@@ -2,7 +2,7 @@
 // Anything marked check: true is a draft that still needs Shannon's (or a teacher's) review.
 
 window.PID_DATA = {
-  version: "0.2 draft",
+  version: "0.3 draft",
 
   organizations: [
     {
@@ -15,7 +15,9 @@ window.PID_DATA = {
       summary: "The largest Irish dance organization. If your school's teacher has the letters TCRG after their name, you dance under CLRG.",
       teachers: "TCRG (teacher), ADCRG (adjudicator, or judge)",
       majors: "Regional Oireachtas, Nationals, All-Irelands, World Championships (Oireachtas Rince na Cruinne)",
-      link: "https://www.clrg.ie"
+      link: "https://www.clrg.ie",
+      rulesLink: "https://www.clrg.ie/wp-content/uploads/2026/09/CLRG_Rules_V6_Sept26.pdf",
+      rulesName: "CLRG Official Rulebook (V6, September 2026)"
     },
     {
       id: "nafc",
@@ -46,9 +48,12 @@ window.PID_DATA = {
       say: "un KOH-loy",
       active: true, pick: true,
       where: "Mainly Ireland, with schools in Great Britain and elsewhere.",
-      summary: "The second-largest Irish dance organization, with its own teachers, rules and championships. Its words, levels and rules are being added to the app.",
+      summary: "The second-largest Irish dance organization, with its own teachers, grades and championships. Its grades use Irish names: Bun Grád (Beginners A, B and C), Meán Grád (Pre-Open) and Ard Grád (Open).",
+      teachers: "Its own registered teachers, organised in local branches",
+      majors: "Provincial Championships / Qualifiers and the World Championships",
       link: "https://www.irishdancingorg.com",
-      check: true
+      rulesLink: "https://web.irishdancingorg.com/index.php/policies/rulebook",
+      rulesName: "An Comhdháil public rulebook"
     },
     {
       id: "wida",
@@ -60,7 +65,8 @@ window.PID_DATA = {
       teachers: "TCRG and TMRF teacher exams",
       majors: "National Oireachtasaí, the International and World Championships",
       link: "https://www.irish.dance",
-      rulesLink: "https://www.irish.dance/competition-rules"
+      rulesLink: "https://www.irish.dance/competition-rules",
+      rulesName: "WIDA competition rules"
     }
   ],
 
@@ -84,14 +90,14 @@ window.PID_DATA = {
   // the moving-up placings, and moving up one dance at a time at the lower levels.
   levels: [
     {
-      org: "clrg", id: "b1", order: 1, name: "Beginner 1", alt: "sometimes called First Feis",
+      org: "clrg", id: "b1", order: 1, name: "Beginner 1", alt: "Bun Grád in the CLRG rulebook; sometimes called First Feis",
       danced: "Reel, light jig, often single jig and slip jig",
       moveUp: "Place 1st, 2nd or 3rd in a dance, then move up in that dance",
       moveUpPlace: 3, perDance: true,
       parents: "School costume or a simple outfit, soft shoes only"
     },
     {
-      org: "clrg", id: "b2", order: 2, name: "Beginner 2", alt: "also called Advanced Beginner",
+      org: "clrg", id: "b2", order: 2, name: "Beginner 2", alt: "also called Advanced Beginner; Tús Grád in the CLRG rulebook",
       danced: "Soft shoe dances plus treble jig and hornpipe",
       moveUp: "Place 1st, 2nd or 3rd in a dance",
       moveUpPlace: 3, perDance: true,
@@ -168,6 +174,49 @@ window.PID_DATA = {
       moveUp: "The top level. Winning one moves all of a dancer's solo dances up to Open",
       perDance: false,
       parents: "Qualifying for Worlds starts at your National Oireachtas the year before"
+    },
+    // An Comhdháil, from its public rulebook (web.irishdancingorg.com/index.php/policies/rulebook), read Nov 23 2026.
+    {
+      org: "comhdhail", id: "ac_a", order: 1, name: "Beginners A", alt: "Bun Grád",
+      danced: "Basic steps in reel, light jig, slip jig, single jig, hornpipe, treble jig and traditional sets",
+      moveUp: "Win 1st place in a dance with at least 10 dancers, then move up in that dance",
+      moveUpPlace: 1, minEntrants: 10, perDance: true,
+      parents: "Class costume only; no solo costumes in Beginners A, B or C"
+    },
+    {
+      org: "comhdhail", id: "ac_b", order: 2, name: "Beginners B", alt: "Bun Grád",
+      danced: "Slightly harder versions of the basic steps",
+      moveUp: "Win 1st place in a dance with at least 10 dancers",
+      moveUpPlace: 1, minEntrants: 10, perDance: true,
+      parents: "Beginner figure (team) dances are open to Beginners A and B"
+    },
+    {
+      org: "comhdhail", id: "ac_c", order: 3, name: "Beginners C", alt: "Bun Grád",
+      danced: "A further step up from Beginners B",
+      moveUp: "Win 1st place in a dance with at least 10 dancers",
+      moveUpPlace: 1, minEntrants: 10, perDance: true,
+      parents: "Beginner cup competitions let a dancer move a dance up by winning the cup"
+    },
+    {
+      org: "comhdhail", id: "ac_po", order: 4, name: "Pre-Open", alt: "Meán Grád",
+      danced: "Solo dances in a set age group; a dancer may dance one year above their age",
+      moveUp: "Win 1st place in a dance with at least 5 dancers",
+      moveUpPlace: 1, minEntrants: 5, perDance: true,
+      parents: "Win in an older age group and you can come back to it the next year"
+    },
+    {
+      org: "comhdhail", id: "ac_open", order: 5, name: "Open", alt: "Ard Grád",
+      danced: "Open to everyone, in your own age group",
+      moveUp: "The top grade for solo dances. Dancing an Open solo is needed before entering a Championship",
+      perDance: true,
+      parents: "A dancer can be Open in some dances and lower in others"
+    },
+    {
+      org: "comhdhail", id: "ac_ch", order: 6, name: "Championship",
+      danced: "A light and a heavy dance, judged by 1 or 3 adjudicators (5 at the World Championships). Open Championship starts at Under 10.",
+      moveUp: "Win with 1 judge: Open in those dances for the year. Win with 3 judges: Open in every dance for life",
+      perDance: false,
+      parents: "Provincial Championships are the route to the World Championships"
     }
   ],
 
@@ -222,12 +271,21 @@ window.PID_DATA = {
     { g: "people", orgs: ["clrg"], term: "CLRG", alt: "An Coimisiún", say: "un KUM-ish-oon", means: "An Coimisiún le Rincí Gaelacha, the largest Irish dance organization, based in Dublin", why: "Sets the rules your dancer competes under" },
     { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Only a TCRG can enter dancers in CLRG competitions" },
     { g: "people", orgs: ["clrg"], term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
-    { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner", why: "Mostly relevant to teachers", check: true },
+    { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner, who can run grade exams", why: "Mostly relevant to teachers" },
     { g: "people", term: "Adjudicator", means: "A judge", why: "Championships use panels of three or more" },
     { g: "people", orgs: ["clrg"], term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
     { g: "people", orgs: ["clrg"], term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
     { g: "people", orgs: ["clrg"], term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },
     { g: "people", orgs: ["clrg"], term: "Grade exam", alt: "Grád", say: "grawd", means: "Optional CLRG exams in dance skills and knowledge", why: "Some schools encourage them; separate from competitions" },
+    { g: "events", orgs: ["clrg"], term: "Bun Grád / Tús Grád", say: "bun grawd / toos grawd", means: "The CLRG rulebook's names for the first two grades (Beginner and Advanced Beginner)", why: "Special costume, make-up and filming rules apply to these grades", check: true },
+    { g: "events", orgs: ["clrg"], term: "Restyling", means: "A 3-month wait before a dancer who changes school can compete again", why: "Plan around it if you're thinking of changing schools" },
+    { g: "events", orgs: ["comhdhail"], term: "Bun Grád", say: "bun grawd", means: "An Comhdháil's beginner grades: Beginners A, B and C", why: "Win a dance with 10 or more dancers to move up", check: true },
+    { g: "events", orgs: ["comhdhail"], term: "Meán Grád", say: "MAWN grawd", means: "Pre-Open, the middle grade", why: "Danced in age groups; win with 5 or more dancers to move up", check: true },
+    { g: "events", orgs: ["comhdhail"], term: "Ard Grád", say: "AWRD grawd", means: "Open, the top solo grade", why: "Needed before entering a Championship", check: true },
+    { g: "events", orgs: ["comhdhail"], term: "Restyling", means: "A 3-month wait before a dancer who moves into or within An Comhdháil can compete", why: "Starts when the new teacher's branch gets the registration form" },
+    { g: "events", orgs: ["comhdhail"], term: "Provincial Championship", alt: "Qualifier", means: "The championship a dancer must dance to qualify for the World Championships", why: "Dancers may only enter one each season" },
+    { g: "events", orgs: ["comhdhail"], term: "Cup competition", means: "A special competition at beginner or Pre-Open level; the winner moves up in that dance", why: "Only one cup per grade per feis" },
+    { g: "events", orgs: ["comhdhail"], term: "NCH", alt: "Non-Championship Holder", means: "A competition for dancers who haven't won a Championship, with a light and a heavy dance", why: "Winning makes the dancer Open in those dances" },
     { g: "events", orgs: ["wida"], term: "Premiership", means: "A WIDA competition where a dancer does two dances and the scores are added together (for example reel and light jig)", why: "Your dancer can enter one premiership per feis, at the grade they're in for most of their dances" },
     { g: "events", orgs: ["wida"], term: "Jump 2-3", means: "A first competition for the youngest WIDA dancers: 16 jump 2-3s or promenade steps", why: "From 2027 it's for under-7s only" },
     { g: "events", orgs: ["wida"], term: "Yafers", means: "The online system used to enter every WIDA feis", why: "Entries are non-refundable once paid" },
@@ -236,44 +294,118 @@ window.PID_DATA = {
     { g: "people", term: "Feis committee", means: "The volunteers running a particular feis", why: "Contact them about entries, schedules and results" }
   ],
 
-  // Rules library. These are DRAFT examples to show how the library will work.
-  // Real entries will be written from the official rulebooks Shannon sends.
+  // Rules library. CLRG entries summarise the CLRG Official Rulebook V6 (Sept 2026).
+  // CLRG's rulebook doesn't set grades or moving up: in North America that's the
+  // North American Feis Commission, whose rulebook isn't added yet (draft: true).
   rules: [
-    {
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
       q: "How does my dancer move up from Beginner 1?",
-      a: "By placing 1st, 2nd or 3rd in a dance. They move up in that dance only, so a dancer can be Beginner 2 in reel and still Beginner 1 in light jig.",
-      orgId: "clrg", levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
-    },
-    {
+      a: "By placing 1st, 2nd or 3rd in a dance. They move up in that dance only, so a dancer can be Beginner 2 in reel and still Beginner 1 in light jig." },
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
       q: "How does my dancer move up from Beginner 2?",
-      a: "By placing 1st, 2nd or 3rd in a dance. Again, this is one dance at a time.",
-      orgId: "clrg", levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
-    },
-    {
+      a: "By placing 1st, 2nd or 3rd in a dance. Again, this is one dance at a time." },
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
       q: "How does my dancer move up from Novice?",
-      a: "By placing 1st or 2nd in a dance, one dance at a time.",
-      orgId: "clrg", levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
-    },
-    {
+      a: "By placing 1st or 2nd in a dance, one dance at a time." },
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
       q: "How does my dancer move up from Open Prizewinner?",
-      a: "By winning 1st place in a dance. Once a dancer has moved up in enough dances, they can start dancing Preliminary Championship.",
-      orgId: "clrg", levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up", check: true
-    },
-    {
-      q: "When does my dancer need hard shoes?",
-      a: "Usually at Beginner 2, when treble jig and hornpipe are added. Ask your teacher before buying, because fit matters and they may suggest a brand.",
-      orgId: "clrg", levels: ["b1", "b2"], regions: [], org: "CLRG", topic: "Shoes and costume"
-    },
-    {
-      q: "Can my daughter wear a wig or a solo dress at the lower levels?",
-      a: "There are rules about costume, wigs and makeup at the beginner levels, and they change often. This answer will be filled in from the current rulebook.",
-      orgId: "clrg", levels: ["b1", "b2", "novice"], regions: [], org: "CLRG", topic: "Shoes and costume", check: true
-    },
-    {
-      q: "Who is allowed to enter my dancer in a CLRG feis?",
-      a: "A CLRG-registered teacher (TCRG). Registration normally goes through your school, so ask your teacher before you sign up for a feis.",
-      orgId: "clrg", levels: [], regions: [], org: "CLRG", topic: "Entering competitions"
-    },
+      a: "By winning 1st place in a dance. Once a dancer has moved up in enough dances, they can start dancing Preliminary Championship." },
+    { orgId: "clrg", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "CLRG",
+      q: "Who can enter my dancer in a CLRG feis?",
+      a: "Only a teacher registered with CLRG: a TCRG for solo dances, or a TCRG or TMRF for teams. So entries normally go through your school." },
+    { orgId: "clrg", topic: "Entering competitions", sec: "1.1, 3.1", levels: [], regions: [], org: "CLRG",
+      q: "Can my dancer also compete in other organizations' competitions?",
+      a: "No. Dancers of a CLRG teacher may not compete in events that aren't run under CLRG, apart from a few CLRG recognises (such as Scór) and approved \"open platform\" events. Check with your teacher before entering anything else." },
+    { orgId: "clrg", topic: "At the feis", sec: "2.7", levels: [], regions: [], org: "CLRG",
+      q: "Can I film or photograph my dancer?",
+      a: "Only in the first two grades (Beginner and Advanced Beginner, called Bun Grád and Tús Grád in the rulebook), and only if local law and your region allow it. In every other grade, photos and video of dancers dancing are forbidden." },
+    { orgId: "clrg", topic: "At the feis", sec: "5.4", levels: [], regions: [], org: "CLRG",
+      q: "What is the \"arms up\" check side stage?",
+      a: "Before each round, dancers lining up side stage must be able to raise their arms to shoulder height. A dancer whose costume stops this isn't allowed to dance. Arm or posture aids (\"carriage aids\") are banned, apart from medical ones." },
+    { orgId: "clrg", topic: "Steps and technique", sec: "4.2", levels: [], regions: [], org: "CLRG",
+      q: "When can my dancer dance on their toes (en pointe)?",
+      a: "Not at all up to and including the Under 12 age group. Dancers moving into Under 13 in January may start from 1 September the year before." },
+    { orgId: "clrg", topic: "Shoes and costume", sec: "5.1.8", levels: ["b1", "b2"], regions: [], org: "CLRG",
+      q: "What can my dancer wear at Beginner and Advanced Beginner?",
+      a: "Up to and including Under 12, only a school class costume, or a simple outfit: blouse or shirt with a skirt or trousers, a polo top with a skirt or trousers, or a bodysuit with a skirt. No low-cut tops or short tight skirts." },
+    { orgId: "clrg", topic: "Shoes and costume", sec: "5.2", levels: [], regions: [], org: "CLRG",
+      q: "When can my dancer wear make-up?",
+      a: "No make-up for anyone in the Under 10 age group or younger, in solos or teams; that includes false eyelashes and tan on the face. No make-up in the first two grades up to and including Under 12. It goes by the competition's age group, not the dancer's own age." },
+    { orgId: "clrg", topic: "Shoes and costume", sec: "5.1.3–5.1.13", levels: [], regions: [], org: "CLRG",
+      q: "What are the rules for dresses?",
+      a: "Necklines at the collarbone or higher, a full front, sides and back, and sleeves. Underwear must cover the midriff. Skirts over bodysuits should reach mid-thigh at the back. No feathers and no cartoon characters. If a dress is too short, judges can ask for thick black tights." },
+    { orgId: "clrg", topic: "Shoes and costume", sec: "5.1.1–5.1.2", levels: ["pc", "oc"], regions: [], org: "CLRG",
+      q: "Can a championship dress show names or past wins?",
+      a: "No. In championships judged by 3 or more adjudicators, solo costumes and headwear can't have names, initials, or designs that show past achievements (such as globes)." },
+    { orgId: "clrg", topic: "Shoes and costume", sec: "5.3", levels: [], regions: [], org: "CLRG",
+      q: "What are the rules for hard shoes?",
+      a: "Heels can be at most 1.5 inches high and made of leather, plastic or fiberglass, with no metal except the nails or screws holding them on. Altering shoes, wearing them on the wrong feet, or adding heels and tips to soft shoes can get a dancer disqualified." },
+    { orgId: "clrg", topic: "Changing schools", sec: "2.1", levels: [], regions: [], org: "CLRG",
+      q: "What happens if we change schools?",
+      a: "Your dancer has a 3-month \"restyling\" break from competing, whether they come from a CLRG school or another organization. It starts on the date the transfer notice is posted or emailed. Competing during it can add up to 3 more months." },
+    { orgId: "clrg", topic: "Changing schools", sec: "2.1.3, 2.1.5", levels: [], regions: [], org: "CLRG",
+      q: "Are there exceptions to the 3-month restyling?",
+      a: "Yes. It doesn't apply to a beginner who spent 3 months or less at their first school, or to a dancer who hasn't been to any Irish dance class for at least a year. For anything else you can appeal using the form on clrg.ie." },
+    { orgId: "clrg", topic: "Grade exams", sec: "6.3", levels: [], regions: [], org: "CLRG",
+      q: "What are grade exams?",
+      a: "Optional CLRG exams in dance skills, from Grade 1 up to Grade 10, separate from competitions. Your teacher has to request them." },
+
+    // ----- An Comhdháil: plain-language summaries of its public rulebook (read Nov 23 2026) -----
+    { orgId: "comhdhail", topic: "Entering competitions", sec: "4.1, 4.3", levels: [], regions: [], org: "An Comhdháil",
+      q: "Which age group does my dancer dance in?",
+      a: "Their age on 1 January decides it for the whole year. Every dancer's birth certificate must be registered with the local branch secretary." },
+    { orgId: "comhdhail", topic: "Entering competitions", sec: "4.2", levels: [], regions: [], org: "An Comhdháil",
+      q: "Can my dancer enter other organizations' competitions?",
+      a: "Dancers who live outside Ireland and the UK may enter open platform competitions that aren't registered with An Comhdháil." },
+    { orgId: "comhdhail", topic: "At the feis", sec: "10.1", levels: [], regions: [], org: "An Comhdháil",
+      q: "Can I film or photograph my dancer?",
+      a: "No. Any unofficial photos or video of a dancer while they're competing are forbidden, on phones, tablets or cameras. Live coverage is allowed at the World Championships." },
+    { orgId: "comhdhail", topic: "At the feis", sec: "5.10, 5.12", levels: [], regions: [], org: "An Comhdháil",
+      q: "What if my dancer falls or a lace comes undone?",
+      a: "If a dance is interrupted by the dancer's own mishap (a lace, a fall, a wig), they can dance again once. A second mishap of the same kind means disqualification. Dancers who stop because someone else fell aren't penalised." },
+    { orgId: "comhdhail", topic: "At the feis", sec: "5.9", levels: [], regions: [], org: "An Comhdháil",
+      q: "Are any moves banned?",
+      a: "Dancing en pointe is banned up to and including Under 14 (it's allowed from the September before Under 15), and horizontal split jumps are banned for safety. Either one means disqualification." },
+    { orgId: "comhdhail", topic: "Moving up", sec: "5.1–5.3, 5.7", levels: ["ac_a", "ac_b", "ac_c"], regions: [], org: "An Comhdháil",
+      q: "When does my dancer move up from Beginners A, B or C?",
+      a: "When they win 1st place in a dance with at least 10 dancers, they move up in that dance. With fewer dancers, the judge decides whether to give a 1st place or just an award, based on the standard." },
+    { orgId: "comhdhail", topic: "Moving up", sec: "5.4, 5.7", levels: ["ac_po"], regions: [], org: "An Comhdháil",
+      q: "How does Pre-Open work?",
+      a: "Pre-Open (Meán Grád) is danced in age groups, and a dancer may dance one year above their age. Winning 1st with at least 5 dancers moves them up in that dance. Win in an older age group and you can dance it again the next year." },
+    { orgId: "comhdhail", topic: "Moving up", sec: "4.5", levels: ["ac_a", "ac_b", "ac_c", "ac_po"], regions: [], org: "An Comhdháil",
+      q: "My dancer won, but we already paid for the next feis. Can they still dance that grade?",
+      a: "No. Once a dancer wins 1st place in a dance, they can't dance it in that grade again, even if entries are already paid." },
+    { orgId: "comhdhail", topic: "Moving up", sec: "4.11–4.12", levels: ["ac_a", "ac_b", "ac_c", "ac_po"], regions: [], org: "An Comhdháil",
+      q: "What are cup competitions?",
+      a: "Special competitions at beginner and Pre-Open level. Your dancer must be in that grade for the dance and have danced a matching solo there. Only one cup per grade per feis, and the winner moves up in that dance." },
+    { orgId: "comhdhail", topic: "Championships", sec: "4.6–4.8", levels: ["ac_open", "ac_ch"], regions: [], org: "An Comhdháil",
+      q: "When can my dancer enter a Championship?",
+      a: "After dancing at least one Open solo (not the treble reel) at that feis, plus both solo dances in the Championship. Open Championships start at Under 10 (Under 9 at Provincials). A Championship is a light and a heavy dance." },
+    { orgId: "comhdhail", topic: "Championships", sec: "4.6, 4.9", levels: ["ac_ch"], regions: [], org: "An Comhdháil",
+      q: "What happens when my dancer wins a Championship?",
+      a: "With 1 judge, they become Open in the dances they danced for that year. With 3 judges, they're Open in every dance for life, and can't go back to Beginners or Pre-Open unless they win no Open medal for two years and apply to be re-graded." },
+    { orgId: "comhdhail", topic: "Championships", sec: "5.8", levels: ["ac_po", "ac_open"], regions: [], org: "An Comhdháil",
+      q: "What is a Non-Championship Holder (NCH) competition?",
+      a: "A competition for dancers who haven't won a Championship, with a light and a heavy dance and one judge. The winner becomes Open in those dances and can't enter NCH again." },
+    { orgId: "comhdhail", topic: "Championships", sec: "7.1, 8.1, 8.2", levels: ["ac_ch"], regions: [], org: "An Comhdháil",
+      q: "How does my dancer qualify for the World Championships?",
+      a: "By dancing at a Provincial Championship or Qualifier (only one per season). If something outside your control stops them, tell your branch in writing within 10 days. Schools must also enter figure championships at Provincials to take part in team events at Worlds." },
+    { orgId: "comhdhail", topic: "Shoes and costume", sec: "2.1–2.2", levels: ["ac_a", "ac_b", "ac_c"], regions: [], org: "An Comhdháil",
+      q: "When can my dancer wear a solo costume?",
+      a: "Not in Beginners A, B or C. Up to and including Under 9, a class figure costume is the only class costume allowed." },
+    { orgId: "comhdhail", topic: "Shoes and costume", sec: "2.9–2.11", levels: [], regions: [], org: "An Comhdháil",
+      q: "When can my dancer wear make-up?",
+      a: "No face make-up up to and including age 12, and in team competitions for Under 12 and below. No glitter on the face at any age." },
+    { orgId: "comhdhail", topic: "Shoes and costume", sec: "2.4–2.8, 4.6", levels: [], regions: [], org: "An Comhdháil",
+      q: "What are the other costume and shoe rules?",
+      a: "Dance shoes must be black (white laces are fine). No arm aids. No names or initials on solo costumes, and no designs showing past wins (such as globes). Wear the number in the centre of the costume. Boys over 11 wear soft shoes for the reel." },
+    { orgId: "comhdhail", topic: "Changing schools", sec: "3.1–3.9", levels: [], regions: [], org: "An Comhdháil",
+      q: "What happens if we change schools?",
+      a: "Dancers moving into or within An Comhdháil have a 3-month restyling period before they can compete, starting when the new teacher's branch receives the form. For brand-new beginners it only applies after a month of classes, and not if the old class closed. After restyling, they must dance a Provincial Championship before the World Championships." },
+    { orgId: "comhdhail", topic: "Penalties", sec: "9.1–9.2", levels: [], regions: [], org: "An Comhdháil",
+      q: "What if my dancer is entered in the wrong grade or age?",
+      a: "It's taken seriously: dancing in the wrong grade means a 3-month suspension, and in the wrong age group a 12-month suspension. Double-check entries." },
+
     // ----- WIDA: plain-language summaries of irish.dance/competition-rules (read Nov 23 2026) -----
     { orgId: "wida", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "WIDA",
       q: "Who can dance at a WIDA feis?",

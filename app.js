@@ -105,11 +105,12 @@
     const lv = r.levels.length ? r.levels.map((id) => `<span class="chip">${esc(levelById(id).name)}</span>`).join("") : '<span class="chip">All levels</span>';
     const rg = r.regions.length ? `<span class="chip grey">${esc(r.regions.length === 3 && r.regions.includes("Mexico") ? "North America" : r.regions.join(", "))}</span>` : "";
     const org = D.organizations.find((o) => o.id === r.orgId) || {};
-    const src = org.rulesLink
-      ? `Source: <a href="${esc(org.rulesLink)}" target="_blank" rel="noopener">${esc(org.name)} competition rules${r.sec ? ", section " + esc(r.sec) : ""} ↗</a>. This is a plain-language summary; the official wording always wins.`
-      : `Source: ${esc(r.org)} rules · official wording and link coming once rulebooks are added`;
+    const linked = org.rulesLink && !r.draft;
+    const src = linked
+      ? `Source: <a href="${esc(org.rulesLink)}" target="_blank" rel="noopener">${esc(org.rulesName || org.name + " rules")}${r.sec ? ", rule " + esc(r.sec) : ""} ↗</a>. A plain-language summary; the official wording always wins.`
+      : `Source: ${esc(r.org)} rules. Draft until we add their official rulebook.`;
     return `<article class="card">
-      <div class="chips">${lv}${rg}${org.rulesLink ? "" : '<span class="chip gold">Draft</span>'}</div>
+      <div class="chips">${lv}${rg}${linked ? "" : '<span class="chip gold">Draft</span>'}</div>
       <h3 style="margin-top:8px">${esc(r.q)}</h3>
       <p style="margin:6px 0">${esc(r.a)}</p>
       <p class="small muted" style="margin:0">${src}</p>
