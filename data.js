@@ -2,7 +2,7 @@
 // Anything marked check: true is a draft that still needs Shannon's (or a teacher's) review.
 
 window.PID_DATA = {
-  version: "0.1 draft",
+  version: "0.2 draft",
 
   organizations: [
     {
@@ -10,7 +10,7 @@ window.PID_DATA = {
       name: "CLRG",
       fullName: "An Coimisiún le Rincí Gaelacha",
       say: "un KUM-ish-oon le RIN-kee GAY-luh-kuh",
-      active: true,
+      active: true, pick: true,
       where: "Worldwide. Based in Dublin, with regions across Ireland, Great Britain, North America, Australia, mainland Europe and beyond.",
       summary: "The largest Irish dance organization. If your school's teacher has the letters TCRG after their name, you dance under CLRG.",
       teachers: "TCRG (teacher), ADCRG (adjudicator, or judge)",
@@ -44,9 +44,9 @@ window.PID_DATA = {
       name: "An Comhdháil",
       fullName: "An Comhdháil Múinteoirí Rince Gaelacha",
       say: "un KOH-loy",
-      active: false,
+      active: true, pick: true,
       where: "Mainly Ireland, with schools in Great Britain and elsewhere.",
-      summary: "The second-largest Irish dance organization, with its own teachers, rules and championships. Coming in a later version of the app.",
+      summary: "The second-largest Irish dance organization, with its own teachers, rules and championships. Its words, levels and rules are being added to the app.",
       link: "https://www.irishdancingorg.com",
       check: true
     },
@@ -54,9 +54,9 @@ window.PID_DATA = {
       id: "wida",
       name: "WIDA",
       fullName: "World Irish Dance Association",
-      active: false,
+      active: true, pick: true,
       where: "Mainly mainland Europe, with members in other countries.",
-      summary: "An independent organization known for competitions open to dancers from different schools and organizations. Coming in a later version of the app.",
+      summary: "An independent organization known for competitions open to dancers from different schools and organizations. Its words, levels and rules are being added to the app.",
       check: true
     }
   ],
@@ -81,42 +81,42 @@ window.PID_DATA = {
   // the moving-up placings, and moving up one dance at a time at the lower levels.
   levels: [
     {
-      id: "b1", order: 1, name: "Beginner 1", alt: "sometimes called First Feis",
+      org: "clrg", id: "b1", order: 1, name: "Beginner 1", alt: "sometimes called First Feis",
       danced: "Reel, light jig, often single jig and slip jig",
       moveUp: "Place 1st, 2nd or 3rd in a dance, then move up in that dance",
       moveUpPlace: 3, perDance: true,
       parents: "School costume or a simple outfit, soft shoes only"
     },
     {
-      id: "b2", order: 2, name: "Beginner 2", alt: "also called Advanced Beginner",
+      org: "clrg", id: "b2", order: 2, name: "Beginner 2", alt: "also called Advanced Beginner",
       danced: "Soft shoe dances plus treble jig and hornpipe",
       moveUp: "Place 1st, 2nd or 3rd in a dance",
       moveUpPlace: 3, perDance: true,
       parents: "Hard shoes are usually bought around here"
     },
     {
-      id: "novice", order: 3, name: "Novice",
+      org: "clrg", id: "novice", order: 3, name: "Novice",
       danced: "All the main dances, plus a traditional set at some feiseanna",
       moveUp: "Place 1st or 2nd in a dance",
       moveUpPlace: 2, perDance: true,
       parents: "Solo dress and wig rules start to matter"
     },
     {
-      id: "pw", order: 4, name: "Open Prizewinner",
+      org: "clrg", id: "pw", order: 4, name: "Open Prizewinner",
       danced: "Same dances, with more advanced steps",
       moveUp: "Win 1st in a dance",
       moveUpPlace: 1, perDance: true,
       parents: "Often the last stage before championships"
     },
     {
-      id: "pc", order: 5, name: "Preliminary Championship",
+      org: "clrg", id: "pc", order: 5, name: "Preliminary Championship",
       danced: "Two or three rounds: soft shoe, hard shoe, often a set. Judged by a panel.",
       moveUp: "Win twice, or meet your region's rules",
       perDance: false, check: true,
       parents: "Recalls and Oireachtas qualification come into play"
     },
     {
-      id: "oc", order: 6, name: "Open Championship",
+      org: "clrg", id: "oc", order: 6, name: "Open Championship",
       danced: "Three rounds, panel of judges. The path to Nationals, All-Irelands and Worlds.",
       moveUp: "The top level",
       perDance: false,
@@ -137,7 +137,7 @@ window.PID_DATA = {
     { g: "events", term: "Oireachtas", say: "oh-ROCK-tus", means: "The regional championship, held once a year", why: "Qualifying dancers compete for places at Nationals and Worlds" },
     { g: "events", term: "Nationals", means: "National championship (for example North American Nationals or the Great Britain Championships)", why: "Usually needs a qualifying result for championship dancers" },
     { g: "events", term: "All-Irelands", means: "The All-Ireland Championships, held in Ireland", why: "A major championship open to dancers from abroad" },
-    { g: "events", term: "Worlds", alt: "Oireachtas Rince na Cruinne", say: "oh-ROCK-tus RIN-kuh nuh KRIN-yuh", means: "The CLRG World Championships", why: "Qualification only, usually through a regional or national event" },
+    { g: "events", orgs: ["clrg"], term: "Worlds", alt: "Oireachtas Rince na Cruinne", say: "oh-ROCK-tus RIN-kuh nuh KRIN-yuh", means: "The CLRG World Championships", why: "Qualification only, usually through a regional or national event" },
     { g: "events", term: "Grades", alt: "grade competitions", means: "All the levels below championship (Beginner 1, Beginner 2, Novice, Open Prizewinner). Each dance is its own competition, split by level and age", why: "Where most dancers spend their first years. Not the same as grade exams" },
     { g: "events", term: "Championship", means: "Prelim and Open competitions, danced in rounds and judged by a panel", why: "Brings recalls, marks and placements to more dancers" },
     { g: "events", term: "Recall", means: "Being called back after the first rounds to dance the final round", why: "A recall is itself an achievement worth celebrating" },
@@ -172,15 +172,15 @@ window.PID_DATA = {
     { g: "dance", term: "Tan", means: "Spray or bottled tan for legs", why: "Rules on makeup and tan vary by age and level", check: true },
 
     // People and organizations
-    { g: "people", term: "CLRG", alt: "An Coimisiún", say: "un KUM-ish-oon", means: "An Coimisiún le Rincí Gaelacha, the largest Irish dance organization, based in Dublin", why: "Sets the rules your dancer competes under" },
-    { g: "people", term: "TCRG", means: "A certified CLRG teacher", why: "Only a TCRG can enter dancers in CLRG competitions" },
-    { g: "people", term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
-    { g: "people", term: "SDCRG", means: "A certified CLRG examiner", why: "Mostly relevant to teachers", check: true },
+    { g: "people", orgs: ["clrg"], term: "CLRG", alt: "An Coimisiún", say: "un KUM-ish-oon", means: "An Coimisiún le Rincí Gaelacha, the largest Irish dance organization, based in Dublin", why: "Sets the rules your dancer competes under" },
+    { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Only a TCRG can enter dancers in CLRG competitions" },
+    { g: "people", orgs: ["clrg"], term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
+    { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner", why: "Mostly relevant to teachers", check: true },
     { g: "people", term: "Adjudicator", means: "A judge", why: "Championships use panels of three or more" },
-    { g: "people", term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
-    { g: "people", term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
-    { g: "people", term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },
-    { g: "people", term: "Grade exam", alt: "Grád", say: "grawd", means: "Optional CLRG exams in dance skills and knowledge", why: "Some schools encourage them; separate from competitions" },
+    { g: "people", orgs: ["clrg"], term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
+    { g: "people", orgs: ["clrg"], term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
+    { g: "people", orgs: ["clrg"], term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },
+    { g: "people", orgs: ["clrg"], term: "Grade exam", alt: "Grád", say: "grawd", means: "Optional CLRG exams in dance skills and knowledge", why: "Some schools encourage them; separate from competitions" },
     { g: "people", term: "Feis committee", means: "The volunteers running a particular feis", why: "Contact them about entries, schedules and results" }
   ],
 
@@ -190,37 +190,37 @@ window.PID_DATA = {
     {
       q: "How does my dancer move up from Beginner 1?",
       a: "By placing 1st, 2nd or 3rd in a dance. They move up in that dance only, so a dancer can be Beginner 2 in reel and still Beginner 1 in light jig.",
-      levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
+      orgId: "clrg", levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
     },
     {
       q: "How does my dancer move up from Beginner 2?",
       a: "By placing 1st, 2nd or 3rd in a dance. Again, this is one dance at a time.",
-      levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
+      orgId: "clrg", levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
     },
     {
       q: "How does my dancer move up from Novice?",
       a: "By placing 1st or 2nd in a dance, one dance at a time.",
-      levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
+      orgId: "clrg", levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up"
     },
     {
       q: "How does my dancer move up from Open Prizewinner?",
       a: "By winning 1st place in a dance. Once a dancer has moved up in enough dances, they can start dancing Preliminary Championship.",
-      levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up", check: true
+      orgId: "clrg", levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission", topic: "Moving up", check: true
     },
     {
       q: "When does my dancer need hard shoes?",
       a: "Usually at Beginner 2, when treble jig and hornpipe are added. Ask your teacher before buying, because fit matters and they may suggest a brand.",
-      levels: ["b1", "b2"], regions: [], org: "CLRG", topic: "Shoes and costume"
+      orgId: "clrg", levels: ["b1", "b2"], regions: [], org: "CLRG", topic: "Shoes and costume"
     },
     {
       q: "Can my daughter wear a wig or a solo dress at the lower levels?",
       a: "There are rules about costume, wigs and makeup at the beginner levels, and they change often. This answer will be filled in from the current rulebook.",
-      levels: ["b1", "b2", "novice"], regions: [], org: "CLRG", topic: "Shoes and costume", check: true
+      orgId: "clrg", levels: ["b1", "b2", "novice"], regions: [], org: "CLRG", topic: "Shoes and costume", check: true
     },
     {
       q: "Who is allowed to enter my dancer in a CLRG feis?",
       a: "A CLRG-registered teacher (TCRG). Registration normally goes through your school, so ask your teacher before you sign up for a feis.",
-      levels: [], regions: [], org: "CLRG", topic: "Entering competitions"
+      orgId: "clrg", levels: [], regions: [], org: "CLRG", topic: "Entering competitions"
     }
   ],
 

@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const blank = () => ({ profile: { org: "clrg", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {} });
+  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
@@ -65,6 +65,15 @@
       img.src = url;
     });
   }
+
+  // ---------- organization filter ----------
+  // The dancer's own organization is saved in S.profile.org. viewOrg lets a parent
+  // look at another organization for a while without changing their own.
+  const ORGS = D.organizations.filter((o) => o.pick);
+  const orgName = (id) => (D.organizations.find((o) => o.id === id) || {}).name || "";
+  let viewOrg = "";
+  const curOrg = () => viewOrg || S.profile.org || "";
+  const inOrg = (item) => { const o = curOrg(); if (!o) return true; const tags = item.orgs || (item.org && item.org.length < 12 && D.organizations.some((x) => x.id === item.org) ? [item.org] : null) || (item.orgId ? [item.orgId] : null); return !tags || tags.includes(o); };
 
   // ---------- pronunciation ----------
   function speak(text) {
@@ -117,12 +126,17 @@
         ${searchBox("", "Type any word you heard, like feis")}
       </section>
 
-      ${!p.region ? `<a class="banner" href="#/settings" style="text-decoration:none">Set your dancer's region and level so the app shows what applies to you. <span class="btn sm">Set up</span></a>` :
-        `<p class="small muted" style="margin:0 4px 6px">Showing CLRG · ${esc(p.region)}${lv ? " · " + esc(lv.name) : ""} · <a href="#/settings">change</a></p>`}
+      ${!p.org ? `<section class="card" style="border-color:var(--green)">
+        <h3>Which organization is your dancer's school in?</h3>
+        <p class="small muted" style="margin:2px 0 10px">The app will then show only the words, levels and rules that apply to you. You can still look at the others any time.</p>
+        <div class="stack">${ORGS.map((o) => `<button class="btn ghost block" data-set-org="${o.id}">${esc(o.name)}</button>`).join("")}</div>
+        <p class="small" style="margin:10px 0 0;text-align:center"><a href="#/orgs">Not sure? See how to tell</a></p>
+      </section>` : !p.region ? `<a class="banner" href="#/settings" style="text-decoration:none">Showing ${esc(orgName(p.org))}. Add your region and level so the app fits your dancer. <span class="btn sm">Set up</span></a>` :
+        `<p class="small muted" style="margin:0 4px 6px">Showing ${esc(orgName(p.org))} · ${esc(p.region)}${lv ? " · " + esc(lv.name) : ""} · <a href="#/settings">change</a></p>`}
 
       <div class="grid">
         <a class="tile" href="#/rules"><span class="ico">📘</span><strong>Rules</strong><span>What's allowed at your level, in plain words</span></a>
-        <a class="tile" href="#/words"><span class="ico">🗣️</span><strong>Words</strong><span>${D.glossary.length} terms with how to say them</span></a>
+        <a class="tile" href="#/words"><span class="ico">🗣️</span><strong>Words</strong><span>${D.glossary.filter(inOrg).length} terms with how to say them</span></a>
         <a class="tile" href="#/levels"><span class="ico">🪜</span><strong>Levels</strong><span>Beginner to Open Championship</span></a>
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>First feis, solo dress, Oireachtas</span></a>
@@ -144,12 +158,15 @@
     const n = norm(q).trim();
     let html = searchBox(q);
     if (!n) return { title: "Search", tab: "home", back: true, html };
-    const words = D.glossary.filter((t) => norm(t.term + " " + (t.alt || "") + " " + t.means + " " + (t.say || "")).includes(n));
-    const rules = D.rules.filter((r) => norm(r.q + " " + r.a + " " + r.topic).includes(n));
-    const levels = D.levels.filter((l) => norm(l.name + " " + (l.alt || "") + " " + l.danced).includes(n));
+    const all = screens.search.all;
+    const ok = (x) => all || inOrg(x);
+    const words = D.glossary.filter(ok).filter((t) => norm(t.term + " " + (t.alt || "") + " " + t.means + " " + (t.say || "")).includes(n));
+    const rules = D.rules.filter(ok).filter((r) => norm(r.q + " " + r.a + " " + r.topic).includes(n));
+    const levels = D.levels.filter(ok).filter((l) => norm(l.name + " " + (l.alt || "") + " " + l.danced).includes(n));
     const checks = [];
     D.checklists.forEach((c) => c.items.forEach((it) => { if (norm(it).includes(n)) checks.push({ c, it }); }));
     const total = words.length + rules.length + levels.length + checks.length;
+    if (curOrg()) html += `<p class="small muted" style="margin:10px 4px 0">${all ? "Searching all organizations." : "Searching " + esc(orgName(curOrg())) + " only."} <button class="btn plain sm" data-search-all="${all ? "" : "1"}">${all ? "Just " + esc(orgName(curOrg())) : "Search all organizations"}</button></p>`;
     html += `<p class="muted small" style="margin:10px 4px">${total ? total + " result" + (total === 1 ? "" : "s") : "Nothing found yet. Try a different spelling, or tell us the word so we can add it."}</p>`;
     if (words.length) html += `<div class="az">WORDS</div>` + words.map(termCard).join("");
     if (rules.length) html += `<div class="az">RULES</div>` + rules.map(ruleCard).join("");
@@ -166,7 +183,7 @@
     { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: "Irish dance school WIDA", locator: "https://www.irish.dance/teachers" }
   ];
   screens.schools = function () {
-    const st = screens.schools.st || { org: "", place: "" };
+    const st = screens.schools.st || { org: curOrg(), place: "" };
     screens.schools.st = st;
     if (!st.org) {
       return {
@@ -228,7 +245,8 @@
 
   screens.words = function () {
     const group = screens.words.group || "all";
-    const list = D.glossary.filter((t) => group === "all" || t.g === group).slice().sort((a, b) => a.term.localeCompare(b.term));
+    const allOrgs = screens.words.allOrgs;
+    const list = D.glossary.filter((t) => allOrgs || inOrg(t)).filter((t) => group === "all" || t.g === group).slice().sort((a, b) => a.term.localeCompare(b.term));
     let lastLetter = "";
     const body = list.map((t) => {
       const L = t.term[0].toUpperCase(); let h = "";
@@ -242,6 +260,7 @@
         <button data-group="all" class="${group === "all" ? "on" : ""}">All</button>
         ${D.glossaryGroups.map((g) => `<button data-group="${g.id}" class="${group === g.id ? "on" : ""}">${esc(g.name)}</button>`).join("")}
       </div>
+      ${curOrg() ? `<label class="toggle small" style="margin:10px 4px 0"><input type="checkbox" data-words-all ${allOrgs ? "checked" : ""}> Include words used by other organizations</label>` : ""}
       <p class="small muted" style="margin:8px 4px 0">Tap the gold button to hear a word. It uses your phone's voice for now; real recordings are coming.</p>
       ${body}`
     };
@@ -249,9 +268,19 @@
 
   screens.levels = function () {
     const mine = S.profile.level;
+    const o = curOrg();
+    if (o && o !== "clrg") {
+      const org = D.organizations.find((x) => x.id === o);
+      return {
+        title: "Levels", tab: "levels",
+        html: `<h2>${esc(org.name)} levels</h2>
+        <div class="empty"><div class="big">🪜</div><p>The ${esc(org.name)} level ladder is being written. Its level names and moving-up rules are different from CLRG's, so we're not showing CLRG's here.</p>
+        ${org.link ? `<a class="btn ghost" href="${esc(org.link)}" target="_blank" rel="noopener">${esc(org.name)} website ↗</a>` : ""}</div>`
+      };
+    }
     return {
       title: "Levels", tab: "levels",
-      html: `<h2>The level ladder</h2>
+      html: `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
       <p class="muted" style="margin-top:0">CLRG in North America (North American Feis Commission level names). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
       <article class="card">
         <h3>What are “grades”?</h3>
@@ -279,8 +308,9 @@
       title: "Organizations", tab: "home", back: true,
       html: `<h2>Who's who in Irish dance</h2>
       <p class="muted" style="margin-top:0">There isn't one Irish dance organization. Your school belongs to one, and that decides the rules, the levels and the championships your dancer can enter. Dancers from different organizations usually don't compete against each other.</p>
+      <div class="card small"><strong>How to tell which one you're in:</strong> ask your teacher, or look at their title. A teacher with <strong>TCRG</strong> after their name teaches in CLRG. Your school's website or feis entry forms usually name the organization too.</div>
       ${D.organizations.map((o) => `<article class="card">
-        <div class="row between wrap"><h3>${esc(o.name)}</h3>${o.active ? (o.partOf ? `<span class="chip grey">Part of the ${esc(o.partOf)} world</span>` : '<span class="chip">In the app now</span>') : '<span class="chip gold">Coming later</span>'}</div>
+        <div class="row between wrap"><h3>${esc(o.name)}</h3>${o.partOf ? `<span class="chip grey">Part of the ${esc(o.partOf)} world</span>` : ""}</div>
         ${o.fullName !== o.name ? `<p class="small muted" style="margin:0">${esc(o.fullName)}</p>` : ""}
         ${o.say ? `<div style="margin-top:6px">${sayBtn(o.say)}</div>` : ""}
         <p style="margin:8px 0 0">${esc(o.summary)}${draftTag(o)}</p>
@@ -290,6 +320,8 @@
           ${o.majors ? `<dt>Big events</dt><dd>${esc(o.majors)}</dd>` : ""}
         </dl>
         ${o.link ? `<p class="small" style="margin:8px 0 0"><a href="${esc(o.link)}" target="_blank" rel="noopener">Official website ↗</a></p>` : ""}
+        ${o.pick ? (S.profile.org === o.id ? `<p style="margin:10px 0 0"><span class="chip">✓ Your organization</span></p>` :
+          `<div class="row wrap" style="margin-top:10px;gap:8px">${S.profile.org ? `<button class="btn ghost sm" data-view-org="${o.id}">Look around ${esc(o.name)}</button>` : ""}<button class="btn ${S.profile.org ? "plain" : "ghost"} sm" data-set-org="${o.id}">${S.profile.org ? "Switch to " + esc(o.name) : "This is us: " + esc(o.name)}</button></div>`) : ""}
       </article>`).join("")}`
     };
   };
@@ -298,19 +330,19 @@
     const f = screens.rules.f || { level: S.profile.level || "", region: S.profile.region || "" };
     screens.rules.f = f;
     const naRegions = ["United States", "Canada", "Mexico"];
-    const list = D.rules.filter((r) =>
+    const list = D.rules.filter(inOrg).filter((r) =>
       (!f.level || !r.levels.length || r.levels.includes(f.level)) &&
       (!f.region || !r.regions.length || r.regions.includes(f.region)));
     return {
       title: "Rules", tab: "rules",
       html: `<h2>Rules library</h2>
       <p class="muted" style="margin-top:0">The rules that matter to parents, in plain language, with a link to the official rulebook.</p>
-      <div class="note"><strong>Coming soon:</strong> these are draft examples showing how the library will work. The full CLRG and North American Feis Commission rules will be added from the current rulebooks.</div>
-      <div class="two">
+      <div class="note"><strong>Coming soon:</strong> these are draft examples showing how the library will work. ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "The full CLRG and North American Feis Commission rules will be added from the current rulebooks."}</div>
+      ${curOrg() && curOrg() !== "clrg" ? "" : `<div class="two">
         <label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${D.levels.map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Region</span><select data-rf="region"><option value="">Everywhere</option>${D.regions.map((r) => `<option ${f.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
-      </div>
-      ${list.length ? list.map(ruleCard).join("") : `<div class="empty"><div class="big">📘</div>No rules for this level and region yet.${naRegions.includes(f.region) || !f.region ? "" : "<br>Your region's rules are coming in a later update."}</div>`}`
+      </div>`}
+      ${list.length ? list.map(ruleCard).join("") : `<div class="empty"><div class="big">📘</div>No ${curOrg() ? esc(orgName(curOrg())) + " " : ""}rules for this level and region yet.${naRegions.includes(f.region) || !f.region ? "" : "<br>Your region's rules are coming in a later update."}</div>`}`
     };
   };
 
@@ -570,7 +602,7 @@
       html: `<h2>Your dancer's world</h2>
       <p class="muted" style="margin-top:0">Set this once and the app shows the version that applies to you.</p>
       <form id="profForm" class="card">
-        <label class="field"><span>Organization</span><select name="org">${D.organizations.filter((o) => !o.partOf).map((o) => `<option value="${o.id}" ${o.active ? "" : "disabled"} ${p.org === o.id ? "selected" : ""}>${esc(o.name)}${o.active ? "" : " (coming later)"}</option>`).join("")}</select></label>
+        <label class="field"><span>Organization</span><select name="org"><option value="">Not sure yet</option>${ORGS.map((o) => `<option value="${o.id}" ${p.org === o.id ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Country or region</span><select name="region"><option value="">Choose…</option>${D.regions.map((r) => `<option ${p.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
         <label class="field"><span>Main level right now</span><select name="level"><option value="">Not sure yet</option>${D.levels.map((l) => `<option value="${l.id}" ${p.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <button class="btn block">Save</button>
@@ -590,7 +622,7 @@
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
           e.preventDefault(); const fd = new FormData(e.target);
-          S.profile = { org: fd.get("org") || "clrg", region: fd.get("region") || "", level: fd.get("level") || "" };
+          viewOrg = ""; screens.schools.st = null; S.profile = { org: fd.get("org") || "", region: fd.get("region") || "", level: fd.get("level") || "" };
           screens.rules.f = null; save(); toast("Saved"); location.hash = "#/";
         });
         document.getElementById("exportBtn").addEventListener("click", () => {
@@ -638,7 +670,7 @@
     document.title = v.title === "Pocket Irish Dance" ? v.title : v.title + " · Pocket Irish Dance";
     backBtn.hidden = !v.back;
     document.querySelectorAll(".tabbar a").forEach((a) => a.classList.toggle("on", a.dataset.tab === v.tab));
-    app.innerHTML = v.html;
+    app.innerHTML = (viewOrg && viewOrg !== S.profile.org ? `<div class="banner" style="margin-top:0">👀 You're looking at ${esc(orgName(viewOrg))}.<button class="btn sm" data-view-org="">Back to ${esc(orgName(S.profile.org))}</button></div>` : "") + v.html;
     if (v.after) v.after();
     loadPhotos();
     if (!route.keepScroll) window.scrollTo(0, 0);
@@ -658,6 +690,9 @@
     const t = e.target.closest("button, [data-say]");
     if (!t) return;
     if (t.dataset.say) { e.preventDefault(); speak(t.dataset.say); return; }
+    if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
+    if (t.dataset.viewOrg !== undefined) { viewOrg = t.dataset.viewOrg; screens.schools.st = null; toast(viewOrg ? "Looking at " + orgName(viewOrg) : "Back to " + orgName(S.profile.org)); location.hash = "#/"; route(); return; }
+    if (t.dataset.searchAll !== undefined) { screens.search.all = !!t.dataset.searchAll; rerender(); return; }
     if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }
     if (t.dataset.dview) { screens.dancer.view = t.dataset.dview; rerender(); return; }
@@ -693,6 +728,7 @@
   app.addEventListener("change", (e) => {
     const t = e.target;
     if (t.dataset.check) { if (t.checked) S.checks[t.dataset.check] = true; else delete S.checks[t.dataset.check]; save(); t.closest(".check").classList.toggle("done", t.checked); }
+    if (t.hasAttribute && t.hasAttribute("data-words-all")) { screens.words.allOrgs = t.checked; rerender(); return; }
     if (t.dataset.rf) { screens.rules.f[t.dataset.rf] = t.value; rerender(); }
   });
 
