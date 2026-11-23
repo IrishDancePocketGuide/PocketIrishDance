@@ -179,15 +179,36 @@
     return "";
   }
 
+  // "Adjudicator: Mary Smith", "Judges: A. Byrne, C. Walsh", "Judge 2 - Sean Kelly 78"
+  const NOT_NAMES = /^(place|placing|score|scores|marks?|points|comp|competition|result|results|name|dancer|school|total|rank|age|level|dance)$/i;
+  function findJudges(raw) {
+    const m = raw.match(/\b(adjudicators?|judges?|adj)\b\.?\s*(?:#?\d\s*)?(?:[:\-–=]|\s)\s*(.*)$/i);
+    if (!m) return null;
+    const out = [];
+    m[2].split(/\s*(?:,|;|&|\/|\band\b|\|)\s*/i).forEach((part) => {
+      const sc = part.match(/(\d{1,3}(?:\.\d{1,2})?)\s*$/);
+      const name = part.replace(/(\d{1,3}(?:\.\d{1,2})?)\s*$/, "").replace(/[^\p{L}' .-]/gu, " ").replace(/\s+/g, " ").trim();
+      if (name.length >= 3 && /\p{L}{2}/u.test(name) && !NOT_NAMES.test(name)) out.push({ name, marks: sc ? sc[1] : "" });
+    });
+    return out.length ? out : null;
+  }
+
   // text: what was read. ctx.levels: this organization's levels.
   function parse(text, ctx) {
     const lines = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
     const levelOf = levelMatcher((ctx && ctx.levels) || []);
     const found = [];
+    const judgeAt = lines.map(findJudges);
+    let current = null;
+    // Is the judge named above each group of results, or underneath each result?
+    const firstJudge = judgeAt.findIndex(Boolean);
+    const firstDance = lines.findIndex((x) => findDance(clean(x)));
+    const judgeAbove = firstJudge >= 0 && firstJudge < firstDance;
     for (let i = 0; i < lines.length; i++) {
       const l = clean(lines[i]);
       const d = findDance(l);
-      if (!d) continue;
+      if (!d) { if (judgeAt[i]) current = judgeAt[i]; continue; }
+      let judges = judgeAt[i];
       let level = levelOf(l);
       let p = findPlace(l, d.text);
       let entrants = findEntrants(l), marks = findMarks(l), recall = /\brecall(ed)?\b/.test(l);
@@ -199,15 +220,20 @@
         if (!marks) marks = findMarks(n);
         if (!level) level = levelOf(n);
         recall = recall || /\brecall(ed)?\b/.test(n);
+        if (!judges && !judgeAbove && judgeAt[j]) judges = judgeAt[j];
       }
+      if (judgeAbove) judges = judges || current;
       // Championship lines name the level; the dance is the championship itself.
       if (!level && (d.id === "prelim" || d.id === "open")) level = levelOf(d.text);
       found.push({
-        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall,
+        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall, judges: judges || [],
         check: !p || !p.sure || d.guess || !level,
         line: lines[i]
       });
     }
+    // Judges listed only after the results belong to all of them.
+    const later = judgeAt.find(Boolean);
+    if (later) found.forEach((x) => { if (!x.judges.length) x.judges = later; });
     return { results: found, date: findDate(text), feis: findFeis(lines), text: lines.join("\n") };
   }
 
