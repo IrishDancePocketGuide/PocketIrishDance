@@ -12,12 +12,24 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | `app.js` | The screens and the score tracker. |
 | `reader.js` | Reads a results screenshot or photo and suggests results to save. |
 | `vendor/ocr/` | The open-source text reader (Tesseract.js 7.0.0, Apache 2.0) and its English data, kept with the app so photos are read on the phone and never uploaded. |
+| `friends.js` | Friends: private invite-only groups, shared wins and cheers (online, via Supabase). |
+| `config.js` | The Supabase project address and public key for Friends. Empty means Friends shows "coming soon". |
+| `supabase/schema.sql` | The Friends database and its privacy rules. Run once in the Supabase SQL Editor. |
+| `vendor/supabase/` | The Supabase browser library (supabase-js 2.118.0, MIT). |
 | `styles.css` | Colors and layout. |
 | `manifest.webmanifest`, `sw.js`, `icons/` | What makes it installable and work offline. |
 
 ## Privacy
 
 Score tracker results and photos are saved only on the parent's own phone (browser storage). Reading a results photo also happens on the phone. Nothing is sent to a server. Parents can save a backup file from Settings.
+
+Friends is the only online part, and only for parents who sign up. A parent shares one win at a time (first name or nickname, dance, level, placing, feis and date) with private groups joined by invite code. The database rules in `supabase/schema.sql` make sure people only see their own groups.
+
+### Setting up Friends
+
+1. Run `supabase/schema.sql` in the Supabase SQL Editor.
+2. In Authentication > Emails, edit the Magic Link template so it shows the code: `Your Pocket Irish Dance code is {{ .Token }}`. (Codes work inside the installed app; links would open the browser instead.)
+3. Put the Project URL and publishable key in `config.js`.
 
 ## Status
 
