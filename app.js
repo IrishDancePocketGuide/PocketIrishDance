@@ -127,6 +127,7 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>First feis, solo dress, Oireachtas</span></a>
         <a class="tile" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
+        <a class="tile wide" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Search for Irish dance schools near you</span></a>
       </div>
 
       ${standalone ? "" : `<div class="card install show" style="flex-direction:column;gap:6px">
@@ -155,6 +156,63 @@
     if (levels.length) html += `<div class="az">LEVELS</div>` + levels.map((l) => `<a class="card" style="display:block;text-decoration:none;color:inherit" href="#/levels"><h3>${esc(l.name)}</h3><p class="small muted" style="margin:0">${esc(l.danced)}</p></a>`).join("");
     if (checks.length) html += `<div class="az">CHECKLISTS</div>` + checks.map((x) => `<a class="card" style="display:block;text-decoration:none;color:inherit" href="#/guide/${x.c.id}"><span class="chip">${esc(x.c.name)}</span><p style="margin:6px 0 0">${esc(x.it)}</p></a>`).join("");
     return { title: "Search", tab: "home", back: true, html };
+  };
+
+  // ----- find a school -----
+  const SCHOOL_ORGS = [
+    { id: "any", name: "No preference", hint: "Just show me schools near me", q: "Irish dance school" },
+    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: "Irish dance school TCRG" },
+    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", q: "Irish dance school An Comhdháil" },
+    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: "Irish dance school WIDA" }
+  ];
+  screens.schools = function () {
+    const st = screens.schools.st || { org: "", place: "" };
+    screens.schools.st = st;
+    if (!st.org) {
+      return {
+        title: "Find a school", tab: "home", back: true,
+        html: `<h2>Find a dance school near you</h2>
+        <p class="muted" style="margin-top:0">Do you have a preference for an organization? If you're not sure, choose “No preference”. You can read about each one in <a href="#/orgs">Organizations</a>.</p>
+        ${SCHOOL_ORGS.map((o) => `<button class="card" data-school-org="${o.id}" style="display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit">
+          <h3>${esc(o.name)}</h3><span class="small muted">${esc(o.hint)}</span></button>`).join("")}`
+      };
+    }
+    const o = SCHOOL_ORGS.find((x) => x.id === st.org) || SCHOOL_ORGS[0];
+    return {
+      title: "Find a school", tab: "home", back: true,
+      html: `<div class="row between"><span class="chip">${esc(o.name)}</span><button class="btn plain sm" data-school-org="">Change</button></div>
+      <form id="schoolForm" class="card" style="margin-top:10px">
+        <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
+        <button class="btn block">Search the map</button>
+        <button type="button" class="btn ghost block" id="nearMe" style="margin-top:8px">📍 Use my location</button>
+        <p class="small muted" style="margin:8px 0 0">This opens Google Maps with a search for Irish dance schools. Your location goes only to Google Maps, not to this app.</p>
+      </form>
+      <div class="card small">
+        <h3>Before you sign up, ask the school:</h3>
+        <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
+          <li>Which organization are you part of? (For CLRG, is the teacher a TCRG?)</li>
+          <li>Is there a beginner class for my child's age?</li>
+          <li>Can we try a class first?</li>
+          <li>What are the costs: classes, shoes, costume, competitions?</li>
+          <li>How often do dancers compete, and is it required?</li>
+        </ul>
+      </div>
+      ${o.id === "clrg" || o.id === "any" ? `<p class="small muted">Official CLRG information: <a href="https://www.clrg.ie" target="_blank" rel="noopener">clrg.ie ↗</a></p>` : ""}
+      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`,
+      after() {
+        const open = (where) => window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(o.q + " " + where), "_blank", "noopener");
+        document.getElementById("schoolForm").addEventListener("submit", (e) => {
+          e.preventDefault(); st.place = e.target.place.value.trim();
+          open(st.place ? "near " + st.place : "near me");
+        });
+        document.getElementById("nearMe").addEventListener("click", () => {
+          if (!navigator.geolocation) { open("near me"); return; }
+          navigator.geolocation.getCurrentPosition(
+            (pos) => window.open(`https://www.google.com/maps/search/${encodeURIComponent(o.q)}/@${pos.coords.latitude.toFixed(3)},${pos.coords.longitude.toFixed(3)},12z`, "_blank", "noopener"),
+            () => open("near me"), { timeout: 8000 });
+        });
+      }
+    };
   };
 
   screens.words = function () {
@@ -562,6 +620,7 @@
       case "edit": v = screens.resultForm(parts[1], parts[2]); break;
       case "result": v = screens.result(parts[1]); break;
       case "settings": v = screens.settings(); break;
+      case "schools": v = screens.schools(); break;
       default: v = screens.home();
     }
     titleEl.textContent = v.title;
@@ -588,6 +647,7 @@
     const t = e.target.closest("button, [data-say]");
     if (!t) return;
     if (t.dataset.say) { e.preventDefault(); speak(t.dataset.say); return; }
+    if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }
     if (t.dataset.dview) { screens.dancer.view = t.dataset.dview; rerender(); return; }
     if (t.dataset.resetCheck) { Object.keys(S.checks).forEach((k) => { if (k.startsWith(t.dataset.resetCheck + ":")) delete S.checks[k]; }); save(); rerender(); return; }
