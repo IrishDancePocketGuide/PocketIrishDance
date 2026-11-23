@@ -282,3 +282,8 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .cheer.on span { color: var(--green); }
 .msgs { list-style: none; margin: 10px 0 0; padding: 0; font-size: 14px; }
 .msgs li { padding: 6px 10px; background: var(--bg); border-radius: 10px; margin-top: 4px; }
+
+/* Judges */
+.judge-row { margin-bottom: 8px; }
+.judge-places { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill-tabs button { white-space: nowrap; }
