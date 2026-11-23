@@ -252,3 +252,16 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .spinner { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--green); animation: spin 0.8s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .read-prog[hidden] { display: none; }
+
+/* 1st place celebration */
+.celebrate { position: fixed; inset: 0; z-index: 100; background: rgba(8, 12, 28, 0.9); display: grid; place-items: center; padding: 16px; animation: cel-in 0.25s ease-out; }
+.celebrate.out { opacity: 0; transition: opacity 0.25s; }
+.celebrate canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.celebrate-card { position: relative; background: var(--card, #fff); color: var(--ink); border-radius: 20px; padding: 22px 20px 18px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.35); animation: cel-pop 0.5s cubic-bezier(.2,1.4,.4,1); }
+.celebrate-medal { font-size: 64px; line-height: 1; animation: cel-bob 1.2s ease-in-out infinite alternate; }
+.celebrate-card h2 { margin: 10px 0 6px; font-size: 24px; color: var(--green); }
+.celebrate-card p { margin: 0 0 16px; color: var(--ink-2); }
+@keyframes cel-in { from { opacity: 0; } }
+@keyframes cel-pop { from { transform: scale(0.6); opacity: 0; } }
+@keyframes cel-bob { to { transform: translateY(-6px) rotate(-6deg); } }
+@media (prefers-reduced-motion: reduce) { .celebrate, .celebrate-card, .celebrate-medal { animation: none; } }

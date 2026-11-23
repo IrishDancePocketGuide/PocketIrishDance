@@ -51,6 +51,17 @@
     };
   })();
 
+  // Fireworks for 1st places
+  function cheer(dn, recs) {
+    const firsts = recs.filter((x) => Number(x.place) === 1);
+    if (!firsts.length || !window.PID_CELEBRATE) return;
+    const names = firsts.map((x) => (danceById(x.dance) || { name: "a dance" }).name);
+    const list = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    const feis = firsts[0].feis ? " at " + firsts[0].feis : "";
+    const title = firsts.length === 1 ? `1st place, ${dn.name}!` : `${firsts.length} first places, ${dn.name}!`;
+    setTimeout(() => window.PID_CELEBRATE(title, `Congratulations on winning ${list}${feis}! 🎉`), 250);
+  }
+
   // One photo can belong to several results (read from one screenshot). Delete it only when none use it.
   function releasePhoto(pid, exceptId) {
     if (!pid || S.results.some((x) => x.photoId === pid && x.id !== exceptId)) return;
@@ -672,6 +683,7 @@
             }
             S.results.push(...picked);
             save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + dancerId;
+            cheer(dn, picked);
           });
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -692,6 +704,7 @@
           const i = S.results.findIndex((x) => x.id === rec.id);
           if (i >= 0) S.results[i] = rec; else S.results.push(rec);
           save(); toast("Result saved"); location.hash = "#/dancer/" + dancerId;
+          if (Number(r.place) !== 1) cheer(dn, [rec]);
         });
       }
     };

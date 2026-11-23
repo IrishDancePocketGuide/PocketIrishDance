@@ -1,7 +1,7 @@
 // Keeps the app working offline. Bump VERSION whenever any file changes.
-const VERSION = "pid-v12";
+const VERSION = "pid-v13";
 const FILES = [
-  "./", "index.html", "styles.css", "app.js", "data.js", "reader.js", "manifest.webmanifest",
+  "./", "index.html", "styles.css", "app.js", "data.js", "reader.js", "celebrate.js", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"
 ];
 
