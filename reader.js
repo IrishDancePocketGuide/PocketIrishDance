@@ -71,6 +71,9 @@
     ["singlejig", /\b(single\s*jig|hop\s*jig)\b/],
     ["hornpipe", /\b(horn\s*pipe|hpipe|h\.?\s*pipe)\b/],
     ["reel", /(?<!treble\s)(?<!treble)\breel\b/],
+    // Short forms some results sites use
+    ["lightjig", /\b(lj|lt\.?\s*jig)\b/], ["slipjig", /\b(sj)\b/], ["treblejig", /\b(tj|trbl\.?\s*jig)\b/],
+    ["hornpipe", /\b(hp|hrnpipe)\b/], ["singlejig", /\b(sgl\.?\s*jig)\b/], ["tradset", /\b(ts|tset)\b/],
     ["lightjig", /\bjig\b/]
   ];
 
@@ -101,7 +104,7 @@
   }
 
   function findDance(l) {
-    for (const [id, re] of DANCES) { const m = l.match(re); if (m) return { id, guess: re.source === "\\bjig\\b", text: m[0] }; }
+    for (const [id, re] of DANCES) { const m = l.match(re); if (m) return { id, guess: re.source === "\\bjig\\b" || /^\\b\(\w\w\)/.test(re.source), text: m[0] }; }
     return null;
   }
 

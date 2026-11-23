@@ -544,21 +544,21 @@
       html: `<form id="resForm">
         <div class="card">
           <h3>Photo of the results (optional)</h3>
-          <p class="small muted" style="margin:0 0 8px">Take a screenshot of the results website (QuickFeis, FeisWorx…) or a photo of the results sheet.${r.id ? "" : " The app can read the results from it for you."} It stays on this phone.</p>
+          <p class="small muted" style="margin:0 0 8px">Take a screenshot of the results website (QuickFeis, FeisWorx…) or a photo of the results sheet.${r.id ? "" : " The app reads it and fills everything in for you."} It stays on this phone and isn't sent anywhere.</p>
           <label class="btn ghost block" style="cursor:pointer">📷 ${r.photoId ? "Replace photo" : "Add photo"}<input type="file" accept="image/*" name="photo" hidden></label>
           <img id="photoPrev" class="photo-preview" ${r.photoId ? `data-photo="${esc(r.photoId)}"` : "hidden"} alt="Results photo">
-          ${r.id ? "" : `<div id="readBox" hidden>
-            <button type="button" class="btn block" id="readBtn">🔎 Read the results from this photo</button>
-            <p class="small muted" style="margin:6px 0 0">The reading happens on this phone. The photo isn't sent anywhere.</p>
-          </div>
-          <div id="readProg" class="small muted" hidden></div>`}
+          ${r.id ? "" : `<div id="readBox" hidden><button type="button" class="btn ghost block" id="readBtn">🔎 Try reading the photo again</button></div>
+          <div id="readProg" class="read-prog" hidden><span class="spinner" aria-hidden="true"></span><span id="readMsg">Reading the results…</span></div>`}
         </div>
-        <div id="readOut"></div>
         <div class="card">
           <div class="two">
             <label class="field"><span>Date</span><input type="date" name="date" required value="${esc(r.date)}"></label>
             <label class="field"><span>Feis or event</span><input name="feis" value="${esc(lastFeis)}" placeholder="e.g. Feis Mid-America" maxlength="80"></label>
           </div>
+        </div>
+        <div id="readOut"></div>
+        <div id="manual">
+        <div class="card">
           <div class="two">
             <label class="field"><span>Dance</span><select name="dance" required><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${r.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
             <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
@@ -572,6 +572,7 @@
           <label class="field"><span>Notes</span><textarea name="notes" maxlength="500" placeholder="Anything to remember: judges' comments, how it felt…">${esc(r.notes)}</textarea></label>
         </div>
         <button class="btn block">${r.id ? "Save changes" : "Save result"}</button>
+        </div>
         ${r.id ? `<button type="button" class="btn danger block" data-del-result="${r.id}" style="margin-top:6px">Delete this result</button>` : ""}
       </form>`,
       after() {
@@ -589,39 +590,46 @@
           origFile = file;
           newPhoto = await shrinkImage(file);
           const img = document.getElementById("photoPrev"); img.hidden = false; img.src = URL.createObjectURL(newPhoto);
-          const box = document.getElementById("readBox"); if (box) box.hidden = false;
           document.getElementById("readOut").innerHTML = "";
+          if (!r.id) readPhoto();
         });
         const readBtn = document.getElementById("readBtn");
-        if (readBtn) readBtn.addEventListener("click", async () => {
+        if (readBtn) readBtn.addEventListener("click", () => readPhoto());
+        async function readPhoto() {
           if (!origFile || !window.PID_READER) return;
-          const prog = document.getElementById("readProg"); const box = document.getElementById("readBox");
-          box.hidden = true; prog.hidden = false;
+          const prog = document.getElementById("readProg"); const box = document.getElementById("readBox"); const msgEl = document.getElementById("readMsg");
+          box.hidden = true; prog.hidden = false; document.getElementById("manual").hidden = true;
           try {
-            const text = await window.PID_READER.readText(origFile, (msg, pct) => { prog.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
+            const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
             const out = window.PID_READER.parse(text, { levels: orgLevels() });
             prog.hidden = true;
             if (out.date) f.date.value = out.date;
             if (out.feis && (!f.feis.value || f.feis.value === lastFeis)) f.feis.value = out.feis;
             showFound(out);
           } catch (err) {
-            prog.hidden = true; box.hidden = false;
+            prog.hidden = true; box.hidden = false; document.getElementById("manual").hidden = false;
             toast(navigator.onLine ? "Couldn't read this photo. You can fill it in below." : "The reader needs internet the first time. Fill it in below for now.");
           }
-        });
+        }
         function showFound(out) {
           const el = document.getElementById("readOut");
+          const manual = document.getElementById("manual");
+          // A level read from another line of the same screenshot is the best guess for rows that don't name one.
+          const lvCount = {}; out.results.forEach((x) => { if (x.level) lvCount[x.level] = (lvCount[x.level] || 0) + 1; });
+          const guessLevel = Object.keys(lvCount).sort((a, b) => lvCount[b] - lvCount[a])[0] || "";
           const rows = out.results.map((x) => {
-            if (!x.level) x.level = dancerLevel(dn, x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance);
+            if (!x.level) x.level = dancerLevel(dn, x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
             return x;
           });
           const said = `<details class="small" style="margin-top:8px"><summary>Show everything the app read</summary><pre class="read-text">${esc(out.text || "(no words found)")}</pre></details>`;
+          manual.hidden = !!rows.length;
           if (!rows.length) {
-            el.innerHTML = `<div class="card"><h3>No results found</h3><p class="small muted" style="margin:0">The app couldn't spot a dance name in this photo. Try a closer, straighter photo, or fill in the result below.</p>${said}</div>`;
+            document.getElementById("readBox").hidden = false;
+            el.innerHTML = `<div class="card"><h3>No results found</h3><p class="small muted" style="margin:0">The app couldn't spot a dance name in this photo${out.feis || out.date ? ", but it filled in the feis details above" : ""}. Try a closer, straighter photo, or fill in the result below.</p>${said}</div>`;
             return;
           }
           el.innerHTML = `<div class="card"><h3>Found ${rows.length} result${rows.length > 1 ? "s" : ""}</h3>
-            <p class="small muted" style="margin:0">Check each one, fix anything that's wrong, and untick any that aren't ${esc(dn.name)}'s. Date and feis come from the boxes below.</p>${said}</div>
+            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(dn.name)}'s, then save.</p>${said}</div>
             ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
               <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
               <div class="two">
@@ -635,11 +643,16 @@
               ${x.marks || x.recall ? `<div class="two"><label class="field"><span>Marks</span><input data-k="marks" value="${esc(x.marks)}" maxlength="30"></label><label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label></div>` : ""}
               <p class="small muted" style="margin:4px 0 0">Read from: “${esc(x.line)}”</p>
             </div>`).join("")}
-            <button type="button" class="btn block" id="saveFound">Save the ticked results</button>
-            <p class="small muted" style="text-align:center;margin:6px 0 14px">Or add one by hand below.</p>`;
+            <button type="button" class="btn block" id="saveFound">Save ${rows.length === 1 ? "this result" : "all " + rows.length + " results"}</button>
+            <button type="button" class="btn ghost block" id="showManual" style="margin-top:6px">Add a result by hand instead</button>`;
+          document.getElementById("showManual").addEventListener("click", () => { manual.hidden = false; manual.scrollIntoView({ behavior: "smooth" }); });
+          el.querySelectorAll('[data-k="pick"]').forEach((c) => c.addEventListener("change", () => {
+            const n = el.querySelectorAll('[data-k="pick"]:checked').length;
+            document.getElementById("saveFound").textContent = n === 1 ? "Save this result" : n ? "Save " + n + " results" : "Nothing ticked";
+          }));
           document.getElementById("saveFound").addEventListener("click", async () => {
             const date = f.date.value; const feis = String(f.feis.value || "").trim();
-            if (!date) { toast("Add the date below first"); f.date.focus(); return; }
+            if (!date) { toast("Add the date first"); f.date.focus(); return; }
             const picked = [];
             for (const row of el.querySelectorAll(".found-row")) {
               const g = (k) => row.querySelector(`[data-k="${k}"]`);
