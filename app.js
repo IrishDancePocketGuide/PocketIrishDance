@@ -51,6 +51,12 @@
     };
   })();
 
+  // One photo can belong to several results (read from one screenshot). Delete it only when none use it.
+  function releasePhoto(pid, exceptId) {
+    if (!pid || S.results.some((x) => x.photoId === pid && x.id !== exceptId)) return;
+    photos.del(pid).catch(() => {});
+  }
+
   function shrinkImage(file, max = 1400) {
     return new Promise((res) => {
       const img = new Image(); const url = URL.createObjectURL(file);
@@ -538,10 +544,16 @@
       html: `<form id="resForm">
         <div class="card">
           <h3>Photo of the results (optional)</h3>
-          <p class="small muted" style="margin:0 0 8px">Take a photo of the results board or a screenshot of the results website. It stays on this phone. Reading the photo automatically is coming in a later version.</p>
+          <p class="small muted" style="margin:0 0 8px">Take a screenshot of the results website (QuickFeis, FeisWorx…) or a photo of the results sheet.${r.id ? "" : " The app can read the results from it for you."} It stays on this phone.</p>
           <label class="btn ghost block" style="cursor:pointer">📷 ${r.photoId ? "Replace photo" : "Add photo"}<input type="file" accept="image/*" name="photo" hidden></label>
           <img id="photoPrev" class="photo-preview" ${r.photoId ? `data-photo="${esc(r.photoId)}"` : "hidden"} alt="Results photo">
+          ${r.id ? "" : `<div id="readBox" hidden>
+            <button type="button" class="btn block" id="readBtn">🔎 Read the results from this photo</button>
+            <p class="small muted" style="margin:6px 0 0">The reading happens on this phone. The photo isn't sent anywhere.</p>
+          </div>
+          <div id="readProg" class="small muted" hidden></div>`}
         </div>
+        <div id="readOut"></div>
         <div class="card">
           <div class="two">
             <label class="field"><span>Date</span><input type="date" name="date" required value="${esc(r.date)}"></label>
@@ -571,11 +583,85 @@
           const lv = dancerLevel(dn, d.shoe === "champ" ? "champ" : d.id);
           if (lv) f.level.value = lv;
         });
+        let origFile = null;
         f.photo.addEventListener("change", async () => {
           const file = f.photo.files[0]; if (!file) return;
+          origFile = file;
           newPhoto = await shrinkImage(file);
           const img = document.getElementById("photoPrev"); img.hidden = false; img.src = URL.createObjectURL(newPhoto);
+          const box = document.getElementById("readBox"); if (box) box.hidden = false;
+          document.getElementById("readOut").innerHTML = "";
         });
+        const readBtn = document.getElementById("readBtn");
+        if (readBtn) readBtn.addEventListener("click", async () => {
+          if (!origFile || !window.PID_READER) return;
+          const prog = document.getElementById("readProg"); const box = document.getElementById("readBox");
+          box.hidden = true; prog.hidden = false;
+          try {
+            const text = await window.PID_READER.readText(origFile, (msg, pct) => { prog.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
+            const out = window.PID_READER.parse(text, { levels: orgLevels() });
+            prog.hidden = true;
+            if (out.date) f.date.value = out.date;
+            if (out.feis && (!f.feis.value || f.feis.value === lastFeis)) f.feis.value = out.feis;
+            showFound(out);
+          } catch (err) {
+            prog.hidden = true; box.hidden = false;
+            toast(navigator.onLine ? "Couldn't read this photo. You can fill it in below." : "The reader needs internet the first time. Fill it in below for now.");
+          }
+        });
+        function showFound(out) {
+          const el = document.getElementById("readOut");
+          const rows = out.results.map((x) => {
+            if (!x.level) x.level = dancerLevel(dn, x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance);
+            return x;
+          });
+          const said = `<details class="small" style="margin-top:8px"><summary>Show everything the app read</summary><pre class="read-text">${esc(out.text || "(no words found)")}</pre></details>`;
+          if (!rows.length) {
+            el.innerHTML = `<div class="card"><h3>No results found</h3><p class="small muted" style="margin:0">The app couldn't spot a dance name in this photo. Try a closer, straighter photo, or fill in the result below.</p>${said}</div>`;
+            return;
+          }
+          el.innerHTML = `<div class="card"><h3>Found ${rows.length} result${rows.length > 1 ? "s" : ""}</h3>
+            <p class="small muted" style="margin:0">Check each one, fix anything that's wrong, and untick any that aren't ${esc(dn.name)}'s. Date and feis come from the boxes below.</p>${said}</div>
+            ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
+              <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
+              <div class="two">
+                <label class="field"><span>Dance</span><select data-k="dance"><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${x.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
+                <label class="field"><span>Level</span><select data-k="level"><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${x.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+              </div>
+              <div class="two">
+                <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
+                <label class="field"><span>Dancers in it</span><input type="number" inputmode="numeric" min="1" max="500" data-k="entrants" value="${esc(x.entrants)}" placeholder="optional"></label>
+              </div>
+              ${x.marks || x.recall ? `<div class="two"><label class="field"><span>Marks</span><input data-k="marks" value="${esc(x.marks)}" maxlength="30"></label><label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label></div>` : ""}
+              <p class="small muted" style="margin:4px 0 0">Read from: “${esc(x.line)}”</p>
+            </div>`).join("")}
+            <button type="button" class="btn block" id="saveFound">Save the ticked results</button>
+            <p class="small muted" style="text-align:center;margin:6px 0 14px">Or add one by hand below.</p>`;
+          document.getElementById("saveFound").addEventListener("click", async () => {
+            const date = f.date.value; const feis = String(f.feis.value || "").trim();
+            if (!date) { toast("Add the date below first"); f.date.focus(); return; }
+            const picked = [];
+            for (const row of el.querySelectorAll(".found-row")) {
+              const g = (k) => row.querySelector(`[data-k="${k}"]`);
+              if (!g("pick").checked) continue;
+              if (!g("dance").value || !g("level").value) { toast("Choose the dance and level for each ticked result"); (g("dance").value ? g("level") : g("dance")).focus(); return; }
+              picked.push({
+                id: uid(), dancerId, date, feis, dance: g("dance").value, level: g("level").value,
+                place: g("place").value ? Number(g("place").value) : "", entrants: g("entrants").value ? Number(g("entrants").value) : "",
+                marks: g("marks") ? String(g("marks").value).trim() : "", recall: g("recall") ? g("recall").checked : false, notes: "", photoId: ""
+              });
+            }
+            if (!picked.length) { toast("Tick at least one result"); return; }
+            if (newPhoto) {
+              const pid = "ph_" + picked[0].id + "_" + Date.now().toString(36);
+              try { await photos.put(pid, newPhoto); picked.forEach((p) => { p.photoId = pid; }); }
+              catch (err) { toast("Photo couldn't be saved, but the results were"); }
+            }
+            S.results.push(...picked);
+            save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + dancerId;
+          });
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
         f.addEventListener("submit", async (e) => {
           e.preventDefault();
           const fd = new FormData(f);
@@ -587,7 +673,7 @@
           };
           if (newPhoto) {
             const pid = "ph_" + rec.id + "_" + Date.now().toString(36);
-            try { await photos.put(pid, newPhoto); if (rec.photoId) photos.del(rec.photoId).catch(() => {}); rec.photoId = pid; }
+            try { await photos.put(pid, newPhoto); releasePhoto(rec.photoId, rec.id); rec.photoId = pid; }
             catch (err) { toast("Photo couldn't be saved, but the result was"); }
           }
           const i = S.results.findIndex((x) => x.id === rec.id);
@@ -734,16 +820,17 @@
     if (t.dataset.delResult) {
       if (!confirm("Delete this result?")) return;
       const r = S.results.find((x) => x.id === t.dataset.delResult);
-      if (r && r.photoId) photos.del(r.photoId).catch(() => {});
       S.results = S.results.filter((x) => x.id !== t.dataset.delResult); save(); toast("Deleted");
+      if (r) releasePhoto(r.photoId);
       location.hash = "#/dancer/" + (r ? r.dancerId : "");
       return;
     }
     if (t.dataset.delDancer) {
       const id = t.dataset.delDancer; const dn = S.dancers.find((d) => d.id === id);
       if (!confirm(`Delete ${dn ? dn.name : "this dancer"} and all their results?`)) return;
-      S.results.filter((x) => x.dancerId === id && x.photoId).forEach((x) => photos.del(x.photoId).catch(() => {}));
+      const gone = S.results.filter((x) => x.dancerId === id && x.photoId).map((x) => x.photoId);
       S.results = S.results.filter((x) => x.dancerId !== id); S.dancers = S.dancers.filter((d) => d.id !== id);
+      gone.forEach((pid) => releasePhoto(pid));
       save(); toast("Deleted"); location.hash = "#/scores";
     }
   });
