@@ -286,7 +286,10 @@
   screens.words = function () {
     const group = screens.words.group || "all";
     const allOrgs = screens.words.allOrgs;
-    const list = D.glossary.filter((t) => allOrgs || inOrg(t)).filter((t) => group === "all" || t.g === group).slice().sort((a, b) => a.term.localeCompare(b.term));
+    const wq = screens.words.q || ""; const nq = norm(wq).trim();
+    const list = D.glossary.filter((t) => allOrgs || inOrg(t)).filter((t) => group === "all" || t.g === group)
+      .filter((t) => !nq || norm(t.term + " " + (t.alt || "") + " " + t.means + " " + (t.say || "") + " " + (t.why || "")).includes(nq))
+      .slice().sort((a, b) => a.term.localeCompare(b.term));
     let lastLetter = "";
     const body = list.map((t) => {
       const L = t.term[0].toUpperCase(); let h = "";
@@ -295,13 +298,14 @@
     }).join("");
     return {
       title: "Words", tab: "words",
-      html: `${searchBox("", "Search the words")}
+      html: `${searchBox(wq, "Search the words")}
       <div class="pill-tabs" style="margin-top:12px">
         <button data-group="all" class="${group === "all" ? "on" : ""}">All</button>
         ${D.glossaryGroups.map((g) => `<button data-group="${g.id}" class="${group === g.id ? "on" : ""}">${esc(g.name)}</button>`).join("")}
       </div>
       ${curOrg() ? `<label class="toggle small" style="margin:10px 4px 0"><input type="checkbox" data-words-all ${allOrgs ? "checked" : ""}> Include words used by other organizations</label>` : ""}
       <p class="small muted" style="margin:8px 4px 0">Tap the gold button to hear a word. It uses your phone's voice for now; real recordings are coming.</p>
+      ${nq && !list.length ? `<div class="empty"><div class="big">🔎</div><p>No words match “${esc(wq)}”${group !== "all" ? " in this group" : ""}.</p><a class="btn ghost" href="#/search?q=${encodeURIComponent(wq)}">Search the whole app</a></div>` : ""}
       ${body}`
     };
   };
@@ -953,6 +957,7 @@
   app.addEventListener("submit", (e) => {
     const f = e.target.closest("[data-search]"); if (!f) return;
     e.preventDefault(); const q = f.q.value.trim();
+    if (location.hash.startsWith("#/words")) { f.q.blur(); return; } // Words page filters as you type
     location.hash = "#/search?q=" + encodeURIComponent(q);
   });
   // Live search as you type on the search page and the Words page
@@ -961,7 +966,11 @@
     const q = e.target.value;
     clearTimeout(app._st);
     app._st = setTimeout(() => {
-      if (location.hash.startsWith("#/search")) {
+      if (location.hash.startsWith("#/words")) {
+        screens.words.q = q;
+        const pos = e.target.selectionStart; rerender();
+        const inp = app.querySelector("[data-search] input"); inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (_) {}
+      } else if (location.hash.startsWith("#/search")) {
         history.replaceState(null, "", "#/search?q=" + encodeURIComponent(q));
         const pos = e.target.selectionStart; rerender();
         const inp = app.querySelector("[data-search] input"); inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (_) {}
