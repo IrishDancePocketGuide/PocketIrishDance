@@ -31,6 +31,8 @@
     const C = window.PID_CONFIG || {};
     const ready = !!(C.supabaseUrl && C.supabaseKey && window.supabase);
     let sb = null;
+    // Arriving from the sign-in link in the email (Supabase puts the session in the address).
+    let fromLink = /access_token=|error_description=/.test(location.hash);
     if (ready) {
       const opts = {};
       if (C.testAccessToken) opts.accessToken = async () => C.testAccessToken; // automated tests only
@@ -108,6 +110,11 @@
       });
       sb.auth.onAuthStateChange((ev, session) => {
         const was = myId(); F.user = session ? session.user : null;
+        if (fromLink && F.user) {
+          fromLink = false; F.step = "email";
+          history.replaceState(null, "", location.pathname + "#/friends");
+          setTimeout(() => refresh(true).then(() => { if (F.profile) afterSetup(); }), 0);
+        }
         if (myId() !== was) { F.profile = undefined; F.groups = []; F.members = []; F.wins = []; F.loadedAt = 0; if (F.user) refresh(true); else { badge(); if (onFriendsPage()) rerender(); } }
       });
     } else if (sb) {
@@ -177,7 +184,7 @@
         ${codeStep ? `
         <form class="card" data-fform="code">
           <h3>Check your email</h3>
-          <p class="small muted" style="margin-top:0">We sent a code to <strong>${esc(F.email)}</strong>. Type it here.</p>
+          <p class="small muted" style="margin-top:0">We sent an email to <strong>${esc(F.email)}</strong>. Tap the sign-in link in it on this phone, or type the code if the email has one.</p>
           <label class="field"><span>Code</span><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required></label>
           <button class="btn block">Sign in</button>
           <button type="button" class="btn plain block" data-f="restart">Use a different email</button>
@@ -392,7 +399,7 @@
       try {
         if (kind === "email") {
           F.email = f.email.value.trim();
-          const { error } = await sb.auth.signInWithOtp({ email: F.email, options: { shouldCreateUser: true } });
+          const { error } = await sb.auth.signInWithOtp({ email: F.email, options: { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname } });
           if (error) throw error;
           F.step = "code"; rerender();
         } else if (kind === "code") {
