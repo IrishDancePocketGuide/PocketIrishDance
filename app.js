@@ -185,6 +185,10 @@
         <p class="small muted" style="margin:0 0 8px">${esc(o.name)} has its own list of registered schools and teachers. This is the most reliable place to look.</p>
         <a class="btn block" href="${esc(o.locator)}" target="_blank" rel="noopener">Open ${esc(o.name)}'s school locator ↗</a></div>
         <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
+      ${o.id === "any" || o.id === "clrg" ? `<div class="card" style="margin-top:10px"><h3>Planxti school list</h3>
+        <p class="small muted" style="margin:0 0 8px">A growing list of Irish dance schools, mostly in the US and Canada, which you can filter by region. It doesn't show which organization each school belongs to, so ask the school.</p>
+        <a class="btn ghost block" href="https://planxti.com/schools" target="_blank" rel="noopener">Open the Planxti school list ↗</a></div>
+        <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
       <form id="schoolForm" class="card" style="margin-top:10px">
         <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
         <button class="btn block">Search the map</button>
