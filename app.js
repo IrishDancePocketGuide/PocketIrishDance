@@ -73,6 +73,7 @@
   const orgName = (id) => (D.organizations.find((o) => o.id === id) || {}).name || "";
   let viewOrg = "";
   const curOrg = () => viewOrg || S.profile.org || "";
+  const orgLevels = () => D.levels.filter((l) => l.org === (curOrg() || "clrg"));
   const inOrg = (item) => { const o = curOrg(); if (!o) return true; const tags = item.orgs || (item.org && item.org.length < 12 && D.organizations.some((x) => x.id === item.org) ? [item.org] : null) || (item.orgId ? [item.orgId] : null); return !tags || tags.includes(o); };
 
   // ---------- pronunciation ----------
@@ -102,12 +103,16 @@
 
   function ruleCard(r) {
     const lv = r.levels.length ? r.levels.map((id) => `<span class="chip">${esc(levelById(id).name)}</span>`).join("") : '<span class="chip">All levels</span>';
-    const rg = r.regions.length ? `<span class="chip grey">${esc(r.regions.length === 3 && r.regions.includes("Mexico") ? "North America" : r.regions.join(", "))}</span>` : '<span class="chip grey">Everywhere</span>';
+    const rg = r.regions.length ? `<span class="chip grey">${esc(r.regions.length === 3 && r.regions.includes("Mexico") ? "North America" : r.regions.join(", "))}</span>` : "";
+    const org = D.organizations.find((o) => o.id === r.orgId) || {};
+    const src = org.rulesLink
+      ? `Source: <a href="${esc(org.rulesLink)}" target="_blank" rel="noopener">${esc(org.name)} competition rules${r.sec ? ", section " + esc(r.sec) : ""} ↗</a>. This is a plain-language summary; the official wording always wins.`
+      : `Source: ${esc(r.org)} rules · official wording and link coming once rulebooks are added`;
     return `<article class="card">
-      <div class="chips">${lv}${rg}<span class="chip gold">Draft</span></div>
+      <div class="chips">${lv}${rg}${org.rulesLink ? "" : '<span class="chip gold">Draft</span>'}</div>
       <h3 style="margin-top:8px">${esc(r.q)}</h3>
       <p style="margin:6px 0">${esc(r.a)}</p>
-      <p class="small muted" style="margin:0">Source: ${esc(r.org)} rules · official wording and link coming once rulebooks are added</p>
+      <p class="small muted" style="margin:0">${src}</p>
     </article>`;
   }
 
@@ -269,7 +274,7 @@
   screens.levels = function () {
     const mine = S.profile.level;
     const o = curOrg();
-    if (o && o !== "clrg") {
+    if (o && !orgLevels().length) {
       const org = D.organizations.find((x) => x.id === o);
       return {
         title: "Levels", tab: "levels",
@@ -280,7 +285,14 @@
     }
     return {
       title: "Levels", tab: "levels",
-      html: `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
+      html: o && o !== "clrg" ? `<h2>The ${esc(orgName(o))} level ladder</h2>
+      <p class="muted" style="margin-top:0">From the official ${esc(orgName(o))} rules. In the grades, a dancer moves up <strong>one dance at a time</strong>, so they can be at different grades in different dances.</p>
+      ${o === "wida" ? `<article class="card"><h3>Grades, premierships and championships</h3>
+        <p style="margin:6px 0 0">The <strong>grades</strong> are Beginner, Primary, Intermediate and Open. Each dance is its own competition.</p>
+        <p style="margin:8px 0 0">A <strong>premiership</strong> is two dances with the scores added together, at your dancer's grade. Then come <strong>championships</strong>: Preliminary, then Open.</p>
+        <p class="small muted" style="margin:8px 0 0">Once a dancer moves up, they can't move back down.</p></article>` : ""}
+      <div class="ladder">${ladder()}</div>
+      ${(D.organizations.find((x) => x.id === o) || {}).rulesLink ? `<p class="small muted"><a href="${esc(D.organizations.find((x) => x.id === o).rulesLink)}" target="_blank" rel="noopener">Official ${esc(orgName(o))} rules ↗</a></p>` : ""}` : `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
       <p class="muted" style="margin-top:0">CLRG in North America (North American Feis Commission level names). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
       <article class="card">
         <h3>What are “grades”?</h3>
@@ -290,7 +302,11 @@
       </article>
       <div class="note">Great Britain, Ireland and Australia use different names for the lower levels. Their ladders are coming next.</div>
       <div class="ladder">
-        ${D.levels.map((l) => `<article class="card rung ${l.id === mine ? "me" : ""}" data-n="${l.order}">
+        ${ladder()}
+      </div>`
+    };
+    function ladder() {
+      return orgLevels().map((l) => `<article class="card rung ${l.id === mine ? "me" : ""}" data-n="${l.order}">
           <div class="row between wrap"><h3>${esc(l.name)}</h3>${l.id === mine ? '<span class="chip">Your dancer</span>' : ""}</div>
           ${l.alt ? `<p class="small muted" style="margin:0">${esc(l.alt)}</p>` : ""}
           <dl class="facts">
@@ -298,9 +314,8 @@
             <dt>Moving up</dt><dd>${esc(l.moveUp)}${draftTag(l)}</dd>
             <dt>Expect</dt><dd>${esc(l.parents)}</dd>
           </dl>
-        </article>`).join("")}
-      </div>`
-    };
+        </article>`).join("");
+    }
   };
 
   screens.orgs = function () {
@@ -328,6 +343,7 @@
 
   screens.rules = function () {
     const f = screens.rules.f || { level: S.profile.level || "", region: S.profile.region || "" };
+    if (f.level && !orgLevels().some((l) => l.id === f.level)) f.level = "";
     screens.rules.f = f;
     const naRegions = ["United States", "Canada", "Mexico"];
     const list = D.rules.filter(inOrg).filter((r) =>
@@ -337,14 +353,19 @@
       title: "Rules", tab: "rules",
       html: `<h2>Rules library</h2>
       <p class="muted" style="margin-top:0">The rules that matter to parents, in plain language, with a link to the official rulebook.</p>
-      <div class="note"><strong>Coming soon:</strong> these are draft examples showing how the library will work. ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "The full CLRG and North American Feis Commission rules will be added from the current rulebooks."}</div>
-      ${curOrg() && curOrg() !== "clrg" ? "" : `<div class="two">
-        <label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${D.levels.map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+      ${(D.organizations.find((x) => x.id === curOrg()) || {}).rulesLink ? "" : `<div class="note"><strong>Coming soon:</strong> ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "these are draft examples showing how the library will work. The full CLRG and North American Feis Commission rules will be added from the current rulebooks."}</div>`}
+      ${curOrg() && curOrg() !== "clrg" ? (orgLevels().length ? `<label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>` : "") : `<div class="two">
+        <label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Region</span><select data-rf="region"><option value="">Everywhere</option>${D.regions.map((r) => `<option ${f.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
       </div>`}
-      ${list.length ? list.map(ruleCard).join("") : `<div class="empty"><div class="big">📘</div>No ${curOrg() ? esc(orgName(curOrg())) + " " : ""}rules for this level and region yet.${naRegions.includes(f.region) || !f.region ? "" : "<br>Your region's rules are coming in a later update."}</div>`}`
+      ${list.length ? groupRules(list) : `<div class="empty"><div class="big">📘</div>No ${curOrg() ? esc(orgName(curOrg())) + " " : ""}rules for this level and region yet.${naRegions.includes(f.region) || !f.region ? "" : "<br>Your region's rules are coming in a later update."}</div>`}`
     };
   };
+
+  function groupRules(list) {
+    const topics = [...new Set(list.map((r) => r.topic))];
+    return topics.map((t) => `<div class="az">${esc(t.toUpperCase())}</div>` + list.filter((r) => r.topic === t).map(ruleCard).join("")).join("");
+  }
 
   screens.guide = function () {
     return {
@@ -376,7 +397,7 @@
 
   // ----- score tracker -----
   function dancerLevel(dn, danceId) { return (dn.levels && dn.levels[danceId]) || ""; }
-  function nextLevel(id) { const l = levelById(id); return l && D.levels.find((x) => x.order === l.order + 1); }
+  function nextLevel(id) { const l = levelById(id); return l && D.levels.find((x) => x.org === l.org && x.order === l.order + 1); }
 
   function moveUpSuggestions(dn) {
     const out = []; const seen = {};
@@ -385,6 +406,7 @@
       const l = levelById(r.level); const dance = danceById(r.dance);
       if (!l || !l.perDance || !dance || dance.shoe === "champ" || S.dismissed[r.id]) return;
       if (dancerLevel(dn, r.dance) !== r.level) return;
+      if (l.minEntrants && r.entrants && Number(r.entrants) < l.minEntrants) return;
       if (Number(r.place) >= 1 && Number(r.place) <= l.moveUpPlace) {
         const nx = nextLevel(r.level);
         if (nx) { out.push({ r, dance, from: l, to: nx }); seen[r.dance] = true; }
@@ -416,7 +438,7 @@
 
   screens.dancerForm = function (id) {
     const dn = S.dancers.find((d) => d.id === id) || { id: "", name: "", levels: {} };
-    const startLevel = S.profile.level || "b1";
+    const startLevel = S.profile.level || (orgLevels()[0] || {}).id || "b1";
     return {
       title: dn.id ? "Edit dancer" : "Add a dancer", tab: "scores", back: true,
       html: `<form id="dancerForm" class="card">
@@ -424,9 +446,9 @@
         <h3 style="margin-top:16px">Current level in each dance</h3>
         <p class="small muted" style="margin-top:0">Leave as “Not dancing yet” for dances they don't compete in.</p>
         ${D.dances.filter((d) => d.shoe !== "champ").map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span>
-          <select name="lv_${d.id}"><option value="">Not dancing yet</option>${D.levels.filter((l) => l.perDance).map((l) => `<option value="${l.id}" ${(dn.id ? dancerLevel(dn, d.id) : (d.shoe === "soft" && ["reel", "lightjig"].includes(d.id) ? startLevel : "")) === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>`).join("")}
+          <select name="lv_${d.id}"><option value="">Not dancing yet</option>${orgLevels().filter((l) => l.perDance).map((l) => `<option value="${l.id}" ${(dn.id ? dancerLevel(dn, d.id) : (d.shoe === "soft" && ["reel", "lightjig"].includes(d.id) ? startLevel : "")) === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>`).join("")}
         <div class="dance-row"><span class="name">Championship</span>
-          <select name="lv_champ"><option value="">Not yet</option>${D.levels.filter((l) => !l.perDance).map((l) => `<option value="${l.id}" ${dancerLevel(dn, "champ") === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>
+          <select name="lv_champ"><option value="">Not yet</option>${orgLevels().filter((l) => !l.perDance).map((l) => `<option value="${l.id}" ${dancerLevel(dn, "champ") === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>
         <button class="btn block" style="margin-top:14px">${dn.id ? "Save" : "Add dancer"}</button>
         ${dn.id ? `<button type="button" class="btn danger block" data-del-dancer="${dn.id}" style="margin-top:6px">Delete this dancer and their results</button>` : ""}
       </form>`,
@@ -526,7 +548,7 @@
           </div>
           <div class="two">
             <label class="field"><span>Dance</span><select name="dance" required><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${r.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
-            <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${D.levels.map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+            <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
           </div>
           <div class="two">
             <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" name="place" value="${esc(r.place)}" placeholder="e.g. 2"></label>
@@ -604,7 +626,7 @@
       <form id="profForm" class="card">
         <label class="field"><span>Organization</span><select name="org"><option value="">Not sure yet</option>${ORGS.map((o) => `<option value="${o.id}" ${p.org === o.id ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Country or region</span><select name="region"><option value="">Choose…</option>${D.regions.map((r) => `<option ${p.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
-        <label class="field"><span>Main level right now</span><select name="level"><option value="">Not sure yet</option>${D.levels.map((l) => `<option value="${l.id}" ${p.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+        <label class="field"><span>Main level right now</span><select name="level"><option value="">Not sure yet</option>${orgLevels().map((l) => `<option value="${l.id}" ${p.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <button class="btn block">Save</button>
       </form>
 

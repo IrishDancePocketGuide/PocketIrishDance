@@ -56,8 +56,11 @@ window.PID_DATA = {
       fullName: "World Irish Dance Association",
       active: true, pick: true,
       where: "Mainly mainland Europe, with members in other countries.",
-      summary: "An independent organization known for competitions open to dancers from different schools and organizations. Its words, levels and rules are being added to the app.",
-      check: true
+      summary: "An independent organization whose feiseanna are open to dancers from any organization, and to independent dancers with no school. All WIDA feiseanna are run the same way.",
+      teachers: "TCRG and TMRF teacher exams",
+      majors: "National Oireachtasaí, the International and World Championships",
+      link: "https://www.irish.dance",
+      rulesLink: "https://www.irish.dance/competition-rules"
     }
   ],
 
@@ -121,6 +124,50 @@ window.PID_DATA = {
       moveUp: "The top level",
       perDance: false,
       parents: "The highest costs and the most travel"
+    },
+    // WIDA, from the official competition rules (irish.dance/competition-rules), read Nov 23 2026.
+    {
+      org: "wida", id: "w_b", order: 1, name: "Beginner",
+      alt: "the very youngest can start with the Jump 2-3 competition",
+      danced: "Solo dances at beginner speed, plus the Beginner Premiership (reel and light jig)",
+      moveUp: "Win 1st place in a dance with 5 or more dancers, then move up in that dance",
+      moveUpPlace: 1, minEntrants: 5, perDance: true,
+      parents: "Every beginner reel dancer is placed and gets a medal"
+    },
+    {
+      org: "wida", id: "w_p", order: 2, name: "Primary",
+      danced: "Solo dances, plus the Primary Premiership (reel and light jig)",
+      moveUp: "Win 1st place in a dance with 5 or more dancers",
+      moveUpPlace: 1, minEntrants: 5, perDance: true,
+      parents: "Treble jig and hornpipe can be danced at beginner or open speed until the end of 2026; open speed only from 2027"
+    },
+    {
+      org: "wida", id: "w_i", order: 3, name: "Intermediate",
+      danced: "Solo dances, plus the Intermediate Premiership (reel and treble jig; under-12s may dance light jig instead until the end of 2026)",
+      moveUp: "Win 1st place in a dance with 5 or more dancers. After winning 4 Intermediate dances (2 of them hard shoe), move on to Preliminary Championship",
+      moveUpPlace: 1, minEntrants: 5, perDance: true,
+      parents: "The step before championships"
+    },
+    {
+      org: "wida", id: "w_o", order: 4, name: "Open",
+      danced: "The top grade for solo dances",
+      moveUp: "The top solo grade",
+      perDance: true,
+      parents: "A dancer can be Open in some dances and lower in others"
+    },
+    {
+      org: "wida", id: "w_pc", order: 5, name: "Preliminary Championship",
+      danced: "Two rounds: reel or slip jig, then treble jig or hornpipe. Only at local feiseanna.",
+      moveUp: "Win 3 Preliminary Championships with at least 5 dancers (at least 3 in America and Australasia)",
+      perDance: false,
+      parents: "Every competitor is placed, and 1st to 5th get a trophy"
+    },
+    {
+      org: "wida", id: "w_oc", order: 6, name: "Open Championship",
+      danced: "Two rounds, and a recall to dance a Modern Set if the judges choose. The path to Oireachtas, Internationals and Worlds.",
+      moveUp: "The top level. Winning one moves all of a dancer's solo dances up to Open",
+      perDance: false,
+      parents: "Qualifying for Worlds starts at your National Oireachtas the year before"
     }
   ],
 
@@ -181,6 +228,11 @@ window.PID_DATA = {
     { g: "people", orgs: ["clrg"], term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
     { g: "people", orgs: ["clrg"], term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },
     { g: "people", orgs: ["clrg"], term: "Grade exam", alt: "Grád", say: "grawd", means: "Optional CLRG exams in dance skills and knowledge", why: "Some schools encourage them; separate from competitions" },
+    { g: "events", orgs: ["wida"], term: "Premiership", means: "A WIDA competition where a dancer does two dances and the scores are added together (for example reel and light jig)", why: "Your dancer can enter one premiership per feis, at the grade they're in for most of their dances" },
+    { g: "events", orgs: ["wida"], term: "Jump 2-3", means: "A first competition for the youngest WIDA dancers: 16 jump 2-3s or promenade steps", why: "From 2027 it's for under-7s only" },
+    { g: "events", orgs: ["wida"], term: "Yafers", means: "The online system used to enter every WIDA feis", why: "Entries are non-refundable once paid" },
+    { g: "dance", orgs: ["wida"], term: "Modern set", means: "A set dance to modern music, used as a third round in WIDA Open Championships", why: "Only recalled dancers dance it" },
+    { g: "people", orgs: ["wida"], term: "TMRF", means: "A WIDA teacher qualification", why: "Teachers with only TMRF can still compete themselves" },
     { g: "people", term: "Feis committee", means: "The volunteers running a particular feis", why: "Contact them about entries, schedules and results" }
   ],
 
@@ -221,7 +273,71 @@ window.PID_DATA = {
       q: "Who is allowed to enter my dancer in a CLRG feis?",
       a: "A CLRG-registered teacher (TCRG). Registration normally goes through your school, so ask your teacher before you sign up for a feis.",
       orgId: "clrg", levels: [], regions: [], org: "CLRG", topic: "Entering competitions"
-    }
+    },
+    // ----- WIDA: plain-language summaries of irish.dance/competition-rules (read Nov 23 2026) -----
+    { orgId: "wida", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "WIDA",
+      q: "Who can dance at a WIDA feis?",
+      a: "Anyone. WIDA feiseanna are open to dancers from every organization, and to independent dancers who aren't with a school." },
+    { orgId: "wida", topic: "Entering competitions", sec: "1.6–1.7", levels: [], regions: [], org: "WIDA",
+      q: "How do I enter, and can I get a refund?",
+      a: "All entries go through the Yafers website. Once paid, entries can't be refunded, even for illness or injury. You only get money back if the feis itself is cancelled." },
+    { orgId: "wida", topic: "Entering competitions", sec: "1.8", levels: [], regions: [], org: "WIDA",
+      q: "Which age group does my dancer dance in?",
+      a: "Their age on 1 January decides it for the whole year. A dancer who was 9 on 1 January dances Under 10 all year. Yafers works it out for you, and small age groups can be merged on the day." },
+    { orgId: "wida", topic: "At the feis", sec: "2.3", levels: [], regions: [], org: "WIDA",
+      q: "Can I film or photograph my dancer?",
+      a: "Not while anyone is dancing. Photos and video are only allowed during award ceremonies, introductions and breaks. This protects children, and anyone filming will be asked to delete it and leave." },
+    { orgId: "wida", topic: "At the feis", sec: "2.5–2.6", levels: [], regions: [], org: "WIDA",
+      q: "Can I help or coach my dancer from the side of the stage?",
+      a: "No. Parents and teachers can't give directions while a dancer is competing, and only the dancers in that competition can wait at the side of the stage." },
+    { orgId: "wida", topic: "At the feis", sec: "2.1–2.2", levels: [], regions: [], org: "WIDA",
+      q: "Can I use hairspray in the hall?",
+      a: "No, because of allergies. Do hair before you go into the dancing hall. Smoking, vaping and alcohol aren't allowed in the hall either." },
+    { orgId: "wida", topic: "At the feis", sec: "3.3–3.4", levels: [], regions: [], org: "WIDA",
+      q: "What should my dancer know about lining up and awards?",
+      a: "Dancers go on stage in number order, and a dancer who arrives late may not be allowed to dance. To collect an award they must be in full costume, shoes included." },
+    { orgId: "wida", topic: "At the feis", sec: "3.5–3.9, 16, 18.1", levels: [], regions: [], org: "WIDA",
+      q: "What gets a dancer only 1 point for a round?",
+      a: "Starting early, stopping and not carrying on, bumping into someone on purpose, dancing a step on one foot but not the other, or a costume problem such as a wig or shoe falling off or a lace coming undone. Beginners get some leeway on starting and stopping." },
+    { orgId: "wida", topic: "At the feis", sec: "3.2", levels: [], regions: [], org: "WIDA",
+      q: "Who gets a medal or trophy?",
+      a: "Everyone in Jump 2-3 and the beginner reel is placed and gets a medal. Other solos award 1st to 3rd, and up to half the dancers when there are 10 or more. In premierships and championships everyone is placed, and 1st to 5th get trophies." },
+    { orgId: "wida", topic: "Moving up", sec: "5.3–5.6", levels: ["w_b", "w_p", "w_i"], regions: [], org: "WIDA",
+      q: "When does my dancer move up a grade?",
+      a: "When they win 1st place in a dance with 5 or more dancers, they must move up in that dance. With fewer than 5 dancers, the teacher can choose to move them up. It's one dance at a time." },
+    { orgId: "wida", topic: "Moving up", sec: "5.8", levels: ["w_b", "w_p", "w_i", "w_o"], regions: [], org: "WIDA",
+      q: "Can my dancer move back down a grade?",
+      a: "No. Once they move up, they stay up, and they must dance the new grade from their very next feis. If they're already entered at the lower grade, the teacher must tell that feis within 2 days. The only exception is a break of ten years or more." },
+    { orgId: "wida", topic: "Moving up", sec: "5.2", levels: ["w_b", "w_p", "w_i"], regions: [], org: "WIDA",
+      q: "Can my dancer enter two grades at one feis?",
+      a: "Yes, they can also enter one grade up in the same dance and age group. For example, Beginner and Primary reel at the same feis." },
+    { orgId: "wida", topic: "Moving up", sec: "5.7, 3.1", levels: ["w_b"], regions: [], org: "WIDA",
+      q: "What about very young dancers?",
+      a: "Under-5 competitions have no grades, so nobody moves up from them. The Jump 2-3 competition is for the youngest dancers (up to Under 11 now, Under 7 only from 2027). Jump 2-3 dancers may also dance the Beginner reel, but nothing else." },
+    { orgId: "wida", topic: "Premierships and championships", sec: "10–11", levels: ["w_b", "w_p", "w_i"], regions: [], org: "WIDA",
+      q: "What is a premiership, and which one does my dancer enter?",
+      a: "Two dances with the scores added together: reel and light jig at Beginner and Primary, reel and treble jig at Intermediate. Your dancer enters the premiership for the grade they're in for at least 2 of reel, light jig and treble jig, and only one per feis. They must also dance at least 2 solos that day. Winning one (with 5 or more dancers) moves both dances up." },
+    { orgId: "wida", topic: "Premierships and championships", sec: "11.8", levels: ["w_i", "w_pc"], regions: [], org: "WIDA",
+      q: "When does my dancer start Preliminary Championship?",
+      a: "After winning 4 dances at Intermediate, at least 2 of them hard shoe dances (light jig and single jig count too). Until then they stay in the Intermediate Premiership." },
+    { orgId: "wida", topic: "Premierships and championships", sec: "12.2, 13.5", levels: ["w_pc", "w_oc"], regions: [], org: "WIDA",
+      q: "When does my dancer move to Open Championship?",
+      a: "After winning 3 Preliminary Championships with at least 5 dancers (at least 3 in America and Australasia). Winning an Open Championship moves all their solo dances up to Open too, apart from hard shoe for young dancers who only danced soft shoe." },
+    { orgId: "wida", topic: "Premierships and championships", sec: "14–15", levels: ["w_oc"], regions: [], org: "WIDA",
+      q: "How does my dancer qualify for the World Championships?",
+      a: "The year before, they dance an Open solo championship or a premiership plus 2 solos at their own National Oireachtas. To dance an Open championship at an Oireachtas, they also need to have danced at a normal local feis in the 12 months before. Injured dancers can ask for an exemption once every 3 years." },
+    { orgId: "wida", topic: "Shoes and costume", sec: "18.2, 18.4", levels: [], regions: [], org: "WIDA",
+      q: "What shoes are allowed?",
+      a: "Soft shoes must be all black with black laces and no sparkle. Hard shoes must be all black with black laces (a white strap is fine), with no buckles or sparkle. A dancer who breaks the costume or shoe rules can't place in the top 3." },
+    { orgId: "wida", topic: "Shoes and costume", sec: "18.3, 18.5", levels: [], regions: [], org: "WIDA",
+      q: "What are the rules for dresses?",
+      a: "No school names or personal names on any costume. Class dresses should be simpler than solo dresses, and Celtic designs are strongly recommended. Jewellery worn for religious reasons must be taped down." },
+    { orgId: "wida", topic: "Shoes and costume", sec: "2.7", levels: [], regions: [], org: "WIDA",
+      q: "What should my dancer wear between rounds?",
+      a: "Change in the changing rooms. If a dress is unzipped between rounds, wear a crop top or bodysuit underneath, keep arms in the sleeves and the front covered." },
+    { orgId: "wida", topic: "Changing schools", sec: "19", levels: [], regions: [], org: "WIDA",
+      q: "What happens if we change schools?",
+      a: "Your dancer can keep competing straight away, with no ban. The new teacher tells the old teacher in writing. Your dancer can't use the old school's steps (except traditional sets), so they compete once they've learned the new school's steps." }
   ],
 
   checklists: [
