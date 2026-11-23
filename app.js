@@ -184,6 +184,12 @@
       title: "Levels", tab: "levels",
       html: `<h2>The level ladder</h2>
       <p class="muted" style="margin-top:0">CLRG in North America (North American Feis Commission level names). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
+      <article class="card">
+        <h3>What are “grades”?</h3>
+        <p style="margin:6px 0 0">“Grades” (or <strong>grade competitions</strong>) is the name for all the levels below championship: Beginner 1, Beginner 2, Novice and Open Prizewinner. In grades, each dance is a separate competition with one judge, and your dancer moves up one dance at a time.</p>
+        <p style="margin:8px 0 0">Once a dancer has moved up through the grades, they go into <strong>championships</strong> (Preliminary, then Open). There, they dance several rounds in one competition, judged by a panel, and get one overall result.</p>
+        <p class="small muted" style="margin:8px 0 0">Don't confuse grades with <strong>grade exams</strong> (Grád, said “grawd”). Those are optional CLRG skills exams, separate from competitions.</p>
+      </article>
       <div class="note">Great Britain, Ireland and Australia use different names for the lower levels. Their ladders are coming next.</div>
       <div class="ladder">
         ${D.levels.map((l) => `<article class="card rung ${l.id === mine ? "me" : ""}" data-n="${l.order}">
