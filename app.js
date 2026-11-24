@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "35"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "36"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -246,7 +246,7 @@
         <button class="btn sm" id="installBtn" hidden>Install the app</button>
       </div>`}
 
-      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}, update ${APP_VERSION}). Content is being checked and may change.</p>`
+      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}, update ${APP_VERSION}). Content is being checked and may change. <a href="${feedbackLink(FEEDBACK[0])}">Report a problem</a></p>`
     };
   };
 
@@ -1091,6 +1091,22 @@
     };
   };
 
+  // ----- help and feedback: emails to the app's inbox, nothing sent from the app itself -----
+  const CONTACT_EMAIL = "pocketirishdance@gmail.com";
+  const FEEDBACK = [
+    { id: "problem", ico: "🐞", label: "Report a problem", subject: "Problem report", ask: "What happened? What did you expect to happen?\n(A screenshot helps a lot.)" },
+    { id: "idea", ico: "💡", label: "Suggest an idea", subject: "Idea", ask: "What would make the app more useful for you?" },
+    { id: "missing", ico: "📅", label: "Tell us about a missing feis or school", subject: "Missing feis or school", ask: "Name, place, date (for a feis) and a website if you have one:" },
+    { id: "contact", ico: "✉️", label: "Contact us", subject: "Hello", ask: "" }
+  ];
+  function feedbackLink(x) {
+    const ua = navigator.userAgent || "";
+    const device = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Other";
+    const installed = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone ? "home screen app" : "browser";
+    const body = (x.ask ? x.ask + "\n\n\n\n" : "\n\n") + `----\nPocket Irish Dance update ${APP_VERSION} · ${device} · ${installed}`;
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Pocket Irish Dance: " + x.subject)}&body=${encodeURIComponent(body)}`;
+  }
+
   screens.settings = function () {
     const p = S.profile;
     return {
@@ -1112,9 +1128,15 @@
         <p class="small muted" style="margin:0">Backups include results and checklist ticks, not photos.</p>
       </div>
 
+      <h2 id="help" style="margin-top:22px">Help and feedback</h2>
+      <p class="muted" style="margin-top:0">Each button opens an email to us from your own email app, with your app details filled in so we can help faster.</p>
+      <div class="card stack">
+        ${FEEDBACK.map((x) => `<a class="btn ghost block" href="${feedbackLink(x)}">${x.ico} ${esc(x.label)}</a>`).join("")}
+      </div>
+
       <h2 style="margin-top:22px">About</h2>
       <div class="card small"><p style="margin-top:0">Pocket Irish Dance is an independent guide for parents. It is not an official publication of any Irish dance organization. Always check important decisions with your teacher and the current official rules.</p>
-      <p><a href="#/privacy">Privacy policy</a> · <a href="#/terms">Terms of use</a> · <a href="mailto:pocketirishdance@gmail.com">Contact us</a></p>
+      <p><a href="#/privacy">Privacy policy</a> · <a href="#/terms">Terms of use</a> · <a href="${feedbackLink(FEEDBACK[3])}">Contact us</a></p>
       <p style="margin-bottom:0" class="muted">Version ${esc(D.version)} · update ${APP_VERSION}</p></div>`,
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
