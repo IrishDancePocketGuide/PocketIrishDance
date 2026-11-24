@@ -334,3 +334,19 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .panel-grid thead th { font-size: 0.75rem; color: var(--ink-2); font-weight: 600; }
 .panel-grid tbody th { text-align: left; font-weight: 600; }
 .panel-grid td strong { color: var(--green); }
+
+/* Judges' comment trends */
+.theme-card h3 { font-size: 1.05rem; }
+.trend { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--line, #e6eef0); font-size: .78rem; color: inherit; }
+.trend.good { background: #dff3ef; color: #0f6b5c; }
+.trend.warn { background: #ffe6df; color: #a83a1d; }
+.theme-quotes { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.theme-quotes a { display: block; font-size: .88rem; font-style: italic; color: inherit; text-decoration: none; padding: 6px 10px; border-left: 3px solid var(--green); background: rgba(0,0,0,.03); border-radius: 6px; }
+.theme-quotes a .muted { font-style: normal; font-size: .78rem; }
+.tips-h { margin: 10px 0 4px; font-size: .9rem; }
+.tips { margin: 0; padding-left: 20px; font-size: .9rem; }
+.tips li { margin: 3px 0; }
+@media (prefers-color-scheme: dark) { .trend.good { background: #12423b; color: #bfeee4; } .trend.warn { background: #4a2219; color: #ffd2c4; } .theme-quotes a { background: rgba(255,255,255,.05); } }
+.sec-h { font-size: 1.05rem; margin: 16px 4px 6px; }
+.journal-form textarea { width: 100%; }
+.journal-entry { padding: 10px 14px; }

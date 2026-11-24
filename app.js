@@ -26,8 +26,8 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "38"; // keep in step with VERSION in sw.js
-  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
+  const APP_VERSION = "39"; // keep in step with VERSION in sw.js
+  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
@@ -707,9 +707,11 @@
     const tabs = screens.dancer.view || "recent";
     const dancesWithResults = D.dances.filter((d) => rs.some((r) => r.dance === d.id));
     let body;
-    if (!rs.length) body = `<div class="empty"><div class="big">📸</div>No results yet. After the next feis, snap the results and add them here.</div>`;
+    if (tabs === "comments") body = commentSummaries(dn, rs);
+    else if (!rs.length) body = `<div class="empty"><div class="big">📸</div>No results yet. After the next feis, snap the results and add them here.</div>`;
     else if (tabs === "recent") body = rs.map(resultRow).join("");
     else if (tabs === "judge") body = judgeSummaries(dn, rs);
+    else if (tabs === "comments") body = commentSummaries(dn, rs);
     else body = dancesWithResults.map((d) => {
       const drs = rs.filter((r) => r.dance === d.id);
       const best = Math.min(...drs.map((r) => Number(r.place) || 99));
@@ -732,7 +734,7 @@
         ${D.dances.filter((d) => dancerLevel(dn, d.id)).map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="chip">${esc(levelById(dancerLevel(dn, d.id)).name)}</span></div>`).join("") || '<p class="small muted">No levels set yet.</p>'}
         ${dancerLevel(dn, "champ") ? `<div class="dance-row"><span class="name">Championship</span><span class="chip">${esc(levelById(dancerLevel(dn, "champ")).name)}</span></div>` : ""}
       </div>
-      ${rs.length ? `<div class="pill-tabs"><button data-dview="recent" class="${tabs === "recent" ? "on" : ""}">Latest results</button><button data-dview="dance" class="${tabs === "dance" ? "on" : ""}">By dance</button><button data-dview="judge" class="${tabs === "judge" ? "on" : ""}">By judge</button></div>` : ""}
+      ${true ? `<div class="pill-tabs"><button data-dview="recent" class="${tabs === "recent" ? "on" : ""}">Latest results</button><button data-dview="dance" class="${tabs === "dance" ? "on" : ""}">By dance</button><button data-dview="judge" class="${tabs === "judge" ? "on" : ""}">By judge</button><button data-dview="comments" class="${tabs === "comments" ? "on" : ""}">To work on</button></div>` : ""}
       ${body}`
     };
   };
@@ -772,6 +774,98 @@
         ${judgeTagline(g.name) ? `<p class="judge-tag">${esc(judgeTagline(g.name))}</p>` : ""}<p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.ps)))}</p>
         <div class="judge-places">${g.ps.slice(0, 8).map((p) => `<span class="chip ${p.place === 1 ? "gold" : "grey"}">${esc(placingLabel(p))}</span>`).join("")}</div>
       </a>`).join("") + (none ? `<p class="small muted" style="text-align:center">${none} result${none === 1 ? " has" : "s have"} no judge yet. Open ${none === 1 ? "it" : "them"} and tap Edit to add one.</p>` : "");
+  }
+
+  // ---- Judges' comment trends ----
+  // Each judge comment (or each line of the notes) counts once per theme. Longer phrases win
+  // over shorter ones ("on toes" before "toes"), and praise ("good turnout") is not counted.
+  const PRAISE = /\b(good|great|lovely|nice|excellent|beautiful|super|well done|strong|fantastic|brilliant|improved|better)\b[^.,;!]{0,12}$/;
+  let THEME_PHRASES;
+  function themePhrases() {
+    if (!THEME_PHRASES) {
+      THEME_PHRASES = [];
+      (D.commentThemes || []).forEach((t) => t.words.forEach((w) => THEME_PHRASES.push({ w, t, re: new RegExp("(^|[^a-z])" + w.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + "(?![a-z])", "g") })));
+      THEME_PHRASES.sort((a, b) => b.w.length - a.w.length);
+    }
+    return THEME_PHRASES;
+  }
+  function themesIn(text) {
+    let s = " " + String(text || "").toLowerCase().replace(/[’']/g, "") + " ";
+    const found = new Set();
+    themePhrases().forEach(({ t, re }) => {
+      s = s.replace(re, (m, pre, off) => {
+        if (!PRAISE.test(s.slice(Math.max(0, off - 30), off + pre.length))) found.add(t.id);
+        return pre + " ".repeat(m.length - pre.length);
+      });
+    });
+    return [...found];
+  }
+  // The comments on one result: judges' round comments if the score sheet had them, else the notes, line by line.
+  function commentsOf(r) {
+    const out = [];
+    judgesOf(r).forEach((j) => (j.rounds || []).forEach((x) => { if (x.comment) out.push({ text: x.comment, judge: j.name }); }));
+    if (!out.length && r.notes) String(r.notes).split(/\n|;|•|(?<=[.!?])\s+/).map((x) => x.trim()).filter((x) => x.length > 2)
+      .forEach((x) => out.push({ text: x, judge: "" }));
+    return out;
+  }
+  function commentTrends(rs) {
+    const withC = rs.filter((r) => commentsOf(r).length).sort((a, b) => b.date.localeCompare(a.date));
+    const recent = new Set(withC.slice(0, 3).map((r) => r.id));
+    const map = {};
+    withC.forEach((r) => commentsOf(r).forEach((c) => themesIn(c.text).forEach((id) => {
+      const m = (map[id] = map[id] || { id, t: D.commentThemes.find((x) => x.id === id), n: 0, results: new Set(), recentN: 0, quotes: [] });
+      m.n++; m.results.add(r.id); if (recent.has(r.id)) m.recentN++;
+      if (m.quotes.length < 3 && !m.quotes.some((q) => q.text === c.text)) m.quotes.push({ text: c.text, judge: c.judge, r });
+    })));
+    const list = Object.values(map).sort((a, b) => b.n - a.n || b.recentN - a.recentN);
+    return { list, nResults: withC.length, recentCount: Math.min(3, withC.length) };
+  }
+  function trendWord(m, tr) {
+    if (tr.nResults < 4) return "";
+    const earlier = m.n - m.recentN, earlierRes = tr.nResults - tr.recentCount;
+    const rateRecent = m.recentN / tr.recentCount, rateEarlier = earlierRes ? earlier / earlierRes : 0;
+    if (m.recentN === 0) return `<span class="trend good">Not mentioned in the last ${tr.recentCount} 👏</span>`;
+    if (rateRecent < rateEarlier * 0.6) return `<span class="trend good">Coming up less lately 👏</span>`;
+    if (rateRecent > rateEarlier * 1.5) return `<span class="trend warn">Coming up more lately</span>`;
+    return `<span class="trend">Steady</span>`;
+  }
+  const JOURNAL_KINDS = { mine: "💭 My thoughts", teacher: "🧑‍🏫 Teacher's correction", practice: "🏠 Practice notes", feis: "🏆 Feis notes" };
+  function journalSection(dn) {
+    const es = (S.journal || []).filter((e) => e.dancerId === dn.id).sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+    const themes = D.commentThemes || [];
+    return `<h2 class="sec-h">📓 ${esc(dn.name)}'s journal</h2>
+      <form class="card journal-form" data-journal="${dn.id}">
+        <label class="field"><span>What's on your mind?</span><textarea name="text" rows="3" maxlength="2000" required placeholder="How practice went, what the teacher said, goals for the next feis…"></textarea></label>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <label class="field" style="flex:1;min-width:140px"><span>Type</span><select name="kind">${Object.entries(JOURNAL_KINDS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select></label>
+          <label class="field" style="flex:1;min-width:140px"><span>About (optional)</span><select name="theme"><option value="">Anything</option>${themes.map((t) => `<option value="${t.id}">${t.icon} ${esc(t.name)}</option>`).join("")}</select></label>
+        </div>
+        <button class="btn block" type="submit">Save to journal</button>
+      </form>
+      ${es.length ? es.map((e) => { const t = themes.find((x) => x.id === e.theme); return `<article class="card journal-entry">
+        <div class="row between"><span class="small muted">${esc(fmtDate(e.date))} · ${esc(JOURNAL_KINDS[e.kind] || "")}${t ? ` · ${t.icon} ${esc(t.name)}` : ""}</span>
+        <button type="button" class="btn plain sm" data-del-journal="${e.id}" aria-label="Delete this note">✕</button></div>
+        <p style="margin:4px 0 0;white-space:pre-wrap">${esc(e.text)}</p></article>`; }).join("") : `<p class="small muted center">Nothing in the journal yet. Notes stay on this phone, saved for ${esc(dn.name)}.</p>`}`;
+  }
+  function commentSummaries(dn, rs) {
+    return commentThemesHtml(dn, rs) + journalSection(dn);
+  }
+  function commentThemesHtml(dn, rs) {
+    const tr = commentTrends(rs);
+    if (!tr.nResults) return `<div class="empty"><div class="big">💬</div>No judges' comments saved yet, so there's nothing to suggest yet. When you add a result, put the judge's comments in "Comments and notes" (photos of score sheets fill this in). After a few feiseanna, the most common comments show here with practice ideas.</div>`;
+    if (!tr.list.length) return `<div class="empty"><div class="big">💬</div>${tr.nResults} result${tr.nResults === 1 ? " has" : "s have"} comments, but none match the usual themes yet (like turnout, pointed toes, timing or posture). They'll show here as more comments come in.</div>`;
+    const top = tr.list.slice(0, 3), rest = tr.list.slice(3);
+    return `<h2 class="sec-h">⭐ What to work on</h2><p class="small muted" style="margin:0 4px 8px">The comments judges give ${esc(dn.name)} most often, from ${tr.nResults} result${tr.nResults === 1 ? "" : "s"} with comments, with ideas to practise at home.</p>` +
+      top.map((m, i) => `<article class="card theme-card">
+        <div class="row between"><h3 style="margin:0">${i + 1}. ${m.t.icon} ${esc(m.t.name)}</h3><span class="chip">${m.n} mention${m.n === 1 ? "" : "s"}</span></div>
+        <p class="small muted" style="margin:4px 0">In ${m.results.size} of ${tr.nResults} results ${trendWord(m, tr)}</p>
+        <p class="small" style="margin:6px 0">${esc(m.t.why)}</p>
+        ${m.quotes.length ? `<div class="theme-quotes">${m.quotes.map((q) => `<a href="#/result/${q.r.id}">“${esc(q.text.length > 90 ? q.text.slice(0, 88) + "…" : q.text)}”<span class="muted"> ${esc([q.judge, q.r.feis].filter(Boolean).join(" · "))}</span></a>`).join("")}</div>` : ""}
+        <h4 class="tips-h">Try at home</h4>
+        <ul class="tips">${m.t.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      </article>`).join("") +
+      (rest.length ? `<div class="card" style="padding:10px 14px"><p class="small muted" style="margin:0 0 6px">Also mentioned</p><div class="judge-places">${rest.map((m) => `<span class="chip grey">${m.t.icon} ${esc(m.t.name)} · ${m.n}</span>`).join("")}</div></div>` : "") +
+      `<p class="small muted" style="margin:10px 4px">These are general practice ideas, not medical or coaching advice. Check with ${esc(dn.name)}'s teacher before adding new exercises, warm up first, and stop if anything hurts.</p>`;
   }
 
   screens.judge = function (dancerId, name) {
@@ -1264,11 +1358,16 @@
       location.hash = "#/dancer/" + (r ? r.dancerId : "");
       return;
     }
+    if (t.dataset.delJournal) {
+      if (!confirm("Delete this journal note?")) return;
+      S.journal = (S.journal || []).filter((x) => x.id !== t.dataset.delJournal); save(); toast("Deleted"); rerender();
+      return;
+    }
     if (t.dataset.delDancer) {
       const id = t.dataset.delDancer; const dn = S.dancers.find((d) => d.id === id);
       if (!confirm(`Delete ${dn ? dn.name : "this dancer"} and all their results?`)) return;
       const gone = S.results.filter((x) => x.dancerId === id && x.photoId).map((x) => x.photoId);
-      S.results = S.results.filter((x) => x.dancerId !== id); S.dancers = S.dancers.filter((d) => d.id !== id);
+      S.results = S.results.filter((x) => x.dancerId !== id); S.dancers = S.dancers.filter((d) => d.id !== id); S.journal = (S.journal || []).filter((x) => x.dancerId !== id);
       gone.forEach((pid) => releasePhoto(pid));
       save(); toast("Deleted"); location.hash = "#/scores";
     }
@@ -1282,6 +1381,12 @@
   });
 
   app.addEventListener("submit", (e) => {
+    const jf = e.target.closest("[data-journal]");
+    if (jf) {
+      e.preventDefault(); const text = String(jf.text.value || "").trim().slice(0, 2000); if (!text) return;
+      (S.journal = S.journal || []).push({ id: uid(), dancerId: jf.dataset.journal, date: today(), kind: jf.kind.value, theme: jf.theme.value, text });
+      save(); toast("Saved to the journal"); rerender(); return;
+    }
     const f = e.target.closest("[data-search]"); if (!f) return;
     e.preventDefault(); const q = f.q.value.trim();
     if (location.hash.startsWith("#/words")) { f.q.blur(); return; } // Words page filters as you type
