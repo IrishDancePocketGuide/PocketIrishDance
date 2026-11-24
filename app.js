@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "41"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "42"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -257,7 +257,7 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>Feis bag, feis day, championships</span></a>
         <a class="tile" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Irish dance school lists</span></a>
-        <a class="tile wide" href="#/games"><span class="ico">🧩</span><strong>Games</strong><span>Boredom busters for feis day, like a daily word search</span></a>
+        <a class="tile wide" href="#/games"><span class="ico">🧩</span><strong>Games</strong><span>Boredom busters for feis day, like word search and feis day bingo</span></a>
       </div>
 
       ${standalone ? "" : `<div class="card install show" style="flex-direction:column;gap:6px">
