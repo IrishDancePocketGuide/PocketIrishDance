@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "40"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "41"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -250,6 +250,7 @@
       <div class="grid">
         <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
         <a class="tile wide" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
+        <a class="tile wide workon-tile" href="#/workon"><span class="ico">⭐</span><strong>What to work on</strong><span>Judges' most common comments, tips to practise, and a journal</span></a>
         <a class="tile" href="#/rules"><span class="ico">📘</span><strong>Rules</strong><span>What's allowed at your level, in plain words</span></a>
         <a class="tile" href="#/words"><span class="ico">🗣️</span><strong>Words</strong><span>${D.glossary.filter(inOrg).length} terms with how to say them</span></a>
         <a class="tile" href="#/levels"><span class="ico">🪜</span><strong>Levels</strong><span>Beginner to Open Championship</span></a>
@@ -735,7 +736,9 @@
         ${D.dances.filter((d) => dancerLevel(dn, d.id)).map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="chip">${esc(levelById(dancerLevel(dn, d.id)).name)}</span></div>`).join("") || '<p class="small muted">No levels set yet.</p>'}
         ${dancerLevel(dn, "champ") ? `<div class="dance-row"><span class="name">Championship</span><span class="chip">${esc(levelById(dancerLevel(dn, "champ")).name)}</span></div>` : ""}
       </div>
-      ${true ? `<div class="pill-tabs"><button data-dview="recent" class="${tabs === "recent" ? "on" : ""}">Latest results</button><button data-dview="dance" class="${tabs === "dance" ? "on" : ""}">By dance</button><button data-dview="judge" class="${tabs === "judge" ? "on" : ""}">By judge</button><button data-dview="comments" class="${tabs === "comments" ? "on" : ""}">To work on</button></div>` : ""}
+      ${tabs !== "comments" ? (() => { const top = commentTrends(rs).list.slice(0, 3).map((m) => m.t.icon + " " + m.t.name);
+        return `<button type="button" class="workon-cta" data-dview="comments"><span class="ico" aria-hidden="true">⭐</span><span><strong>What ${esc(dn.name)} needs to work on</strong><span>${top.length ? esc(top.join(" · ")) : "Judges' comments, practice tips and a journal"}</span></span><span aria-hidden="true">›</span></button>`; })() : ""}
+      ${true ? `<div class="pill-tabs"><button data-dview="recent" class="${tabs === "recent" ? "on" : ""}">Latest results</button><button data-dview="dance" class="${tabs === "dance" ? "on" : ""}">By dance</button><button data-dview="judge" class="${tabs === "judge" ? "on" : ""}">By judge</button><button data-dview="comments" class="workon-pill ${tabs === "comments" ? "on" : ""}">⭐ To work on</button></div>` : ""}
       ${body}`
     };
   };
@@ -1296,6 +1299,11 @@
       case "rules": v = screens.rules(); break;
       case "guide": v = parts[1] ? screens.checklist(parts[1]) : screens.guide(); break;
       case "scores": v = screens.scores(); break;
+      case "workon": {
+        const d = S.dancers.find((x) => x.id === parts[1]) || S.dancers[0];
+        if (!d) { v = screens.scores(); break; }
+        screens.dancer.view = "comments"; v = screens.dancer(d.id); break;
+      }
       case "dancer": v = parts[1] === "new" ? screens.dancerForm() : parts[2] === "edit" ? screens.dancerForm(parts[1]) : screens.dancer(parts[1]); break;
       case "add": v = screens.resultForm(parts[1]); break;
       case "judge": v = screens.judge(parts[1], decodeURIComponent(parts[2] || "")); break;

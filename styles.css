@@ -388,3 +388,13 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .ws-words { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .ws-words li { padding: 3px 9px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 13px; font-weight: 600; }
 .ws-words li.got { text-decoration: line-through; opacity: .5; }
+
+/* "What to work on": make it easy to find */
+.workon-tile { background: var(--gold); border-color: var(--gold); color: #fff; }
+.workon-tile strong, .workon-tile span { color: #fff; }
+.workon-cta { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; margin: 12px 0 4px; padding: 14px 16px; border: 0; border-radius: 16px; background: var(--gold); color: #fff; font: inherit; cursor: pointer; box-shadow: 0 2px 8px rgba(243,131,110,.35); }
+.workon-cta .ico { font-size: 1.6rem; }
+.workon-cta strong { display: block; font-size: 1.05rem; }
+.workon-cta span span { display: block; font-size: .85rem; opacity: .95; }
+.workon-cta > span:last-child { margin-left: auto; font-size: 1.4rem; }
+.pill-tabs button.workon-pill:not(.on) { border-color: var(--gold); color: #c4553f; font-weight: 600; }
