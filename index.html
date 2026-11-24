@@ -3,51 +3,319 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Pocket Irish Dance</title>
-  <meta name="description" content="A pocket guide to Irish dance for parents: words, levels, rules, checklists and a score tracker.">
+  <title>Pocket Irish Dance: the free Irish dance guide for parents</title>
+  <script>
+    // The website is for visitors. The installed app, sign-in links and old shared links go straight to the app.
+    (function () {
+      var h = location.hash, q = location.search;
+      var installed = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+      if (installed || /^#\//.test(h) || /access_token|error_description/.test(h) || /[?&](code|token_hash)=/.test(q)) location.replace("app.html" + q + h);
+      addEventListener("hashchange", function () { if (/^#\//.test(location.hash)) location.replace("app.html" + location.hash); });
+    })();
+  </script>
+  <meta name="description" content="A free pocket guide for Irish dance parents: what the words mean and how to say them, the levels, the rules for your organization, the feis calendar, and a private score tracker with judge history.">
   <meta name="theme-color" content="#024445">
+  <meta property="og:title" content="Pocket Irish Dance">
+  <meta property="og:description" content="Irish dance, explained for parents. Words, levels, rules, feis calendar and a private score tracker. Free.">
+  <meta property="og:image" content="https://pocketirishdance.com/icons/logo-1024.png">
+  <meta property="og:url" content="https://pocketirishdance.com/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Irish Dance">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --teal: #024445; --teal-2: #0a6466; --teal-soft: #e3f0f0;
+      --coral: #f3836e; --coral-soft: #fde6e1; --coral-ink: #a8402b;
+      --ink: #152625; --ink-2: #4f6463; --line: #dde7e7; --bg: #fbfcfc; --card: #ffffff;
+      --on-teal: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --teal: #6fcfcb; --teal-2: #8fdcd8; --teal-soft: #12302f;
+        --coral: #ff9a85; --coral-soft: #3a1f19; --coral-ink: #ffb3a3;
+        --ink: #eef5f5; --ink-2: #a3b8b7; --line: #263636; --bg: #0d1717; --card: #152222;
+        --on-teal: #062222;
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-text-size-adjust: 100%; }
+    a { color: var(--teal-2); }
+    img { max-width: 100%; display: block; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; }
+    h1 { font-size: clamp(30px, 6vw, 48px); letter-spacing: -.02em; }
+    h2 { font-size: clamp(24px, 4.2vw, 34px); letter-spacing: -.01em; }
+    h3 { font-size: 18px; }
+    p { margin: 0 0 1em; }
+    .muted { color: var(--ink-2); }
+
+    .top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 12px; }
+    .logo { display: flex; align-items: center; background: #fff; border-radius: 10px; padding: 4px 8px; }
+    .logo img { height: 34px; width: auto; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; border: 0; cursor: pointer; font-family: inherit; }
+    .btn.primary { background: var(--teal); color: var(--on-teal); }
+    .btn.coral { background: var(--coral); color: #2a0f08; }
+    .btn.ghost { background: transparent; color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
+    .btn.sm { min-height: 38px; padding: 0 16px; font-size: 15px; }
+    .btn:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+
+    .hero { padding: 44px 0 28px; }
+    .hero .wrap { display: grid; gap: 32px; align-items: center; grid-template-columns: 1.15fr .85fr; }
+    .kicker { display: inline-block; background: var(--coral-soft); color: var(--coral-ink); font-weight: 700; font-size: 14px; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; }
+    .lead { font-size: 19px; color: var(--ink-2); max-width: 34em; }
+    .cta { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 12px; }
+    .free { font-size: 14px; color: var(--ink-2); }
+    .phone { border-radius: 30px; border: 8px solid #0f1d1d; box-shadow: 0 24px 50px -20px rgba(2,68,69,.45); overflow: hidden; background: #fff; max-width: 300px; margin: 0 auto; aspect-ratio: 390 / 780; }
+    .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+
+    section.band { padding: 48px 0; }
+    .soft { background: var(--teal-soft); }
+
+    .install { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 22px; max-width: 720px; margin: 0 auto; }
+    .tabs { display: flex; gap: 6px; background: var(--teal-soft); padding: 5px; border-radius: 999px; margin: 0 auto 18px; width: max-content; max-width: 100%; }
+    .tabs button { border: 0; background: transparent; color: var(--ink); font: inherit; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 999px; cursor: pointer; }
+    .tabs button[aria-selected="true"] { background: var(--teal); color: var(--on-teal); }
+    .steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+    .steps li { counter-increment: s; position: relative; padding: 4px 0 14px 46px; min-height: 40px; }
+    .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--coral); color: #2a0f08; font-weight: 800; display: grid; place-items: center; }
+    .ico { display: inline-block; vertical-align: -4px; width: 20px; height: 20px; }
+    .note { background: var(--coral-soft); border-radius: 14px; padding: 12px 14px; font-size: 15px; margin-top: 6px; }
+    .soon { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
+    .store { display: inline-flex; align-items: center; gap: 8px; border: 1px dashed var(--ink-2); color: var(--ink-2); border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .feat { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+    .feat .em { font-size: 28px; line-height: 1; margin-bottom: 10px; }
+    .feat p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
+    .feat.big { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; background: var(--teal); color: var(--on-teal); border: 0; }
+    .feat.big p { color: inherit; opacity: .9; font-size: 17px; }
+    .feat.big h3 { font-size: 24px; }
+    .feat.big ul { margin: 12px 0 0; padding-left: 20px; }
+    .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .shots .phone { border-width: 6px; border-radius: 24px; }
+
+    .gallery { display: flex; gap: 16px; overflow-x: auto; padding: 8px 4px 18px; scroll-snap-type: x mandatory; margin-top: 18px; }
+    .gallery figure { margin: 0; flex: 0 0 210px; scroll-snap-align: start; }
+    .gallery .phone { border-width: 6px; border-radius: 24px; }
+    .gallery figcaption { text-align: center; font-size: 14px; font-weight: 600; margin-top: 8px; color: var(--ink-2); }
+
+    .promise { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .promise div { background: var(--card); border-radius: 18px; padding: 18px; border: 1px solid var(--line); }
+    .orgs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+    .orgs span { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 15px; }
+    .center { text-align: center; }
+
+    footer { padding: 32px 0 calc(32px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+    footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-bottom: 12px; }
+    footer a { color: var(--ink); font-weight: 600; }
+
+    @media (max-width: 820px) {
+      .hero .wrap { grid-template-columns: 1fr; }
+      .hero .phone { max-width: 240px; }
+      .features { grid-template-columns: 1fr 1fr; }
+      .feat.big { grid-column: span 2; grid-template-columns: 1fr; }
+      .promise { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 540px) {
+      .hero { padding-top: 28px; }
+      .features { grid-template-columns: 1fr; }
+      .feat.big { grid-column: span 1; }
+      .top .btn { padding: 0 14px; }
+      .install { padding: 18px 14px; }
+      .tabs button { padding: 8px 12px; }
+    }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <button class="back" id="backBtn" aria-label="Back" hidden>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <h1 id="pageTitle">Pocket Irish Dance</h1>
-    <a href="#/settings" class="gear" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
-    </a>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="./" aria-label="Pocket Irish Dance home"><img src="icons/wordmark.png" alt="Pocket Irish Dance" width="720" height="194"></a>
+      <a class="btn primary sm" id="openTop" href="app.html">Open the app</a>
+    </div>
   </header>
 
-  <main id="app" tabindex="-1"></main>
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <span class="kicker">Free · for Irish dance parents</span>
+          <h1>Irish dance, explained. In your pocket.</h1>
+          <p class="lead">What the words mean and how to say them. What the levels are. The rules for your organization. When the next feis is. And a private place to keep every result, judge by judge.</p>
+          <div class="cta">
+            <a class="btn coral" href="#get">Get the app, free</a>
+            <a class="btn ghost" href="app.html">Try it in your browser</a>
+          </div>
+          <p class="free">No sign-up. No adverts. Works offline at the feis.</p>
+        </div>
+        <div class="phone"><img src="site/home.webp" alt="The Pocket Irish Dance home screen" width="780" height="1560"></div>
+      </div>
+    </section>
 
-  <nav class="tabbar" aria-label="Main">
-    <a href="#/" data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a>
-    <a href="#/rules" data-tab="rules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5z M8 9h8 M8 13h8 M8 17h5"/></svg><span>Rules</span></a>
-    <a href="#/words" data-tab="words"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M20 5h-3a3 3 0 0 0-3 3"/></svg><span>Words</span></a>
-    <a href="#/levels" data-tab="levels"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4v-5h4v-5h4V5h4"/></svg><span>Levels</span></a>
-    <a href="#/scores" data-tab="scores"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 6H4v2a3 3 0 0 0 3 3 M17 6h3v2a3 3 0 0 1-3 3"/></svg><span>Scores</span></a>
-    <a href="#/friends" data-tab="friends"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.9 0 5 2.4 5 5.3"/></svg><span>Friends</span></a>
-  </nav>
+    <section class="band soft" id="get">
+      <div class="wrap">
+        <h2 class="center">Put it on your home screen</h2>
+        <p class="center muted" style="max-width:36em;margin:0 auto 22px">Pocket Irish Dance installs straight from your browser, so there's no app store needed. It takes about 20 seconds, and the app then opens like any other.</p>
+        <div class="install">
+          <div class="tabs" role="tablist" aria-label="Your device">
+            <button role="tab" id="t-iphone" aria-controls="p-iphone" aria-selected="true">iPhone or iPad</button>
+            <button role="tab" id="t-android" aria-controls="p-android" aria-selected="false">Android</button>
+            <button role="tab" id="t-computer" aria-controls="p-computer" aria-selected="false">Computer</button>
+          </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+          <div role="tabpanel" id="p-iphone" aria-labelledby="t-iphone">
+            <ol class="steps">
+              <li>Open <strong>pocketirishdance.com</strong> in <strong>Safari</strong> on your iPhone.</li>
+              <li>Tap the <strong>Share</strong> button
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share icon"><path d="M12 3v12M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>
+                at the bottom of the screen (or at the top on iPad).</li>
+              <li>Scroll down and tap <strong>Add to Home Screen</strong>. You may need to tap <strong>More</strong> first.</li>
+              <li>Tap <strong>Add</strong>. The shamrock icon appears on your home screen.</li>
+            </ol>
+            <p class="note" id="iosChrome" hidden>You're in a different browser. In Chrome on iPhone, tap the <strong>Share</strong> button next to the address bar, then <strong>Add to Home Screen</strong>. If you don't see it, open this page in Safari.</p>
+          </div>
 
-  <script src="data.js"></script>
-  <script src="reader.js"></script>
-  <script src="celebrate.js"></script>
-  <script src="legal.js"></script>
-  <script src="config.js"></script>
-  <script src="vendor/supabase/supabase.js"></script>
-  <script src="friends.js"></script>
-  <script src="rhythm.js"></script>
-  <script src="games.js"></script>
-  <script src="app.js"></script>
+          <div role="tabpanel" id="p-android" aria-labelledby="t-android" hidden>
+            <p id="installReady" hidden><button class="btn primary" id="installBtn">Install Pocket Irish Dance</button></p>
+            <ol class="steps">
+              <li>Open <strong>pocketirishdance.com</strong> in <strong>Chrome</strong> on your phone.</li>
+              <li>Tap the <strong>menu</strong> (the three dots <strong>⋮</strong> at the top right).</li>
+              <li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+              <li>Tap <strong>Install</strong>. The shamrock icon appears with your other apps.</li>
+            </ol>
+          </div>
+
+          <div role="tabpanel" id="p-computer" aria-labelledby="t-computer" hidden>
+            <p>Pocket Irish Dance is made for your phone, so it's with you at the feis. Open <strong>pocketirishdance.com</strong> on your phone and follow the steps for iPhone or Android.</p>
+            <p>You can also use it right here on your computer.</p>
+            <p style="margin:0"><a class="btn primary" href="app.html">Open the app in this browser</a></p>
+          </div>
+
+          <div class="soon" aria-label="Coming soon">
+            <span class="store">App Store: coming soon</span>
+            <span class="store">Google Play: coming soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="wrap">
+        <h2 class="center">Everything a dance parent needs</h2>
+        <p class="center muted" style="max-width:36em;margin:0 auto">Five organizations, different countries, new words at every feis. Here it is in plain language, set to your dancer's organization and level.</p>
+
+        <div class="features">
+          <div class="feat big">
+            <div>
+              <div class="em">🏆</div>
+              <h3>Score tracker with judge history</h3>
+              <p>Snap a photo of the results sheet or a screenshot of online results, and the app reads it for you. See every placing over time, dance by dance, and how each judge has placed your dancer.</p>
+              <ul>
+                <li>Grades, prelim and open championships, round by round</li>
+                <li>Know when your dancer is ready to move up</li>
+                <li>Kept privately on your phone</li>
+              </ul>
+            </div>
+            <div class="shots">
+              <div class="phone"><img src="site/by-dance.webp" alt="A chart of a dancer's reel placings improving over the year" loading="lazy" width="780" height="1560"></div>
+              <div class="phone"><img src="site/by-judge.webp" alt="A dancer's results grouped by judge" loading="lazy" width="780" height="1560"></div>
+            </div>
+          </div>
+          <div class="feat"><div class="em">🗣️</div><h3>Words, and how to say them</h3><p>Feis, ADCRG, céilí, oireachtas and hundreds more, explained simply. Tap to hear each one.</p></div>
+          <div class="feat"><div class="em">🪜</div><h3>Levels, made clear</h3><p>From Beginner to Open Championship: what each level dances, what to wear, and how to move up.</p></div>
+          <div class="feat"><div class="em">📘</div><h3>The rules, in plain words</h3><p>What's allowed at your level, for your organization, without reading the whole rulebook.</p></div>
+          <div class="feat"><div class="em">📅</div><h3>Feis calendar</h3><p>Upcoming feiseanna from the organizations' own calendars, kept up to date automatically.</p></div>
+          <div class="feat"><div class="em">⭐</div><h3>What to work on</h3><p>Turns the judges' comments into the most common things to practise, with tips and a journal.</p></div>
+          <div class="feat"><div class="em">✅</div><h3>Parent checklists</h3><p>The feis bag, feis day, your first championship. Tick things off so nothing gets left behind.</p></div>
+          <div class="feat"><div class="em">🧩</div><h3>Feis day games</h3><p>Word search, feis bingo and rhythm tap for the long waits between dances. They work without signal.</p></div>
+          <div class="feat"><div class="em">📍</div><h3>Find a dance school</h3><p>Irish dance school lists for your organization and region.</p></div>
+          <div class="feat"><div class="em">🎉</div><h3>Friends</h3><p>Share a win with a private group of dance-parent friends and cheer each other on. Optional and invite-only.</p></div>
+        </div>
+
+        <div class="gallery" aria-label="Screens from the app">
+          <figure><div class="phone"><img src="site/words.webp" alt="The Words screen" loading="lazy" width="780" height="1560"></div><figcaption>Words</figcaption></figure>
+          <figure><div class="phone"><img src="site/feis.webp" alt="The feis calendar" loading="lazy" width="780" height="1560"></div><figcaption>Feis calendar</figcaption></figure>
+          <figure><div class="phone"><img src="site/games.webp" alt="The games screen" loading="lazy" width="780" height="1560"></div><figcaption>Games</figcaption></figure>
+          <figure><div class="phone"><img src="site/by-judge.webp" alt="Results by judge" loading="lazy" width="780" height="1560"></div><figcaption>Judge history</figcaption></figure>
+        </div>
+
+        <h3 class="center" style="margin-top:28px">Covers all the major organizations</h3>
+        <div class="orgs"><span>CLRG</span><span>An Comhdháil</span><span>WIDA</span><span>IDTANA</span><span>North American Feis Commission</span></div>
+        <p class="center muted small" style="margin-top:10px;font-size:14px">For families in the US, Canada, the UK, Ireland, Australia and beyond.</p>
+      </div>
+    </section>
+
+    <section class="band soft">
+      <div class="wrap">
+        <h2 class="center">Private by design</h2>
+        <div class="promise">
+          <div><h3>📱 Stays on your phone</h3><p class="muted" style="margin:0">Results, photos and notes are saved on your phone, not on our servers. Photos are read on your phone too.</p></div>
+          <div><h3>🚫 No adverts, no tracking</h3><p class="muted" style="margin:0">We don't sell anything about you or your dancer, and there's no tracking.</p></div>
+          <div><h3>👨‍👩‍👧 Made for parents</h3><p class="muted" style="margin:0">Friends accounts are for adults only, and only share what you choose.</p></div>
+        </div>
+        <p class="center" style="margin-top:28px"><a class="btn coral" href="#get">Get the app, free</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <nav aria-label="About">
+        <a href="app.html#/privacy">Privacy policy</a>
+        <a href="app.html#/terms">Terms of use</a>
+        <a href="mailto:pocketirishdance@gmail.com">Contact us</a>
+        <a href="app.html">Open the app</a>
+      </nav>
+      <p>Pocket Irish Dance is an independent guide for parents. It is not an official publication of, or endorsed by, any Irish dance organization. Always check important decisions with your teacher and the current official rules.</p>
+      <p style="margin:0">© <span id="yr">2026</span> Pocket Irish Dance</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      document.getElementById("yr").textContent = new Date().getFullYear();
+      // Returning visitors who already have results saved see "Open your app".
+      try { if (localStorage.getItem("pid.v1")) document.getElementById("openTop").textContent = "Open your app"; } catch (e) {}
+
+      // Pick the right install steps for this device.
+      var ua = navigator.userAgent || "";
+      var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      var android = /Android/.test(ua);
+      var tabs = ["iphone", "android", "computer"];
+      function show(id) {
+        tabs.forEach(function (t) {
+          document.getElementById("t-" + t).setAttribute("aria-selected", t === id ? "true" : "false");
+          document.getElementById("p-" + t).hidden = t !== id;
+        });
+      }
+      tabs.forEach(function (t) { document.getElementById("t-" + t).addEventListener("click", function () { show(t); }); });
+      show(ios ? "iphone" : android ? "android" : "computer");
+      if (ios && /CriOS|FxiOS|EdgiOS/.test(ua)) document.getElementById("iosChrome").hidden = false;
+
+      // Android and desktop Chrome: offer a one-tap install button when the browser allows it.
+      var prompt = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault(); prompt = e;
+        document.getElementById("installReady").hidden = false;
+      });
+      document.getElementById("installBtn").addEventListener("click", function () {
+        if (!prompt) return;
+        prompt.prompt();
+        prompt.userChoice.then(function () { prompt = null; document.getElementById("installReady").hidden = true; });
+      });
+      window.addEventListener("appinstalled", function () { document.getElementById("installReady").hidden = true; });
+
+      if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    })();
+  </script>
 </body>
 </html>
