@@ -31,6 +31,7 @@ window.PID_LEGAL = (function () {
         <li>competition results, rounds, judges, marks and notes</li>
         <li>photos and screenshots of results</li>
         <li>checklist ticks</li>
+        <li>feis reminders you set in the iPhone app (they are scheduled by your phone, not by us)</li>
       </ul>
       <p><strong>Reading results photos.</strong> When you add a photo or screenshot, the app reads the text on your phone. The photo is not uploaded anywhere.</p>
       <p style="margin-bottom:0"><strong>Backups.</strong> A backup file you save is yours. It goes wherever you choose to keep it. Because we never hold this information, we can't recover it if your phone is lost or the app's storage is cleared, so please save a backup now and then. You can remove it at any time by deleting a dancer or result, or by clearing the app's data on your phone.</p>`)}

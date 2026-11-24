@@ -17,6 +17,7 @@
     wrap.querySelector("h2").textContent = title;
     wrap.querySelector("p").textContent = line || "";
     document.body.appendChild(wrap);
+    if (window.PID_NATIVE) window.PID_NATIVE.haptic("success");
 
     const cv = wrap.querySelector("canvas"); const g = cv.getContext("2d");
     const dpr = Math.min(2, window.devicePixelRatio || 1);

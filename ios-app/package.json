@@ -1,0 +1,25 @@
+{
+  "name": "pocket-irish-dance-ios",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The iPhone app wrapper for Pocket Irish Dance. The app itself is the web app in the folder above.",
+  "type": "module",
+  "scripts": {
+    "copy-web": "node copy-web.mjs",
+    "sync": "node copy-web.mjs && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2"
+  }
+}

@@ -26,10 +26,11 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "36"; // keep in step with VERSION in sw.js
-  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
+  const APP_VERSION = "37"; // keep in step with VERSION in sw.js
+  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, reminders: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
+  const N = window.PID_NATIVE || { isApp: false, haptic() {}, share: async () => false };
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
 
   // Photos are bigger, so they go in IndexedDB.
@@ -209,7 +210,7 @@
 
   screens.home = function () {
     const p = S.profile; const lv = levelById(p.level);
-    const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    const standalone = N.isApp || matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     return {
       title: "Home", tab: "home",
       html: `
@@ -343,7 +344,9 @@
   function loadFeis() {
     if (feisData || feisLoading) return;
     feisLoading = true;
-    fetch("feis.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    const get = (u) => fetch(u, { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+    // In the iPhone app, get the fresh list from the website; the copy inside the app is the offline fallback.
+    (N.isApp ? get(N.publicUrl + "feis.json").catch(() => get("feis.json")) : get("feis.json"))
       .then((d) => { feisData = d; }).catch(() => { feisFailed = true; })
       .then(() => { feisLoading = false; if (location.hash.startsWith("#/feis")) rerender(); });
   }
@@ -367,7 +370,8 @@
     const t = today();
     const list = (feisData.events || []).filter((e) => (e.end || e.start) >= t && (st.org === "all" || e.org === st.org));
     let lastMonth = "";
-    const cards = list.map((e) => {
+    screens.feis.list = list;
+    const cards = list.map((e, i) => {
       const m = new Date(e.start + "T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
       const h = m !== lastMonth ? `<div class="az" data-feis-month>${esc(m.toUpperCase())}</div>` : "";
       lastMonth = m;
@@ -380,7 +384,7 @@
         ${e.organiser ? `<p class="small muted" style="margin:6px 0 0">Organiser: ${esc(e.organiser)}</p>` : ""}
         ${e.host ? `<p class="small muted" style="margin:6px 0 0">Hosted by ${esc(e.host)}</p>` : ""}
         ${e.source === "found" ? `<p class="small muted" style="margin:4px 0 0">Found on ${esc(e.foundOn || "the host's website")}</p>` : ""}
-        <div class="row wrap" style="gap:8px;margin-top:8px"><a class="btn ghost sm" href="${esc(e.url)}" target="_blank" rel="noopener">Details ↗</a>${e.syllabus ? `<a class="btn ghost sm" href="${esc(e.syllabus)}" target="_blank" rel="noopener">Syllabus ↗</a>` : ""}</div>
+        <div class="row wrap" style="gap:8px;margin-top:8px"><a class="btn ghost sm" href="${esc(e.url)}" target="_blank" rel="noopener">Details ↗</a>${e.syllabus ? `<a class="btn ghost sm" href="${esc(e.syllabus)}" target="_blank" rel="noopener">Syllabus ↗</a>` : ""}${N.canRemind && !e.cancelled ? `<button class="btn ${S.reminders[e.name + "|" + e.start] ? "" : "ghost "}sm" data-remind="${i}">${S.reminders[e.name + "|" + e.start] ? "🔔 Reminders on" : "🔔 Remind me"}</button>` : ""}</div>
       </article>`;
     }).join("");
     const shown = st.org === "all" ? FEIS_ORGS : FEIS_ORGS.filter((o) => o.id === st.org);
@@ -1102,7 +1106,7 @@
   function feedbackLink(x) {
     const ua = navigator.userAgent || "";
     const device = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Other";
-    const installed = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone ? "home screen app" : "browser";
+    const installed = N.isApp ? "iPhone app" : (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone ? "home screen app" : "browser";
     const body = (x.ask ? x.ask + "\n\n\n\n" : "\n\n") + `----\nPocket Irish Dance update ${APP_VERSION} · ${device} · ${installed}`;
     return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Pocket Irish Dance: " + x.subject)}&body=${encodeURIComponent(body)}`;
   }
@@ -1145,9 +1149,8 @@
           screens.rules.f = null; save(); toast("Saved"); location.hash = "#/";
         });
         document.getElementById("exportBtn").addEventListener("click", () => {
-          const blob = new Blob([JSON.stringify({ app: "pocket-irish-dance", saved: new Date().toISOString(), data: S }, null, 2)], { type: "application/json" });
-          const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "irish-dance-backup-" + today() + ".json";
-          document.body.appendChild(a); a.click(); a.remove();
+          const text = JSON.stringify({ app: "pocket-irish-dance", saved: new Date().toISOString(), data: S }, null, 2);
+          window.PID_NATIVE.saveFile("irish-dance-backup-" + today() + ".json", text).catch(() => toast("Couldn't save the backup"));
         });
         document.getElementById("importFile").addEventListener("change", async (e) => {
           const file = e.target.files[0]; if (!file) return;
@@ -1216,6 +1219,16 @@
     if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; screens.feis.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
     if (t.dataset.viewOrg !== undefined) { viewOrg = t.dataset.viewOrg; screens.schools.st = null; toast(viewOrg ? "Looking at " + orgName(viewOrg) : "Back to " + orgName(S.profile.org)); location.hash = "#/"; route(); return; }
     if (t.dataset.searchAll !== undefined) { screens.search.all = !!t.dataset.searchAll; rerender(); return; }
+    if (t.dataset.remind) {
+      const f = screens.feis.list && screens.feis.list[+t.dataset.remind]; if (!f) return;
+      const k = f.name + "|" + f.start;
+      if (S.reminders[k]) { N.cancelReminder(f); delete S.reminders[k]; save(); toast("Reminders off"); rerender(); return; }
+      N.remind(f).then((r) => {
+        if (r.ok) { S.reminders[k] = true; save(); N.haptic(); toast(r.count === 2 ? "We'll remind you a week before and the evening before" : "We'll remind you the evening before"); rerender(); }
+        else toast(r.denied ? "Turn on notifications for Pocket Irish Dance in your iPhone Settings" : "This feis is too soon for a reminder");
+      }).catch(() => toast("Couldn't set the reminder"));
+      return;
+    }
     if (t.dataset.feisOrg) { screens.feis.st.org = t.dataset.feisOrg; rerender(); return; }
     if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }

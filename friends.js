@@ -53,7 +53,10 @@
       return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
     };
     const fail = (err, fallback) => { console.warn(err); toast((err && err.message) || fallback || "Something went wrong. Check your connection."); };
-    const inviteLink = (code) => location.origin + location.pathname + "#/join/" + code;
+    const N = window.PID_NATIVE || { isApp: false, share: async () => false };
+    // Inside the iPhone app the page address is the phone itself, so links point at the website.
+    const siteUrl = () => (N.isApp ? N.publicUrl : location.origin + location.pathname);
+    const inviteLink = (code) => siteUrl() + "#/join/" + code;
 
     // ---------- loading ----------
     async function load() {
@@ -383,7 +386,7 @@
       try {
         if (kind === "email") {
           F.email = f.email.value.trim();
-          const { error } = await sb.auth.signInWithOtp({ email: F.email, options: { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname } });
+          const { error } = await sb.auth.signInWithOtp({ email: F.email, options: { shouldCreateUser: true, emailRedirectTo: siteUrl() } });
           if (error) throw error;
           F.step = "code"; rerender();
         } else if (kind === "code") {
@@ -448,8 +451,7 @@
           case "invite": {
             const link = inviteLink(t.dataset.code);
             const text = `Join my group "${t.dataset.name}" on Pocket Irish Dance, so we can cheer on each other's dancers. Invite code: ${t.dataset.code}`;
-            if (navigator.share) { try { await navigator.share({ title: "Pocket Irish Dance", text, url: link }); } catch (err) { /* closed */ } }
-            else { await navigator.clipboard.writeText(text + "\n" + link); toast("Invite copied. Paste it in a text or WhatsApp."); }
+            if (!(await N.share({ title: "Pocket Irish Dance", text, url: link }))) { await navigator.clipboard.writeText(text + "\n" + link); toast("Invite copied. Paste it in a text or WhatsApp."); }
             break;
           }
           case "unshare": {
