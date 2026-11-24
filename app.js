@@ -1078,6 +1078,7 @@
         ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ""}
       </dl></div>
       ${r.photoId ? `<img class="photo-preview" data-photo="${esc(r.photoId)}" alt="Results photo" style="max-height:none">` : ""}
+      ${friendsApi.canShare ? `<a class="btn block" href="#/share/${r.id}" style="margin-top:10px">🎉 Share this win with friends</a>${S.shared && S.shared[r.id] && S.shared[r.id].length ? `<p class="small muted center" style="margin:6px 0 0">Shared with ${S.shared[r.id].length} group${S.shared[r.id].length === 1 ? "" : "s"}</p>` : ""}` : ""}
       <a class="btn ghost block" href="#/edit/${r.dancerId}/${r.id}" style="margin-top:10px">Edit</a>`
     };
   };
@@ -1153,7 +1154,7 @@
       case "settings": v = screens.settings(); break;
       case "schools": v = screens.schools(); break;
       case "feis": v = screens.feis(); break;
-      default: v = screens.home();
+      default: v = ext[parts[0]] ? ext[parts[0]](parts, q) : screens.home();
     }
     titleEl.textContent = v.title;
     document.title = v.title === "Pocket Irish Dance" ? v.title : v.title + " · Pocket Irish Dance";
@@ -1264,6 +1265,11 @@
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }
+
+  // ---------- friends (friends.js adds its screens here) ----------
+  const ext = {};
+  const friendsApi = { ext, rerender, toast, esc, fmtDate, ordinal, danceById, levelById, save, S: () => S, canShare: false };
+  if (window.PID_FRIENDS) window.PID_FRIENDS(friendsApi);
 
   route();
 })();
