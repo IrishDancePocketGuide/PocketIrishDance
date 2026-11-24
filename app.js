@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "29"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "30"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -785,6 +785,8 @@
   function judgeProfile(name) {
     const i = judgeInfo(name) || {};
     const has = i.school || (i.roles || []).length || i.where || i.note;
+    // Opens a web search; the parent reads it and types in what they find. Nothing is saved automatically.
+    const lookup = `<a class="btn ghost sm" href="https://www.google.com/search?q=${encodeURIComponent('"' + name + '" ADCRG Irish dance')}" target="_blank" rel="noopener">🔎 Look up this judge</a>`;
     const roles = (i.roles || []).filter((id) => !(id === "teacher" && i.school)).map((id) => {
       const x = JUDGE_ROLES.find((y) => y.id === id) || {}; return `<li>${x.ico || "•"} ${esc(id === "other" ? (i.other || "Other") : x.name)}</li>`; }).join("");
     return `<section class="card judge-profile">
@@ -795,9 +797,9 @@
           ${i.school ? `<li>🏫 Teaches at <strong>${esc(i.school)}</strong></li>` : ""}${roles}
           ${i.where ? `<li>📍 ${esc(i.where)}</li>` : ""}</ul>
           ${i.note ? `<p class="small" style="margin:6px 0 0">${esc(i.note)}</p>` : ""}
-          <button type="button" class="btn ghost sm" id="jEdit" style="margin-top:10px">Edit details</button>`
+          <div class="row" style="gap:8px;margin-top:10px"><button type="button" class="btn ghost sm" id="jEdit">Edit details</button>${lookup}</div>`
         : `<p class="small muted" style="margin:10px 0">Add what you know about this judge: the school they teach at, or if they're a dressmaker, choreographer or something else.</p>
-          <button type="button" class="btn sm" id="jEdit">＋ Add details</button>`}
+          <div class="row" style="gap:8px"><button type="button" class="btn sm" id="jEdit">＋ Add details</button>${lookup}</div>`}
       </div>
       <form id="jForm" hidden>
         <label class="field"><span>School they teach at</span><input name="school" list="schoolList" value="${esc(i.school || "")}" placeholder="e.g. Trinity Academy" maxlength="80"></label>
@@ -808,7 +810,7 @@
         <label class="field" id="jOtherWrap" ${(i.roles || []).includes("other") ? "" : "hidden"}><span>Other role</span><input name="other" value="${esc(i.other || "")}" placeholder="e.g. Shoe maker" maxlength="60"></label>
         <label class="field"><span>Where they're from</span><input name="where" value="${esc(i.where || "")}" placeholder="e.g. Chicago, IL" maxlength="60"></label>
         <label class="field"><span>Note (optional)</span><textarea name="note" rows="2" maxlength="200" placeholder="e.g. Also teaches at a summer camp">${esc(i.note || "")}</textarea></label>
-        <p class="small muted" style="margin:4px 0 10px">Saved on this phone only. Stick to facts you know, like their school or business.</p>
+        <p class="small muted" style="margin:4px 0 10px">Saved on this phone only. Stick to facts you know or found on their school's or business's own website.</p>
         <div class="row" style="gap:8px"><button class="btn" style="flex:1">Save</button><button type="button" class="btn ghost" id="jCancel">Cancel</button>
           ${has ? `<button type="button" class="btn plain" id="jClear">Clear</button>` : ""}</div>
       </form>
