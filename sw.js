@@ -1,7 +1,7 @@
 // Keeps the app (app.html) and the website (index.html) working offline. Bump VERSION whenever any file changes.
-const VERSION = "pid-v53";
+const VERSION = "pid-v55";
 const FILES = [
-  "./", "index.html", "app.html", "styles.css", "app.js", "data.js", "reader.js", "celebrate.js", "config.js", "legal.js", "friends.js", "games.js", "rhythm.js", "trivia.js", "namedance.js", "vendor/supabase/supabase.js", "manifest.webmanifest",
+  "./", "index.html", "app.html", "styles.css", "app.js", "data.js", "reader.js", "celebrate.js", "config.js", "legal.js", "friends.js", "games.js", "rhythm.js", "trivia.js", "namedance.js", "gaelic.js", "vendor/supabase/supabase.js", "manifest.webmanifest",
   "icons/favicon-32.png", "icons/wordmark.png", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"
 ];
 

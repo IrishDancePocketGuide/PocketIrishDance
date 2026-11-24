@@ -171,6 +171,7 @@
     const RT = window.PID_RHYTHM ? window.PID_RHYTHM(A) : null; // rhythm.js
     const TQ = window.PID_TRIVIA ? window.PID_TRIVIA(A) : null; // trivia.js
     const ND = window.PID_NAMEDANCE ? window.PID_NAMEDANCE(A) : null; // namedance.js
+    const GW = window.PID_GAELIC ? window.PID_GAELIC(A) : null; // gaelic.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -226,7 +227,14 @@
             <span class="small game-status">${esc(ND.status())}</span></span>
           <span class="btn sm">Play</span>
         </a>` : ""}
-                ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
+        ${GW ? `<a class="card game-card" href="#/games/gaelic">
+          <span class="ico" aria-hidden="true">☘️</span>
+          <span class="game-body"><strong>Gaelic word flashcards</strong>
+            <span class="small muted">See an Irish word and pick what it means</span>
+            <span class="small game-status">${esc(GW.status())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+        ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
         <div class="card" style="text-align:center">
           <p class="small muted" style="margin:0">More games are on the way. Got an idea for one? Tell us in Settings, Help and feedback.</p>
         </div>`
@@ -437,6 +445,7 @@
       if (parts[1] === "rhythm" && RT) return RT.screen();
       if (parts[1] === "trivia" && TQ) return TQ.screen();
       if (parts[1] === "namedance" && ND) return ND.screen();
+      if (parts[1] === "gaelic" && GW) return GW.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };

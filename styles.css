@@ -470,3 +470,9 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .nd-play.playing { animation: nd-beat .5s ease-in-out infinite alternate; }
 @keyframes nd-beat { to { transform: scale(1.05); } }
 @media (prefers-reduced-motion: reduce) { .nd-play.playing { animation: none; } }
+
+/* Gaelic word flashcards */
+.gw-card { text-align: center; padding: 22px 16px; }
+.gw-word { font-size: 38px; font-weight: 700; line-height: 1.15; margin: 0 0 10px; overflow-wrap: anywhere; }
+.gw-dots { flex-wrap: wrap; }
+.gw-dots i { width: 20px; }
