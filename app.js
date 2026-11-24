@@ -213,6 +213,7 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>First feis, solo dress, Oireachtas</span></a>
         <a class="tile" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
+        <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
         <a class="tile wide" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Search for Irish dance schools near you</span></a>
       </div>
 
@@ -316,6 +317,104 @@
             (pos) => window.open(`https://www.google.com/maps/search/${encodeURIComponent(o.q)}/@${pos.coords.latitude.toFixed(3)},${pos.coords.longitude.toFixed(3)},12z`, "_blank", "noopener"),
             () => open("near me"), { timeout: 8000 });
         });
+      }
+    };
+  };
+
+  // ---------- feis calendar ----------
+  // feis.json is refreshed every few hours by a GitHub Action that reads each organization's
+  // own public feis calendar (scripts/update-feis.mjs). The app only reads it.
+  const FEIS_ORGS = [
+    { id: "clrg", name: "CLRG", where: "North America", calendar: "https://idtana.org/feiseanna/" },
+    { id: "comhdhail", name: "An Comhdháil", where: "Ireland, UK and beyond", calendar: "https://web.irishdancingorg.com/index.php/feis" },
+    { id: "wida", name: "WIDA", where: "Mainly mainland Europe and the UK", calendar: "https://www.irish.dance/competitions-list" }
+  ];
+  // IDTANA's national list has the bigger events; most local CLRG feiseanna are on these regional calendars.
+  const CLRG_REGION_CALENDARS = [
+    ["Eastern Canada", "https://www.idtac-er.com/regional-feiseanna"],
+    ["Western Canada", "https://www.wcidta.ca/feis-dates"],
+    ["Mid-America", "https://midamericaregion.com/region-information/feis-calendar/"],
+    ["Mid-Atlantic", "https://www.mid-atlanticregion.com/feis-info"],
+    ["New England", "https://www.neidt.org/feiseanna"],
+    ["Southern US", "https://www.idtana-southernregion.com/calendar"],
+    ["Western US", "https://www.westernusregion.com/feiseanna"]
+  ];
+  let feisData = null, feisLoading = false, feisFailed = false;
+  function loadFeis() {
+    if (feisData || feisLoading) return;
+    feisLoading = true;
+    fetch("feis.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then((d) => { feisData = d; }).catch(() => { feisFailed = true; })
+      .then(() => { feisLoading = false; if (location.hash.startsWith("#/feis")) rerender(); });
+  }
+  function feisDates(e) {
+    const opt = { weekday: "short", day: "numeric", month: "short" };
+    const a = new Date(e.start + "T12:00:00"), b = new Date((e.end || e.start) + "T12:00:00");
+    if (e.end === e.start || !e.end) return a.toLocaleDateString(undefined, opt);
+    const f = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
+    return f.formatRange ? f.formatRange(a, b) : `${f.format(a)} – ${f.format(b)}`;
+  }
+  screens.feis = function () {
+    loadFeis();
+    const st = screens.feis.st || (screens.feis.st = { org: FEIS_ORGS.some((o) => o.id === curOrg()) ? curOrg() : "all", q: "" });
+    const tabs = `<div class="pill-tabs">${[{ id: "all", name: "All" }].concat(FEIS_ORGS).map((o) => `<button data-feis-org="${o.id}" class="${st.org === o.id ? "on" : ""}">${esc(o.name)}</button>`).join("")}</div>`;
+    const head = `<p class="muted" style="margin:0 4px 10px">Upcoming feiseanna from each organization's official calendar, checked automatically every few hours.</p>${tabs}`;
+    if (!feisData) {
+      return { title: "Feis calendar", tab: "home", back: true, html: head + (feisFailed
+        ? `<div class="empty"><div class="big">📅</div><p>The feis calendar couldn't load. Check your connection, or open an official calendar:</p>${FEIS_ORGS.map((o) => `<a class="btn ghost block" style="margin-top:8px" href="${o.calendar}" target="_blank" rel="noopener">${esc(o.name)} calendar ↗</a>`).join("")}</div>`
+        : `<div class="empty"><div class="spinner" style="margin:0 auto 10px"></div><p>Loading feiseanna…</p></div>`) };
+    }
+    const t = today();
+    const list = (feisData.events || []).filter((e) => (e.end || e.start) >= t && (st.org === "all" || e.org === st.org));
+    let lastMonth = "";
+    const cards = list.map((e) => {
+      const m = new Date(e.start + "T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      const h = m !== lastMonth ? `<div class="az" data-feis-month>${esc(m.toUpperCase())}</div>` : "";
+      lastMonth = m;
+      const find = norm([e.name, e.place, e.region, e.kind, e.organiser, orgName(e.org)].join(" "));
+      return h + `<article class="card feis${e.cancelled ? " cancelled" : ""}" data-find="${esc(find)}">
+        <div class="feis-date">${esc(feisDates(e))}</div>
+        <h3>${esc(e.name)}</h3>
+        ${e.place ? `<p class="small" style="margin:2px 0 0">📍 ${esc(e.place)}</p>` : ""}
+        <div class="chips" style="margin-top:6px">${st.org === "all" ? `<span class="chip">${esc(orgName(e.org))}</span>` : ""}${e.cancelled ? `<span class="chip gold">Cancelled</span>` : ""}${e.kind ? `<span class="chip grey">${esc(e.kind)}</span>` : ""}${e.region ? `<span class="chip grey">${esc(e.region)}</span>` : ""}</div>
+        ${e.organiser ? `<p class="small muted" style="margin:6px 0 0">Organiser: ${esc(e.organiser)}</p>` : ""}
+        <div class="row wrap" style="gap:8px;margin-top:8px"><a class="btn ghost sm" href="${esc(e.url)}" target="_blank" rel="noopener">Details ↗</a>${e.syllabus ? `<a class="btn ghost sm" href="${esc(e.syllabus)}" target="_blank" rel="noopener">Syllabus ↗</a>` : ""}</div>
+      </article>`;
+    }).join("");
+    const shown = st.org === "all" ? FEIS_ORGS : FEIS_ORGS.filter((o) => o.id === st.org);
+    const srcs = (feisData.sources || []).filter((s) => shown.some((o) => o.id === s.org));
+    const checked = feisData.checked ? new Date(feisData.checked).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+    return {
+      title: "Feis calendar", tab: "home", back: true,
+      html: head + `
+      <div class="search" style="margin-top:10px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="feisFind" value="${esc(st.q)}" placeholder="Search by name, city or region" aria-label="Search feiseanna"></div>
+      <p class="small muted" style="margin:8px 4px 0" id="feisCount"></p>
+      <div id="feisList">${cards || `<div class="empty"><div class="big">📅</div><p>No upcoming feiseanna listed here right now.</p></div>`}</div>
+      <div class="empty" id="feisNone" hidden><div class="big">🔎</div><p>No feiseanna match your search.</p></div>
+      ${st.org === "clrg" || st.org === "all" ? `<div class="card" style="margin-top:14px"><h3>More CLRG feiseanna in North America</h3>
+        <p class="small muted" style="margin:0 0 8px">The national list above has the bigger events. Most local feiseanna are listed by your region:</p>
+        <div class="row wrap" style="gap:6px">${CLRG_REGION_CALENDARS.map(([n, u]) => `<a class="btn ghost sm" href="${u}" target="_blank" rel="noopener">${esc(n)} ↗</a>`).join("")}</div>
+        <p class="small muted" style="margin:8px 0 0">Outside North America, ask your teacher for your region's feis list.</p></div>` : ""}
+      <div class="card small" style="margin-top:14px"><strong>Where these come from</strong>
+        <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">${srcs.map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>${s.problem ? ` <span class="muted">(couldn't be read on the last check, so these may be a little out of date)</span>` : ""}</li>`).join("")}</ul>
+        <p class="muted" style="margin:6px 0 0">${checked ? `Last checked ${esc(checked)}. ` : ""}Always confirm dates, entry deadlines and fees on the official page before you register.</p></div>`,
+      after() {
+        const input = document.getElementById("feisFind");
+        const apply = () => {
+          const q = norm(input.value).trim(); st.q = input.value;
+          let n = 0;
+          document.querySelectorAll("#feisList .feis").forEach((c) => { const on = !q || c.dataset.find.includes(q); c.hidden = !on; if (on) n++; });
+          // Hide a month heading when every feis under it is hidden.
+          document.querySelectorAll("#feisList [data-feis-month]").forEach((h) => {
+            let el = h.nextElementSibling, any = false;
+            while (el && !el.hasAttribute("data-feis-month")) { if (!el.hidden) any = true; el = el.nextElementSibling; }
+            h.hidden = !any;
+          });
+          document.getElementById("feisCount").textContent = list.length ? `${n} upcoming feis${n === 1 ? "" : "eanna"}` : "";
+          document.getElementById("feisNone").hidden = !(list.length && !n);
+        };
+        input.addEventListener("input", apply);
+        apply();
       }
     };
   };
@@ -946,7 +1045,7 @@
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
           e.preventDefault(); const fd = new FormData(e.target);
-          viewOrg = ""; screens.schools.st = null; S.profile = { org: fd.get("org") || "", region: fd.get("region") || "", level: fd.get("level") || "" };
+          viewOrg = ""; screens.schools.st = null; screens.feis.st = null; S.profile = { org: fd.get("org") || "", region: fd.get("region") || "", level: fd.get("level") || "" };
           screens.rules.f = null; save(); toast("Saved"); location.hash = "#/";
         });
         document.getElementById("exportBtn").addEventListener("click", () => {
@@ -989,6 +1088,7 @@
       case "result": v = screens.result(parts[1]); break;
       case "settings": v = screens.settings(); break;
       case "schools": v = screens.schools(); break;
+      case "feis": v = screens.feis(); break;
       default: v = screens.home();
     }
     titleEl.textContent = v.title;
@@ -1015,9 +1115,10 @@
     const t = e.target.closest("button, [data-say]");
     if (!t) return;
     if (t.dataset.say) { e.preventDefault(); speak(t.dataset.say); return; }
-    if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
+    if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; screens.feis.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
     if (t.dataset.viewOrg !== undefined) { viewOrg = t.dataset.viewOrg; screens.schools.st = null; toast(viewOrg ? "Looking at " + orgName(viewOrg) : "Back to " + orgName(S.profile.org)); location.hash = "#/"; route(); return; }
     if (t.dataset.searchAll !== undefined) { screens.search.all = !!t.dataset.searchAll; rerender(); return; }
+    if (t.dataset.feisOrg) { screens.feis.st.org = t.dataset.feisOrg; rerender(); return; }
     if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }
     if (t.dataset.dview) { screens.dancer.view = t.dataset.dview; rerender(); return; }

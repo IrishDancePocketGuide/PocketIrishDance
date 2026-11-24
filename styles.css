@@ -288,3 +288,8 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .brand { display: flex; justify-content: center; padding: 6px 0 14px; }
 .brand img { width: min(300px, 78%); height: auto; }
 @media (prefers-color-scheme: dark) { .brand img { filter: brightness(0) invert(1); } }
+
+/* Feis calendar */
+.feis h3 { margin: 2px 0 0; }
+.feis-date { font-size: 13px; font-weight: 800; color: var(--green); letter-spacing: 0.02em; }
+.feis.cancelled h3 { text-decoration: line-through; color: var(--ink-2); }
