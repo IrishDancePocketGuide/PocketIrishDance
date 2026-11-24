@@ -96,7 +96,8 @@
     ["🎟️", "A raffle table"], ["🛍️", "A dance shop stall"], ["🎵", "A hornpipe playing"], ["🎶", "A reel playing"],
     ["💧", "A water bottle refill"], ["🧸", "A teddy or mascot"], ["🎒", "A huge feis bag"], ["🙇", "A dancer bowing"],
     ["🎗️", "A winner's sash"], ["💐", "Flowers for a dancer"], ["🍪", "A bake sale"], ["⏰", "A stage running late"],
-    ["🩹", "Tape on a hard shoe"], ["🌀", "Curls bouncing"], ["😊", "A dancer smiling on stage"], ["🙌", "A teacher giving a high five"]
+    ["🩹", "Tape on a hard shoe"], ["🌀", "Curls bouncing"], ["😊", "A dancer smiling on stage"], ["🙌", "A teacher giving a high five"],
+    ["👚", "A mom in a feis mom shirt"], ["👕", "A dad in a feis dad shirt"], ["🏈", "A sports team blanket"], ["👠", "A teacher in high heels"]
   ].map(([e, t]) => ({ e, t }));
   const KEY = "pid.games";
   const FILL = "ABCDEFGHIJKLMNOPRSTUWY"; // filler letters (skips Q, V, X, Z so it looks less random)
