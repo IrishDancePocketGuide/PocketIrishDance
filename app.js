@@ -505,9 +505,12 @@
       title: "Score tracker", tab: "scores",
       html: `${S.dancers.map((dn) => {
         const n = S.results.filter((r) => r.dancerId === dn.id).length;
-        return `<a class="card row" style="text-decoration:none;color:inherit" href="#/dancer/${dn.id}"><span class="place">${esc(dn.name[0] || "?")}</span><div class="meta" style="flex:1"><strong>${esc(dn.name)}</strong><span class="small muted">${n} result${n === 1 ? "" : "s"}</span></div><span class="muted">›</span></a>`;
+        const firsts = S.results.filter((r) => r.dancerId === dn.id && Number(r.place) === 1).length;
+        const last = S.results.filter((r) => r.dancerId === dn.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+        return `<a class="card row" style="text-decoration:none;color:inherit" href="#/dancer/${dn.id}"><span class="place">${esc(dn.name[0] || "?")}</span><div class="meta" style="flex:1"><strong>${esc(dn.name)}</strong><span class="small muted">${n} result${n === 1 ? "" : "s"}${firsts ? ` · ${firsts} × 1st 🥇` : ""}${last ? ` · last: ${esc(last.feis || fmtDate(last.date))}` : ""}</span></div><span class="muted">›</span></a>`;
       }).join("")}
-      <a class="btn ghost block" href="#/dancer/new" style="margin-top:8px">Add another dancer</a>`
+      <a class="btn ghost block" href="#/dancer/new" style="margin-top:8px">＋ Add another child</a>
+      <p class="small muted" style="text-align:center">Each child has their own results, levels, judge history and celebrations.</p>`
     };
   };
 
@@ -592,8 +595,9 @@
       html: `
       ${sugg.map((s) => `<div class="banner"><span>🎉 ${esc(ordinal(s.r.place))} in ${esc(s.dance.name)} at ${esc(s.from.name)}. That usually means moving up to <strong>${esc(s.to.name)}</strong> in ${esc(s.dance.name)}.</span>
         <button class="btn sm" data-moveup="${s.r.id}">Move up</button><button class="btn plain sm" data-dismiss="${s.r.id}" aria-label="Not yet">✕</button></div>`).join("")}
+      <nav class="kid-switch" aria-label="Your dancers">${S.dancers.map((d) => `<a href="#/dancer/${d.id}" class="${d.id === dn.id ? "on" : ""}" ${d.id === dn.id ? 'aria-current="page"' : ""}>${esc(d.name)}</a>`).join("")}<a href="#/dancer/new" class="add">＋ ${S.dancers.length > 1 ? "Add child" : "Add another child"}</a></nav>
       <div class="row" style="gap:8px">
-        <a class="btn" style="flex:1" href="#/add/${dn.id}">＋ Add a result</a>
+        <a class="btn" style="flex:1" href="#/add/${dn.id}">＋ Add a result for ${esc(dn.name)}</a>
         <a class="btn ghost" href="#/dancer/${dn.id}/edit">Levels</a>
       </div>
       <div class="card" style="padding:6px 14px">
@@ -693,6 +697,7 @@
           <div id="readProg" class="read-prog" hidden><span class="spinner" aria-hidden="true"></span><span id="readMsg">Reading the results…</span></div>`}
         </div>
         <div class="card">
+          ${S.dancers.length > 1 ? `<div class="field" style="margin-top:0"><span>Who is this for?</span><div class="who-pick">${S.dancers.map((d) => `<label><input type="radio" name="who" value="${d.id}" ${d.id === dancerId ? "checked" : ""}><span>${esc(d.name)}</span></label>`).join("")}</div></div>` : ""}
           <div class="two">
             <label class="field"><span>Date</span><input type="date" name="date" required value="${esc(r.date)}"></label>
             <label class="field"><span>Feis or event</span><input name="feis" value="${esc(lastFeis)}" placeholder="e.g. Feis Mid-America" maxlength="80"></label>
@@ -729,6 +734,8 @@
       </form>`,
       after() {
         const f = document.getElementById("resForm");
+        // Which child this result is for (families can have several dancers).
+        const who = () => S.dancers.find((d) => d.id === (f.who ? f.who.value : dancerId)) || dn;
         let newPhoto = null;
         // Pre-fill level from the dancer's level in that dance
         const setChamp = () => {
@@ -740,7 +747,7 @@
         f.dance.addEventListener("change", () => {
           setChamp();
           const d = danceById(f.dance.value); if (!d) return;
-          const lv = dancerLevel(dn, d.shoe === "champ" ? "champ" : d.id);
+          const lv = dancerLevel(who(), d.shoe === "champ" ? "champ" : d.id);
           if (lv) f.level.value = lv;
           setChamp();
         });
@@ -762,6 +769,15 @@
           try {
             const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
             const out = window.PID_READER.parse(text, { levels: orgLevels() });
+            // If the sheet names exactly one of the children, pick that child.
+            if (f.who) {
+              const low = " " + text.toLowerCase().replace(/[^a-z\u00c0-\u024f]+/g, " ") + " ";
+              const named = S.dancers.filter((d) => d.name.trim().length > 1 && low.includes(" " + d.name.toLowerCase().trim() + " "));
+              if (named.length === 1 && f.who.value !== named[0].id) {
+                f.querySelector(`input[name="who"][value="${named[0].id}"]`).checked = true;
+                toast("This looks like " + named[0].name + "'s results");
+              }
+            }
             prog.hidden = true;
             if (out.date) f.date.value = out.date;
             if (out.feis && (!f.feis.value || f.feis.value === lastFeis)) f.feis.value = out.feis;
@@ -778,7 +794,7 @@
           const lvCount = {}; out.results.forEach((x) => { if (x.level) lvCount[x.level] = (lvCount[x.level] || 0) + 1; });
           const guessLevel = Object.keys(lvCount).sort((a, b) => lvCount[b] - lvCount[a])[0] || "";
           const rows = out.results.map((x) => {
-            if (!x.level) x.level = dancerLevel(dn, x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
+            if (!x.level) x.level = dancerLevel(who(), x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
             return x;
           });
           const said = `<details class="small" style="margin-top:8px"><summary>Show everything the app read</summary><pre class="read-text">${esc(out.text || "(no words found)")}</pre></details>`;
@@ -789,7 +805,7 @@
             return;
           }
           el.innerHTML = `<div class="card"><h3>Found ${rows.length} result${rows.length > 1 ? "s" : ""}</h3>
-            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(dn.name)}'s, then save.</p>${said}</div>
+            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(who().name)}'s, then save.</p>${said}</div>
             ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
               <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
               <div class="two">
@@ -825,7 +841,7 @@
               if (!g("dance").value || !g("level").value) { toast("Choose the dance and level for each ticked result"); (g("dance").value ? g("level") : g("dance")).focus(); return; }
               picked.push({
                 _row: row.dataset.row,
-                id: uid(), dancerId, date, feis, dance: g("dance").value, level: g("level").value,
+                id: uid(), dancerId: who().id, date, feis, dance: g("dance").value, level: g("level").value,
                 place: g("place").value ? Number(g("place").value) : "", entrants: g("entrants").value ? Number(g("entrants").value) : "",
                 marks: String(g("marks").value).trim(), recall: g("recall") ? g("recall").checked : false, notes: "", photoId: "",
                 judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges), rounds: []
@@ -844,8 +860,8 @@
               catch (err) { toast("Photo couldn't be saved, but the results were"); }
             }
             S.results.push(...picked);
-            save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + dancerId;
-            cheer(dn, picked);
+            save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + who().id;
+            cheer(who(), picked);
           });
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -858,7 +874,7 @@
           e.preventDefault();
           const fd = new FormData(f);
           const rec = {
-            id: r.id || uid(), dancerId,
+            id: r.id || uid(), dancerId: who().id,
             date: fd.get("date"), feis: String(fd.get("feis") || "").trim(), dance: fd.get("dance"), level: fd.get("level"),
             place: fd.get("place") ? Number(fd.get("place")) : "", entrants: fd.get("entrants") ? Number(fd.get("entrants")) : "",
             marks: String(fd.get("marks") || "").trim(), recall: !!fd.get("recall"), notes: String(fd.get("notes") || "").trim(), photoId: r.photoId || "",
@@ -873,8 +889,8 @@
           }
           const i = S.results.findIndex((x) => x.id === rec.id);
           if (i >= 0) S.results[i] = rec; else S.results.push(rec);
-          save(); toast("Result saved"); location.hash = "#/dancer/" + dancerId;
-          if (Number(r.place) !== 1) cheer(dn, [rec]);
+          save(); toast("Result saved"); location.hash = "#/dancer/" + who().id;
+          if (Number(r.place) !== 1) cheer(who(), [rec]);
         });
       }
     };

@@ -270,3 +270,15 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .judge-row { margin-bottom: 8px; }
 .judge-places { display: flex; flex-wrap: wrap; gap: 4px; }
 .pill-tabs button { white-space: nowrap; }
+
+/* Several children */
+.kid-switch { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.kid-switch a { flex: none; padding: 7px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
+.kid-switch a.on { background: var(--green); border-color: var(--green); color: #fff; }
+.kid-switch a.add { color: var(--green); border-style: dashed; font-weight: 500; }
+.who-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.who-pick label { cursor: pointer; }
+.who-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.who-pick span { display: inline-block; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-weight: 600; font-size: 14px; }
+.who-pick input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
+.who-pick input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
