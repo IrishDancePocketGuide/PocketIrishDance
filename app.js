@@ -358,7 +358,7 @@
     loadFeis();
     const st = screens.feis.st || (screens.feis.st = { org: FEIS_ORGS.some((o) => o.id === curOrg()) ? curOrg() : "all", q: "" });
     const tabs = `<div class="pill-tabs">${[{ id: "all", name: "All" }].concat(FEIS_ORGS).map((o) => `<button data-feis-org="${o.id}" class="${st.org === o.id ? "on" : ""}">${esc(o.name)}</button>`).join("")}</div>`;
-    const head = `<p class="muted" style="margin:0 4px 10px">Upcoming feiseanna from each organization's official calendar, checked automatically every few hours.</p>${tabs}`;
+    const head = `<p class="muted" style="margin:0 4px 10px">Upcoming feiseanna from the organizations' official calendars and regional feis lists, kept up to date automatically.</p>${tabs}`;
     if (!feisData) {
       return { title: "Feis calendar", tab: "home", back: true, html: head + (feisFailed
         ? `<div class="empty"><div class="big">📅</div><p>The feis calendar couldn't load. Check your connection, or open an official calendar:</p>${FEIS_ORGS.map((o) => `<a class="btn ghost block" style="margin-top:8px" href="${o.calendar}" target="_blank" rel="noopener">${esc(o.name)} calendar ↗</a>`).join("")}</div>`

@@ -162,9 +162,10 @@ const simple = (n) => String(n || "").toLowerCase().normalize("NFD").replace(/[^
 if (existsSync("feis-found.json")) {
   const found = JSON.parse(readFileSync("feis-found.json", "utf8")).events || [];
   let added = 0;
+  const official = out.events.slice(); // compare finds only with the official lists, not with each other
   for (const e of found) {
     if (!e.name || !e.start || (e.end || e.start) < keepFrom) continue;
-    const dup = out.events.some((o) => o.org === e.org && o.start === e.start && (simple(o.name).includes(simple(e.name)) || simple(e.name).includes(simple(o.name))));
+    const dup = official.some((o) => o.org === e.org && o.start === e.start && (simple(o.name).includes(simple(e.name)) || simple(e.name).includes(simple(o.name))));
     if (dup) continue;
     out.events.push({ source: "found", ...e, end: e.end || e.start }); added++;
   }
