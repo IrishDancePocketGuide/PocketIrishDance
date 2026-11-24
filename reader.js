@@ -242,16 +242,24 @@
     // Compact: "R1 1st R2 3rd R3 3rd"
     const many = [...l.matchAll(/\b(?:round|rnd|rd|r)\s*\.?\s*([1-3])\s*[:=-]?\s*(\d{1,3})(?:st|nd|rd|th)?\b/g)];
     if (many.length > 1) return many.map((m) => ({ n: +m[1], place: +m[2], judge: "" }));
-    const m = l.match(ROUND_RE); if (!m) return null;
+    let m = l.match(ROUND_RE);
+    // Rounds named by shoe instead of number: soft shoe = 1, hard shoe = 2, set round = 3.
+    if (!m) {
+      const byName = /\bsoft\s*shoe\b|\blight\s*shoe\b/.test(l) ? 1 : /\b(hard|heavy)\s*shoe\b/.test(l) ? 2 : /\bset\s*(round|dance)\b|\bown\s*choice\b|\bround\s*3\b/.test(l) ? 3 : 0;
+      if (!byName || !/\b(round|rnd|placing|place[ds]?|\d{1,3}(st|nd|rd|th))\b|:\s*\d/.test(l)) return null;
+      m = ["", String(byName)];
+    }
     const n = +(m[1] || m[2]);
     // Work on the original text after "Round 1" so names keep their capitals.
-    const idx = raw.toLowerCase().search(/\b(round|rnd|rd)\s*\.?\s*#?\s*[1-3]\b|(^|\s)r[1-3]\b/);
-    let rest = raw.slice(idx).replace(/^\s*(round|rnd|rd|r)\s*\.?\s*#?\s*[1-3]/i, "");
+    let idx = raw.toLowerCase().search(/\b(round|rnd|rd)\s*\.?\s*#?\s*[1-3]\b|(^|\s)r[1-3]\b/);
+    let rest;
+    if (idx >= 0) rest = raw.slice(idx).replace(/^\s*(round|rnd|rd|r)\s*\.?\s*#?\s*[1-3]/i, "");
+    else rest = raw.replace(/^.*?\b(soft|light|hard|heavy)\s*shoe\b(\s*round)?|^.*?\bset\s*(round|dance)\b|^.*?\bown\s*choice(\s*set)?\b/i, "");
     rest = rest.replace(/\((soft|hard|heavy|light)\s*shoe\)|\b(soft|hard|heavy)\s*shoe\b|\b(reel|slip jig|treble jig|hornpipe|set dance|set|jig)\b/ig, " ");
     const place = ordNum(clean(rest));
     const js = findJudges(rest);
     let judge = js ? js[0].name : rest.replace(/\b\d{1,3}(st|nd|rd|th)?\b|\b(place[ds]?|placing|judge[ds]?|adjudicator|adj|of)\b|[^\p{L}' .-]/giu, " ").replace(/\s+/g, " ").trim().replace(/^[\s.'-]+|[\s'-]+$/g, "");
-    if (!/\p{L}{2,}.*\s.*\p{L}|\p{L}\.\s*\p{L}{2,}/u.test(judge)) judge = "";
+    if (!/\p{L}{2,}.*\s.*\p{L}|\p{L}\.?\s+\p{L}{2,}/u.test(judge)) judge = "";
     return [{ n, place, judge }];
   }
 
@@ -398,6 +406,8 @@
         }
         if (!sure) { const p0 = findPlace(l, d.text); if (p0) { ch.place = p0.place; sure = p0.sure; } }
         if (!ch.judges.length && judgeAbove && current) ch.judges = current;
+        // Prelim (PC) has only 2 rounds; a "round 3" there is a misread.
+        if (ch.dance === "prelim" || /\bpc\b|prelim/.test(ch.level || "")) ch.rounds = ch.rounds.filter((x) => x.n <= 2);
         // Round judges are on the panel too.
         ch.rounds.sort((a, b) => a.n - b.n).forEach((x) => { if (x.judge && !ch.judges.some((y) => y.name.toLowerCase() === x.judge.toLowerCase())) ch.judges = ch.judges.concat([{ name: x.judge, marks: "" }]); });
         ch.check = !sure || !ch.level;

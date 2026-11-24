@@ -120,14 +120,14 @@ window.PID_DATA = {
     },
     {
       org: "clrg", id: "pc", order: 5, name: "Preliminary Championship",
-      danced: "One competition of two or three rounds (soft shoe, hard shoe, and in the third round an own choice set), judged by a panel of usually 3. Each round is placed by one judge; the overall place comes from all the judges' scores.",
+      danced: "One competition of two rounds: soft shoe, then hard shoe. A panel of judges watches both rounds. For each round one judge is picked at random, and that judge's placings count as everyone's round placing. The overall place comes from all the judges' scores added up, so it can differ from the round placings.",
       moveUp: "Win twice, or meet your region's rules",
       perDance: false, check: true,
       parents: "Recalls and Oireachtas qualification come into play"
     },
     {
       org: "clrg", id: "oc", order: 6, name: "Open Championship",
-      danced: "One competition of three rounds (soft shoe, hard shoe, own choice set) with one overall place, judged by a panel (3, or 5 at majors). The path to Nationals, All-Irelands and Worlds.",
+      danced: "Like Preliminary Championship but with three rounds: soft shoe, hard shoe, and a set round (own choice set). Each round is placed by one judge picked at random; the overall place comes from all the judges' scores added up. Judged by a panel (3, or 5 at majors). The path to Nationals, All-Irelands and Worlds.",
       moveUp: "The top level",
       perDance: false,
       parents: "The highest costs and the most travel"
@@ -236,9 +236,9 @@ window.PID_DATA = {
     { g: "events", term: "All-Irelands", means: "The All-Ireland Championships, held in Ireland", why: "A major championship open to dancers from abroad" },
     { g: "events", orgs: ["clrg"], term: "Worlds", alt: "Oireachtas Rince na Cruinne", say: "oh-ROCK-tus RIN-kuh nuh KRIN-yuh", means: "The CLRG World Championships", why: "Qualification only, usually through a regional or national event" },
     { g: "events", term: "Grades", alt: "grade competitions", means: "All the levels below championship (Beginner 1, Beginner 2, Novice, Open Prizewinner). Each dance is its own competition, split by level and age", why: "Where most dancers spend their first years. Not the same as grade exams" },
-    { g: "events", term: "Championship", means: "Prelim and Open competitions: one competition of 2 or 3 rounds, judged by a panel, with one overall place", why: "Unlike grades, where every dance is its own competition with its own award" },
-    { g: "events", term: "Round placing", means: "In a championship, where your dancer placed in one round, from the one judge picked for that round", why: "Round places can look very different from the overall place, because the other judges may have seen it differently" },
-    { g: "events", term: "Overall place", means: "A dancer's final championship result, from all the judges' scores added together", why: "This is the place that counts for awards, moving up and qualifying" },
+    { g: "events", term: "Championship", means: "Prelim (PC) and Open (OC) competitions. PC is 2 rounds (soft shoe, hard shoe); OC adds a 3rd, the set round (own choice set). Judged by a panel, with one overall place", why: "Unlike grades, where every dance is its own competition with its own award" },
+    { g: "events", term: "Round placing", means: "In a championship, where your dancer placed in one round. One judge from the panel is picked at random for each round, and that judge's placings are given to every dancer for that round", why: "Round places can look very different from the overall place, because the other judges may have seen it differently" },
+    { g: "events", term: "Overall place", means: "A dancer's final championship result, from every judge's scores for every round added together. It isn't worked out from the round placings", why: "This is the place that counts for awards, moving up and qualifying" },
     { g: "events", term: "Recall", means: "Being called back after the first rounds to dance the final round", why: "A recall is itself an achievement worth celebrating" },
     { g: "events", term: "Placement", alt: "podium", means: "Finishing high enough to be called up for an award", why: "How many places are awarded depends on the size of the competition" },
     { g: "events", term: "Raw score", alt: "marks", means: "Points each judge gives", why: "What the score tracker can log" },
