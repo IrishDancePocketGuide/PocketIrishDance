@@ -62,7 +62,8 @@
 
   // ---------- understanding the text ----------
   const DANCES = [
-    ["tradset", /\b(trad(itional)?\.?\s*set|set\s*dance|st\.?\s*patrick'?s\s*day|blackbird|job\s*of\s*journeywork|garden\s*of\s*daisies|king\s*of\s*the\s*fairies|jockey\s*to\s*the\s*fair|three\s*sea\s*captains)\b/],
+    ["set", /\b(own\s*choice(\s*set)?|non[\s-]*trad(itional)?\.?\s*set|open\s*set|contemporary\s*set)\b/],
+    ["tradset", /\b(trad(itional)?\.?\s*set|st\.?\s*patrick'?s\s*day|blackbird|job\s*of\s*journeywork|garden\s*of\s*daisies|king\s*of\s*the\s*fairies|jockey\s*to\s*the\s*fair|three\s*sea\s*captains)\b/],
     ["prelim", /\b(prelim(inary)?\.?\s*champ(ionship)?s?|prelim)\b/],
     ["open", /\b(open\s*champ(ionship)?s?)\b/],
     ["treblejig", /\b(treble\s*jig|t\.?\s*jig|heavy\s*jig)\b/],
@@ -71,6 +72,7 @@
     ["singlejig", /\b(single\s*jig|hop\s*jig)\b/],
     ["hornpipe", /\b(horn\s*pipe|hpipe|h\.?\s*pipe)\b/],
     ["reel", /(?<!treble\s)(?<!treble)\breel\b/],
+    ["set", /\bset\s*dance\b|\bset\b(?!\s*\d)/],
     // Short forms some results sites use
     ["lightjig", /\b(lj|lt\.?\s*jig)\b/], ["slipjig", /\b(sj)\b/], ["treblejig", /\b(tj|trbl\.?\s*jig)\b/],
     ["hornpipe", /\b(hp|hrnpipe)\b/], ["singlejig", /\b(sgl\.?\s*jig)\b/], ["tradset", /\b(ts|tset)\b/],

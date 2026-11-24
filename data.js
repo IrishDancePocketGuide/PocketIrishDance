@@ -82,6 +82,7 @@ window.PID_DATA = {
     { id: "treblejig", name: "Treble jig", shoe: "hard" },
     { id: "hornpipe", name: "Hornpipe", shoe: "hard" },
     { id: "tradset", name: "Traditional set", shoe: "hard" },
+    { id: "set", name: "Own choice set", shoe: "hard" },
     { id: "prelim", name: "Preliminary Championship", shoe: "champ" },
     { id: "open", name: "Open Championship", shoe: "champ" }
   ],
@@ -119,14 +120,14 @@ window.PID_DATA = {
     },
     {
       org: "clrg", id: "pc", order: 5, name: "Preliminary Championship",
-      danced: "One competition of two or three rounds (soft shoe, hard shoe, often a set), judged by a panel of usually 3. Each round is placed by one judge; the overall place comes from all the judges' scores.",
+      danced: "One competition of two or three rounds (soft shoe, hard shoe, and in the third round an own choice set), judged by a panel of usually 3. Each round is placed by one judge; the overall place comes from all the judges' scores.",
       moveUp: "Win twice, or meet your region's rules",
       perDance: false, check: true,
       parents: "Recalls and Oireachtas qualification come into play"
     },
     {
       org: "clrg", id: "oc", order: 6, name: "Open Championship",
-      danced: "One competition of three rounds with one overall place, judged by a panel (3, or 5 at majors). The path to Nationals, All-Irelands and Worlds.",
+      danced: "One competition of three rounds (soft shoe, hard shoe, own choice set) with one overall place, judged by a panel (3, or 5 at majors). The path to Nationals, All-Irelands and Worlds.",
       moveUp: "The top level",
       perDance: false,
       parents: "The highest costs and the most travel"
@@ -260,7 +261,9 @@ window.PID_DATA = {
     { g: "dance", term: "Single jig", alt: "hop jig", means: "A soft shoe jig in 6/8 or 12/8", why: "Whether it's offered varies by region" },
     { g: "dance", term: "Treble jig", say: "TREB-ul", means: "A slow, heavy shoe jig", why: "A core hard shoe dance" },
     { g: "dance", term: "Hornpipe", means: "A heavy shoe dance in 2/4 or 4/4", why: "A core hard shoe dance" },
-    { g: "dance", term: "Set dance", alt: "traditional set", means: "A set piece of music and steps, traditional or contemporary", why: "Appears from the middle levels upward" },
+    { g: "dance", term: "Set dance", means: "A hard shoe dance to a set tune. There are traditional sets and own choice sets", why: "Appears from the middle levels upward" },
+    { g: "dance", term: "Traditional set", alt: "trad set", means: "A set dance with set steps that every school learns, like St. Patrick's Day or The Blackbird", why: "Danced at the lower and middle grades" },
+    { g: "dance", term: "Own choice set", alt: "open set, non-traditional set", means: "A set dance where the dancer picks the tune and dances their teacher's own steps", why: "This is the set danced in championship rounds, not a traditional set" },
     { g: "dance", term: "Steps", means: "Short choreographed sections of a dance, each about 8 bars a side", why: "Teachers give new steps as dancers move up" },
     { g: "dance", term: "School costume", means: "The dress or outfit in your school's colors", why: "Usually worn until a dancer moves into a solo dress" },
     { g: "dance", term: "Solo dress", means: "A dancer's own competition dress", why: "One of the biggest costs; rules govern when it's allowed" },
