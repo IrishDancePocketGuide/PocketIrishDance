@@ -351,7 +351,7 @@
           <p><strong>Adults only.</strong> Accounts are for parents and guardians aged 18 or over. Children should not create accounts.</p>
           <p><strong>Your choices.</strong> You can un-share a win, leave a group, download your data, or delete your account at any time in Friends › Your account. Deleting removes everything you put online straight away.</p>
           <p><strong>Where it's kept.</strong> Friends data is stored securely with our provider, Supabase, in a data centre in the United States. For families in the UK, Ireland and Europe, Supabase's data protection agreement covers moving it there.</p>
-          <p style="margin-bottom:0"><strong>Questions.</strong> Contact the Pocket Irish Dance team. (Contact email to be added.)</p>
+          <p style="margin-bottom:0"><strong>Questions.</strong> Email the Pocket Irish Dance team at <a href="mailto:pocketirishdance@gmail.com">pocketirishdance@gmail.com</a>.</p>
         </div>` };
     }
 
