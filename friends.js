@@ -52,7 +52,28 @@
       if (s < 86400) return Math.floor(s / 3600) + " h ago"; if (s < 7 * 86400) return Math.floor(s / 86400) + " d ago";
       return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
     };
-    const fail = (err, fallback) => { console.warn(err); toast((err && err.message) || fallback || "Something went wrong. Check your connection."); };
+    // "permission denied" from the database means the phone sent no sign-in with the request.
+    // That happens when the sign-in didn't stick (for example the email link opened in another
+    // browser), so send the parent back to sign in instead of showing a database error.
+    const isAuthErr = (err) => !!err && (err.code === "42501" || err.status === 401 || /permission denied|JWT/i.test(err.message || ""));
+    async function backToSignIn() {
+      F.user = null; F.profile = undefined; F.groups = []; F.members = []; F.wins = []; F.loadedAt = 0; F.step = "email"; F.err = "";
+      await sb.auth.signOut({ scope: "local" }).catch(() => {});
+      toast("Your sign-in didn't finish. Please sign in again and type the 6-digit code from the email.");
+      if (onFriendsPage()) { if (location.hash !== "#/friends") location.hash = "#/friends"; else rerender(); }
+      badge();
+    }
+    async function signedOutQuietly() {
+      try { const { data } = await sb.auth.getSession(); return !data.session; } catch (e) { return true; }
+    }
+    const fail = (err, fallback) => {
+      console.warn(err);
+      if (sb && isAuthErr(err)) {
+        signedOutQuietly().then((gone) => gone ? backToSignIn() : toast("Something went wrong. Please try again."));
+        return;
+      }
+      toast((err && err.message) || fallback || "Something went wrong. Check your connection.");
+    };
     const inviteLink = (code) => location.origin + location.pathname + "#/join/" + code;
 
     // ---------- loading ----------
@@ -83,7 +104,11 @@
       if (!force && Date.now() - F.loadedAt < 20000) return Promise.resolve();
       F.loading = load()
         .then(() => { F.loadedAt = Date.now(); F.err = ""; })
-        .catch((err) => { console.warn(err); F.err = "Couldn't reach Friends. Check your connection and try again."; if (F.profile === undefined) F.profile = null; })
+        .catch(async (err) => {
+          console.warn(err);
+          if (isAuthErr(err) && await signedOutQuietly()) { F.loading = null; await backToSignIn(); return; }
+          F.err = "Couldn't reach Friends. Check your connection and try again."; if (F.profile === undefined) F.profile = null;
+        })
         .finally(() => { F.loading = null; badge(); if (onFriendsPage()) rerender(); });
       return F.loading;
     }
@@ -184,7 +209,7 @@
         ${codeStep ? `
         <form class="card" data-fform="code">
           <h3>Check your email</h3>
-          <p class="small muted" style="margin-top:0">We sent an email to <strong>${esc(F.email)}</strong>. Tap the sign-in link in it on this phone, or type the code if the email has one.</p>
+          <p class="small muted" style="margin-top:0">We sent an email to <strong>${esc(F.email)}</strong>. Type the 6-digit code from the email here. It can take a minute to arrive, so check your junk folder too.</p>
           <label class="field"><span>Code</span><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required></label>
           <button class="btn block">Sign in</button>
           <button type="button" class="btn plain block" data-f="restart">Use a different email</button>
