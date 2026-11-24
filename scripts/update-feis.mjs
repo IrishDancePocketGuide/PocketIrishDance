@@ -164,7 +164,7 @@ if (existsSync("feis-found.json")) {
   let added = 0;
   for (const e of found) {
     if (!e.name || !e.start || (e.end || e.start) < keepFrom) continue;
-    const dup = out.events.some((o) => o.start === e.start && (simple(o.name).includes(simple(e.name)) || simple(e.name).includes(simple(o.name))));
+    const dup = out.events.some((o) => o.org === e.org && o.start === e.start && (simple(o.name).includes(simple(e.name)) || simple(e.name).includes(simple(o.name))));
     if (dup) continue;
     out.events.push({ source: "found", ...e, end: e.end || e.start }); added++;
   }
