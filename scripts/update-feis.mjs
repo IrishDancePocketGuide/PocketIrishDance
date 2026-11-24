@@ -156,6 +156,22 @@ for (const src of SOURCES) {
   if (!argFrom) await sleep(5000);
 }
 
+// Feiseanna found on regional and school websites by the weekly feis finder (see FEIS-FINDER.md).
+// Shannon approves each batch before it is added to feis-found.json. Official lists win on duplicates.
+const simple = (n) => String(n || "").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "").replace(/(feis|the|and|championships?|irish|dance)/g, "");
+if (existsSync("feis-found.json")) {
+  const found = JSON.parse(readFileSync("feis-found.json", "utf8")).events || [];
+  let added = 0;
+  for (const e of found) {
+    if (!e.name || !e.start || (e.end || e.start) < keepFrom) continue;
+    const dup = out.events.some((o) => o.start === e.start && (simple(o.name).includes(simple(e.name)) || simple(e.name).includes(simple(o.name))));
+    if (dup) continue;
+    out.events.push({ source: "found", ...e, end: e.end || e.start }); added++;
+  }
+  out.sources.push({ id: "found", org: "all", name: "Found on regional and school websites (checked by hand)", url: "", count: added, lastGood: now, problem: "" });
+  console.log(`found: ${added} upcoming from feis-found.json`);
+}
+
 out.events.sort((a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name));
 const same = JSON.stringify(previous.events) === JSON.stringify(out.events) && JSON.stringify((previous.sources || []).map((s) => s.problem)) === JSON.stringify(out.sources.map((s) => s.problem));
 // Only rewrite when something changed, or once a day so "last checked" stays honest.

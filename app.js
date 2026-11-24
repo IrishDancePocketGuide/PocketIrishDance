@@ -378,11 +378,13 @@
         ${e.place ? `<p class="small" style="margin:2px 0 0">📍 ${esc(e.place)}</p>` : ""}
         <div class="chips" style="margin-top:6px">${st.org === "all" ? `<span class="chip">${esc(orgName(e.org))}</span>` : ""}${e.cancelled ? `<span class="chip gold">Cancelled</span>` : ""}${e.kind ? `<span class="chip grey">${esc(e.kind)}</span>` : ""}${e.region ? `<span class="chip grey">${esc(e.region)}</span>` : ""}</div>
         ${e.organiser ? `<p class="small muted" style="margin:6px 0 0">Organiser: ${esc(e.organiser)}</p>` : ""}
+        ${e.host ? `<p class="small muted" style="margin:6px 0 0">Hosted by ${esc(e.host)}</p>` : ""}
+        ${e.source === "found" ? `<p class="small muted" style="margin:4px 0 0">Found on ${esc(e.foundOn || "the host's website")}</p>` : ""}
         <div class="row wrap" style="gap:8px;margin-top:8px"><a class="btn ghost sm" href="${esc(e.url)}" target="_blank" rel="noopener">Details ↗</a>${e.syllabus ? `<a class="btn ghost sm" href="${esc(e.syllabus)}" target="_blank" rel="noopener">Syllabus ↗</a>` : ""}</div>
       </article>`;
     }).join("");
     const shown = st.org === "all" ? FEIS_ORGS : FEIS_ORGS.filter((o) => o.id === st.org);
-    const srcs = (feisData.sources || []).filter((s) => shown.some((o) => o.id === s.org));
+    const srcs = (feisData.sources || []).filter((s) => s.org === "all" || shown.some((o) => o.id === s.org));
     const checked = feisData.checked ? new Date(feisData.checked).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
     return {
       title: "Feis calendar", tab: "home", back: true,
@@ -396,7 +398,7 @@
         <div class="row wrap" style="gap:6px">${CLRG_REGION_CALENDARS.map(([n, u]) => `<a class="btn ghost sm" href="${u}" target="_blank" rel="noopener">${esc(n)} ↗</a>`).join("")}</div>
         <p class="small muted" style="margin:8px 0 0">Outside North America, ask your teacher for your region's feis list.</p></div>` : ""}
       <div class="card small" style="margin-top:14px"><strong>Where these come from</strong>
-        <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">${srcs.map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>${s.problem ? ` <span class="muted">(couldn't be read on the last check, so these may be a little out of date)</span>` : ""}</li>`).join("")}</ul>
+        <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">${srcs.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>` : esc(s.name)}${s.problem ? ` <span class="muted">(couldn't be read on the last check, so these may be a little out of date)</span>` : ""}</li>`).join("")}</ul>
         <p class="muted" style="margin:6px 0 0">${checked ? `Last checked ${esc(checked)}. ` : ""}Always confirm dates, entry deadlines and fees on the official page before you register.</p></div>`,
       after() {
         const input = document.getElementById("feisFind");
