@@ -293,3 +293,17 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .feis h3 { margin: 2px 0 0; }
 .feis-date { font-size: 13px; font-weight: 800; color: var(--green); letter-spacing: 0.02em; }
 .feis.cancelled h3 { text-decoration: line-through; color: var(--ink-2); }
+
+/* judge profiles */
+.judge-line { font-size: 0.85rem; color: var(--green); margin-top: 2px; }
+.judge-line .muted { color: var(--ink-2); }
+.judge-tag { color: var(--gold); font-weight: 600; font-size: 0.9rem; margin: 2px 0 0; }
+.judge-profile { border-top: 4px solid var(--green); }
+.judge-head { display: flex; gap: 12px; align-items: center; }
+.judge-head h2 { margin: 0; font-size: 1.3rem; }
+.judge-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--green-soft); display: grid; place-items: center; font-size: 1.5rem; flex: none; }
+.judge-facts { list-style: none; padding: 0; margin: 12px 0 0; line-height: 1.8; }
+.role-pick { border: 0; padding: 0; margin: 10px 0 0; }
+.role-pick legend { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+.role-pick label { display: inline-flex; gap: 6px; align-items: center; margin: 0 14px 6px 0; font-size: 0.95rem; }
+.school-hit h3 { font-size: 1rem; }

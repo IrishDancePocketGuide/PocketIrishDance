@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {} });
+  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
@@ -61,6 +61,27 @@
     return Object.values(seen).sort((a, b) => a.localeCompare(b));
   }
   const judgeDatalist = () => `<datalist id="judgeList">${knownJudges().map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`;
+  // What parents know about a judge: the school they teach at, or another role (dressmaker,
+  // choreographer...). Kept per judge, so it shows for every child and every result. Typed in by the parent.
+  const JUDGE_ROLES = [
+    { id: "teacher", name: "Teacher", ico: "🏫" }, { id: "dressmaker", name: "Dressmaker", ico: "🧵" },
+    { id: "choreographer", name: "Choreographer", ico: "💃" }, { id: "musician", name: "Musician", ico: "🎻" },
+    { id: "wigs", name: "Wigs or tan", ico: "💇" }, { id: "other", name: "Other", ico: "✏️" }
+  ];
+  const judgeInfo = (name) => ((S.judgeInfo || {})[judgeKey(name)]) || null;
+  function judgeRoleNames(i) {
+    return (i.roles || []).map((id) => id === "other" ? (i.other || "") : (JUDGE_ROLES.find((x) => x.id === id) || {}).name)
+      .filter((x) => x && !(x === "Teacher" && i.school));
+  }
+  // One short line for lists: "Trinity Academy · Dressmaker · Chicago"
+  function judgeTagline(name) {
+    const i = judgeInfo(name); if (!i) return "";
+    return [i.school, ...judgeRoleNames(i), i.where].filter(Boolean).join(" · ");
+  }
+  function knownSchools() {
+    const seen = {}; Object.values(S.judgeInfo || {}).forEach((i) => { if (i && i.school) seen[i.school.toLowerCase()] = i.school; });
+    return Object.values(seen).sort((a, b) => a.localeCompare(b));
+  }
   // "A. Byrne, C. Walsh" -> [{name, marks}], keeping scores already known for the same names
   function judgesFromText(text, before) {
     const old = {}; (before || []).forEach((j) => { old[judgeKey(j.name)] = j.marks || ""; });
@@ -253,6 +274,42 @@
   // "Irish dance", not any dance studio. Google can still mix in nearby places, so the screen
   // tells parents to check the school's name.
   const IRISH_Q = '"Irish dance" school';
+  // Google Places key (locked to this website in Google Cloud). With a key, the app lists schools
+  // itself and drops any whose name doesn't say "Irish". Without one, it falls back to opening Google Maps.
+  const PLACES_KEY = "";
+  const PLACES_WEBSITES = true; // website links cost more on Google's side (fewer free searches a month)
+  const isIrishSchool = (name) => /\birish\b/i.test(name) && !/\b(pub|bar|tavern|restaurant|grill|inn|bakery|shop|store|gifts?|imports?)\b/i.test(name);
+  function kmBetween(a, b) {
+    const R = 6371, rad = (x) => (x * Math.PI) / 180;
+    const dLa = rad(b.latitude - a.latitude), dLo = rad(b.longitude - a.longitude);
+    const h = Math.sin(dLa / 2) ** 2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLo / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  async function findSchools(place, here) {
+    const body = { textQuery: place ? "Irish dance school near " + place : "Irish dance school", pageSize: 20 };
+    if (here) body.locationBias = { circle: { center: here, radius: 50000 } };
+    const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": PLACES_KEY,
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.googleMapsUri,places.location" + (PLACES_WEBSITES ? ",places.websiteUri" : "") },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("search failed " + res.status);
+    const all = ((await res.json()).places || []).map((x) => ({ name: (x.displayName || {}).text || "", address: x.formattedAddress || "",
+      url: x.googleMapsUri || "", web: /^https?:\/\//i.test(x.websiteUri || "") ? x.websiteUri : "", km: here && x.location ? kmBetween(here, x.location) : null }));
+    const keep = all.filter((x) => isIrishSchool(x.name));
+    if (here) keep.sort((a, b) => a.km - b.km);
+    return { keep, hidden: all.length - keep.length };
+  }
+  function schoolList(out, us) {
+    if (!out.keep.length) return `<div class="card"><p style="margin:0">No Irish dance schools found there. Try a nearby bigger town, or use the school lists above.</p></div>`;
+    const dist = (km) => km == null ? "" : us ? `${(km * 0.621).toFixed(km < 16 ? 1 : 0)} mi` : `${km.toFixed(km < 10 ? 1 : 0)} km`;
+    return `<p class="small muted" style="margin:14px 4px 6px">${out.keep.length} Irish dance school${out.keep.length === 1 ? "" : "s"}${out.hidden ? `. We left out ${out.hidden} other place${out.hidden === 1 ? "" : "s"} that aren't Irish dance schools.` : ""}</p>` +
+      out.keep.map((x) => `<div class="card school-hit">
+        <div class="row between"><h3 style="margin:0">${esc(x.name)}</h3>${x.km != null ? `<span class="chip">${dist(x.km)}</span>` : ""}</div>
+        <p class="small muted" style="margin:4px 0 8px">${esc(x.address)}</p>
+        <div class="row" style="gap:8px">${x.web ? `<a class="btn sm" href="${esc(x.web)}" target="_blank" rel="noopener">Website ↗</a>` : ""}${x.url ? `<a class="btn ghost sm" href="${esc(x.url)}" target="_blank" rel="noopener">Map ↗</a>` : ""}</div></div>`).join("");
+  }
   const SCHOOL_ORGS = [
     { id: "any", name: "No preference", hint: "Just show me schools near me", q: IRISH_Q },
     { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: IRISH_Q },
@@ -288,10 +345,11 @@
         <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
       <form id="schoolForm" class="card" style="margin-top:10px">
         <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
-        <button class="btn block">Search the map</button>
+        <button class="btn block">${PLACES_KEY ? "Find schools" : "Search the map"}</button>
         <button type="button" class="btn ghost block" id="nearMe" style="margin-top:8px">📍 Use my location</button>
-        <p class="small muted" style="margin:8px 0 0">This opens Google Maps searching only for “Irish dance” schools. Google sometimes adds other places nearby, so look for “Irish dance” or “Irish dancing” in the school's name. Your location goes only to Google Maps, not to this app.</p>
+        <p class="small muted" style="margin:8px 0 0">${PLACES_KEY ? "Only schools with “Irish” in their name are shown. Your search goes to Google to find them, and nothing is saved." : "This opens Google Maps searching only for “Irish dance” schools. Google sometimes adds other places nearby, so look for “Irish dance” or “Irish dancing” in the school's name. Your location goes only to Google Maps, not to this app."}</p>
       </form>
+      <div id="schoolResults" aria-live="polite"></div>
       <div class="card small">
         <h3>Before you sign up, ask the school:</h3>
         <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
@@ -305,6 +363,27 @@
       ${o.id === "clrg" || o.id === "any" ? `<p class="small muted">Official CLRG information: <a href="https://www.clrg.ie" target="_blank" rel="noopener">clrg.ie ↗</a></p>` : ""}
       ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`,
       after() {
+        if (PLACES_KEY) {
+          const box = document.getElementById("schoolResults");
+          const us = /^en-US$/i.test(navigator.language || "");
+          const run = async (place, here) => {
+            box.innerHTML = `<div class="read-prog"><span class="spinner" aria-hidden="true"></span><span>Finding Irish dance schools…</span></div>`;
+            try { box.innerHTML = schoolList(await findSchools(place, here), us); }
+            catch (err) { box.innerHTML = `<div class="card"><p style="margin:0">Couldn't search right now. Check your internet connection and try again, or use the school lists above.</p></div>`; }
+          };
+          document.getElementById("schoolForm").addEventListener("submit", (e) => {
+            e.preventDefault(); st.place = e.target.place.value.trim();
+            if (st.place) run(st.place, null); else document.getElementById("nearMe").click();
+          });
+          document.getElementById("nearMe").addEventListener("click", () => {
+            if (!navigator.geolocation) { box.innerHTML = `<div class="card"><p style="margin:0">Type your town instead.</p></div>`; return; }
+            box.innerHTML = `<div class="read-prog"><span class="spinner" aria-hidden="true"></span><span>Finding where you are…</span></div>`;
+            navigator.geolocation.getCurrentPosition(
+              (pos) => run("", { latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+              () => { box.innerHTML = `<div class="card"><p style="margin:0">Couldn't get your location. Type your town instead.</p></div>`; }, { timeout: 8000 });
+          });
+          return;
+        }
         const open = (where) => window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(o.q + " " + where), "_blank", "noopener");
         // "near me" makes Google guess; with no place typed, use the phone's location instead.
         document.getElementById("schoolForm").addEventListener("submit", (e) => {
@@ -655,7 +734,7 @@
     const jn = judgeNames(r);
     if (isChamp(r) && roundsText(r)) bits.push(roundsText(r));
     return `<a class="card result" href="#/result/${r.id}" style="text-decoration:none;color:inherit">${placeBadge(Number(r.place))}
-      <div class="meta"><strong>${esc(d ? d.name : r.dance)}</strong><span class="small muted">${esc(r.feis || "Feis")} · ${esc(fmtDate(r.date))}</span><div class="small muted">${esc(bits.join(" · "))}</div>${jn ? `<div class="small muted">⚖️ ${esc(jn)}</div>` : ""}</div>
+      <div class="meta"><strong>${esc(d ? d.name : r.dance)}</strong><span class="small muted">${esc(r.feis || "Feis")} · ${esc(fmtDate(r.date))}</span><div class="small muted">${esc(bits.join(" · "))}</div>${jn ? `<div class="judge-line">⚖️ ${judgesOf(r).map((j) => esc(j.name) + (judgeTagline(j.name) ? ` <span class="muted">(${esc(judgeTagline(j.name))})</span>` : "")).join(", ")}</div>` : ""}</div>
       ${r.photoId ? `<img class="thumb" data-photo="${esc(r.photoId)}" alt="">` : ""}</a>`;
   }
 
@@ -743,7 +822,7 @@
     return `<p class="small muted" style="margin:8px 4px">In grades, this is the place the judge gave. In championships, it's the place that judge gave in their round, not the overall.</p>` +
       list.map((g) => `<a class="card judge-card" href="#/judge/${dn.id}/${encodeURIComponent(g.name)}" style="text-decoration:none;color:inherit;display:block">
         <div class="row between"><h3 style="margin:0">⚖️ ${esc(g.name)}</h3><span class="muted" aria-hidden="true">›</span></div>
-        <p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.ps)))}</p>
+        ${judgeTagline(g.name) ? `<p class="judge-tag">${esc(judgeTagline(g.name))}</p>` : ""}<p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.ps)))}</p>
         <div class="judge-places">${g.ps.slice(0, 8).map((p) => `<span class="chip ${p.place === 1 ? "gold" : "grey"}">${esc(placingLabel(p))}</span>`).join("")}</div>
       </a>`).join("") + (none ? `<p class="small muted" style="text-align:center">${none} result${none === 1 ? " has" : "s have"} no judge yet. Open ${none === 1 ? "it" : "them"} and tap Edit to add one.</p>` : "");
   }
@@ -772,14 +851,70 @@
     const pts = ps.filter((p) => p.place).map((p) => ({ date: p.r.date, place: p.place }));
     return {
       title: name, tab: "scores", back: true,
-      html: `<div class="card"><p class="small muted" style="margin:0 0 4px">${esc(dn.name)} with this judge</p><h3 style="margin:0 0 6px">⚖️ ${esc(name)}</h3>
+      html: `${judgeProfile(name)}
+        <div class="card"><p class="small muted" style="margin:0 0 4px">${esc(dn.name)} with this judge</p>
           <p style="margin:0">${esc(statLine(st)) || "No results yet"}</p>
           ${champs ? `<p class="small muted" style="margin:8px 0 0">Championship places here are the round this judge placed, not the overall. The overall comes from the whole panel.</p>` : ""}</div>
         ${byDance ? `<div class="card" style="padding:6px 14px">${byDance}</div>` : ""}
         ${pts.length > 1 ? `<div class="card"><h3>This judge's placings over time</h3>${chartFor(pts) || ""}</div>` : ""}
-        ${rows}`
+        ${rows}`,
+      after: judgeProfileAfter(name)
     };
   };
+
+  function judgeProfile(name) {
+    const i = judgeInfo(name) || {};
+    const has = i.school || (i.roles || []).length || i.where || i.note;
+    const roles = (i.roles || []).filter((id) => !(id === "teacher" && i.school)).map((id) => {
+      const x = JUDGE_ROLES.find((y) => y.id === id) || {}; return `<li>${x.ico || "•"} ${esc(id === "other" ? (i.other || "Other") : x.name)}</li>`; }).join("");
+    return `<section class="card judge-profile">
+      <div class="judge-head"><div class="judge-avatar" aria-hidden="true">⚖️</div><div><h2>${esc(name)}</h2>
+        ${has ? `<p class="judge-tag" style="margin:0">${esc(judgeTagline(name)) || "Judge"}</p>` : `<p class="small muted" style="margin:0">Judge</p>`}</div></div>
+      <div id="jView">
+      ${has ? `<ul class="judge-facts">
+          ${i.school ? `<li>🏫 Teaches at <strong>${esc(i.school)}</strong></li>` : ""}${roles}
+          ${i.where ? `<li>📍 ${esc(i.where)}</li>` : ""}</ul>
+          ${i.note ? `<p class="small" style="margin:6px 0 0">${esc(i.note)}</p>` : ""}
+          <button type="button" class="btn ghost sm" id="jEdit" style="margin-top:10px">Edit details</button>`
+        : `<p class="small muted" style="margin:10px 0">Add what you know about this judge: the school they teach at, or if they're a dressmaker, choreographer or something else.</p>
+          <button type="button" class="btn sm" id="jEdit">＋ Add details</button>`}
+      </div>
+      <form id="jForm" hidden>
+        <label class="field"><span>School they teach at</span><input name="school" list="schoolList" value="${esc(i.school || "")}" placeholder="e.g. Trinity Academy" maxlength="80"></label>
+        <datalist id="schoolList">${knownSchools().map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+        <fieldset class="field role-pick"><legend>Also known as (tick any)</legend>
+          ${JUDGE_ROLES.map((x) => `<label><input type="checkbox" name="role" value="${x.id}" ${(i.roles || []).includes(x.id) ? "checked" : ""}> ${x.ico} ${esc(x.name)}</label>`).join("")}
+        </fieldset>
+        <label class="field" id="jOtherWrap" ${(i.roles || []).includes("other") ? "" : "hidden"}><span>Other role</span><input name="other" value="${esc(i.other || "")}" placeholder="e.g. Shoe maker" maxlength="60"></label>
+        <label class="field"><span>Where they're from</span><input name="where" value="${esc(i.where || "")}" placeholder="e.g. Chicago, IL" maxlength="60"></label>
+        <label class="field"><span>Note (optional)</span><textarea name="note" rows="2" maxlength="200" placeholder="e.g. Also teaches at a summer camp">${esc(i.note || "")}</textarea></label>
+        <p class="small muted" style="margin:4px 0 10px">Saved on this phone only. Stick to facts you know, like their school or business.</p>
+        <div class="row" style="gap:8px"><button class="btn" style="flex:1">Save</button><button type="button" class="btn ghost" id="jCancel">Cancel</button>
+          ${has ? `<button type="button" class="btn plain" id="jClear">Clear</button>` : ""}</div>
+      </form>
+    </section>`;
+  }
+  function judgeProfileAfter(name) {
+    return function () {
+      const f = document.getElementById("jForm"), view = document.getElementById("jView");
+      if (!f) return;
+      const k = judgeKey(name);
+      document.getElementById("jEdit").addEventListener("click", () => { view.hidden = true; f.hidden = false; f.school.focus(); });
+      document.getElementById("jCancel").addEventListener("click", () => { f.hidden = true; view.hidden = false; });
+      f.addEventListener("change", (e) => { if (e.target.name === "role") document.getElementById("jOtherWrap").hidden = !f.querySelector('input[value="other"]').checked; });
+      const clear = document.getElementById("jClear");
+      if (clear) clear.addEventListener("click", () => { delete S.judgeInfo[k]; save(); toast("Details cleared"); route(); });
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const roles = [...f.querySelectorAll('input[name="role"]:checked')].map((x) => x.value);
+        const info = { name, school: f.school.value.trim(), roles, other: roles.includes("other") ? f.other.value.trim() : "",
+          where: f.where.value.trim(), note: f.note.value.trim(), updated: today() };
+        S.judgeInfo = S.judgeInfo || {};
+        if (info.school || roles.length || info.where || info.note) S.judgeInfo[k] = info; else delete S.judgeInfo[k];
+        save(); toast("Saved"); route();
+      });
+    };
+  }
 
   screens.resultForm = function (dancerId, resultId) {
     const dn = S.dancers.find((d) => d.id === dancerId);
@@ -1011,7 +1146,7 @@
         <dt>${isChamp(r) ? "Overall place" : "Place"}</dt><dd>${r.place ? esc(ordinal(r.place)) : "Not placed"}${r.entrants ? ` of ${esc(r.entrants)}` : ""}</dd>
         ${isChamp(r) && roundsOf(r).length ? `<dt>Rounds</dt><dd>${roundsOf(r).map((x) => `Round ${x.n}: ${x.place ? esc(ordinal(x.place)) : "?"}${x.judge ? ` (<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(x.judge)}">${esc(x.judge)}</a>)` : ""}`).join("<br>")}<div class="small muted" style="margin-top:4px">${ROUNDS_HELP}</div></dd>` : ""}
         ${r.marks ? `<dt>Overall score</dt><dd>${esc(r.marks)}</dd>` : ""}
-        ${judgesOf(r).length ? `<dt>${isChamp(r) ? "Judging panel" : "Judge" + (judgesOf(r).length > 1 ? "s" : "")}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}`).join("<br>")}</dd>` : ""}
+        ${judgesOf(r).length ? `<dt>${isChamp(r) ? "Judging panel" : "Judge" + (judgesOf(r).length > 1 ? "s" : "")}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}${judgeTagline(j.name) ? `<div class="small muted">${esc(judgeTagline(j.name))}</div>` : ""}`).join("<br>")}</dd>` : ""}
         ${r.recall ? `<dt>Recall</dt><dd>Yes ✨</dd>` : ""}
         ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ""}
       </dl></div>
