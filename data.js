@@ -110,7 +110,7 @@ window.PID_DATA = {
     {
       org: "clrg", id: "pc", order: 5, name: "Preliminary Championship",
       danced: "One competition of two rounds: soft shoe, then hard shoe. A panel of judges watches both rounds. For each round one judge is picked at random, and that judge's placings count as everyone's round placing. The overall place comes from all the judges' scores added up, so it can differ from the round placings.",
-      moveUp: "Win twice, or meet your region's rules",
+      moveUp: "Win twice, or meet your region's rules. In the US Southern Region it takes 3 wins to move up to Open",
       perDance: false, check: true,
       parents: "Recalls and Oireachtas qualification come into play"
     },
@@ -304,6 +304,9 @@ window.PID_DATA = {
     { orgId: "clrg", topic: "Moving up", draft: true, levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "IDTANA",
       q: "How does my dancer move up from Open Prizewinner?",
       a: "By winning 1st place in a dance. Once a dancer has moved up in enough dances, they can start dancing Preliminary Championship." },
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["pc"], regions: ["United States"], org: "IDTANA Southern Region",
+      q: "How does my dancer move up from Prelim to Open in the Southern Region?",
+      a: "In the US Southern Region, a dancer needs 3 Preliminary Championship wins to move up to Open Championship. Other regions set their own rules, so check with your teacher if you dance elsewhere." },
     { orgId: "clrg", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "CLRG",
       q: "Who can enter my dancer in a CLRG feis?",
       a: "Only a teacher registered with CLRG: a TCRG for solo dances, or a TCRG or TMRF for teams. So entries normally go through your school." },
