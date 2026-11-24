@@ -168,6 +168,7 @@
     const { ext, esc, toast } = A;
     let G = load();
     const RT = window.PID_RHYTHM ? window.PID_RHYTHM(A) : null; // rhythm.js
+    const TQ = window.PID_TRIVIA ? window.PID_TRIVIA(A) : null; // trivia.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -188,6 +189,13 @@
           <h2>Boredom busters</h2>
           <p>Quick games for the long waits between dances. They work without signal, too.</p>
         </section>
+        ${TQ ? `<a class="card game-card" href="#/games/trivia">
+          <span class="ico" aria-hidden="true">❓</span>
+          <span class="game-body"><strong>Daily feis trivia</strong>
+            <span class="small muted">5 Irish dance questions a day. Keep your streak going!</span>
+            <span class="small game-status">${esc(TQ.status())}${TQ.streak() ? ` · 🔥 ${TQ.streak()}` : ""}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
         <a class="card game-card" href="#/games/wordsearch">
           <span class="ico" aria-hidden="true">🔎</span>
           <span class="game-body"><strong>Daily word search</strong>
@@ -418,6 +426,7 @@
       G = load();
       if (parts[1] === "bingo") return bingo();
       if (parts[1] === "rhythm" && RT) return RT.screen();
+      if (parts[1] === "trivia" && TQ) return TQ.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };
