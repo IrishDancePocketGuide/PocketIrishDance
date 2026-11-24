@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "33"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "34"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -214,6 +214,7 @@
       title: "Home", tab: "home",
       html: `
       <div class="brand"><img src="icons/wordmark.png" alt="Pocket Irish Dance" width="720" height="194"></div>
+      ${/github\.io$/.test(location.hostname) && S.results.length ? `<a class="banner" href="#/settings" style="text-decoration:none">📦 Pocket Irish Dance is moving to pocketirishdance.com. Save a backup of your results now, so you can restore them at the new address. <span class="btn sm">Back up</span></a>` : ""}
       <section class="hero">
         <h2>Irish dance, explained</h2>
         <p>The words, the levels, the rules and what to do next, in plain language.</p>
@@ -1113,6 +1114,7 @@
 
       <h2 style="margin-top:22px">About</h2>
       <div class="card small"><p style="margin-top:0">Pocket Irish Dance is an independent guide for parents. It is not an official publication of any Irish dance organization. Always check important decisions with your teacher and the current official rules.</p>
+      <p><a href="#/privacy">Privacy policy</a> · <a href="#/terms">Terms of use</a> · <a href="mailto:pocketirishdance@gmail.com">Contact us</a></p>
       <p style="margin-bottom:0" class="muted">Version ${esc(D.version)} · update ${APP_VERSION}</p></div>`,
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
@@ -1161,6 +1163,8 @@
       case "settings": v = screens.settings(); break;
       case "schools": v = screens.schools(); break;
       case "feis": v = screens.feis(); break;
+      case "privacy": v = { title: "Privacy policy", tab: "", back: true, html: window.PID_LEGAL.privacy() }; break;
+      case "terms": v = { title: "Terms of use", tab: "", back: true, html: window.PID_LEGAL.terms() }; break;
       default: v = ext[parts[0]] ? ext[parts[0]](parts, q) : screens.home();
     }
     titleEl.textContent = v.title;
