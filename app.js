@@ -189,8 +189,9 @@
     const p = S.profile; const lv = levelById(p.level);
     const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     return {
-      title: "Pocket Irish Dance", tab: "home",
+      title: "Home", tab: "home",
       html: `
+      <div class="brand"><img src="icons/wordmark.png" alt="Pocket Irish Dance" width="720" height="194"></div>
       <section class="hero">
         <h2>Irish dance, explained</h2>
         <p>The words, the levels, the rules and what to do next, in plain language.</p>

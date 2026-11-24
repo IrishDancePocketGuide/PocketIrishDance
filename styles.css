@@ -1,16 +1,16 @@
 :root {
-  --green: #0f5c3f;
-  --green-2: #16794f;
-  --green-soft: #e4f1ea;
-  --gold: #c8962e;
-  --gold-soft: #fbf1dc;
-  --ink: #1d2422;
-  --ink-2: #55615c;
-  --line: #dfe5e2;
-  --bg: #f6f8f7;
+  --green: #024445;  /* brand teal */
+  --green-2: #0a6466;
+  --green-soft: #e3f0f0;
+  --gold: #f3836e;  /* brand coral */
+  --gold-soft: #fde6e1;
+  --ink: #152625;
+  --ink-2: #4f6463;
+  --line: #dde7e7;
+  --bg: #fbfcfc;
   --card: #ffffff;
-  --warn: #8a5a00;
-  --warn-bg: #fff4d6;
+  --warn: #a8402b;
+  --warn-bg: #fde6e1;
   --danger: #b3261e;
   --radius: 16px;
   --tabbar-h: 64px;
@@ -21,18 +21,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --green: #5fc495;
-    --green-2: #7fd6ac;
-    --green-soft: #17322a;
-    --gold: #e2b75a;
-    --gold-soft: #33290f;
-    --ink: #eef3f1;
-    --ink-2: #a6b3ae;
-    --line: #2b3532;
-    --bg: #111715;
-    --card: #1a2220;
-    --warn: #f1c46a;
-    --warn-bg: #3a2f12;
+    --green: #6fcfcb;
+    --green-2: #8fdcd8;
+    --green-soft: #12302f;
+    --gold: #ff9a85;
+    --gold-soft: #3a1f19;
+    --ink: #eef5f5;
+    --ink-2: #a3b8b7;
+    --line: #263636;
+    --bg: #0d1717;
+    --card: #152222;
+    --warn: #ffb3a3;
+    --warn-bg: #3a1f19;
     --danger: #ff8a80;
     color-scheme: dark;
   }
@@ -96,6 +96,7 @@ p { line-height: 1.5; }
 }
 @media (prefers-color-scheme: dark) { .hero { color: #0b1411; } }
 .hero h2 { margin: 0 0 4px; font-size: 21px; }
+.hero h2::after { content: ""; display: block; width: 44px; height: 4px; border-radius: 2px; background: var(--gold); margin-top: 8px; }
 .hero p { margin: 0 0 12px; opacity: 0.92; font-size: 14.5px; }
 
 .search {
@@ -282,3 +283,8 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .who-pick span { display: inline-block; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-weight: 600; font-size: 14px; }
 .who-pick input:checked + span { background: var(--green); border-color: var(--green); color: #fff; }
 .who-pick input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
+
+/* Brand wordmark on the home page */
+.brand { display: flex; justify-content: center; padding: 6px 0 14px; }
+.brand img { width: min(300px, 78%); height: auto; }
+@media (prefers-color-scheme: dark) { .brand img { filter: brightness(0) invert(1); } }
