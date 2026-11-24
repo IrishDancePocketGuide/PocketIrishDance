@@ -193,6 +193,35 @@
     return out.length ? out : null;
   }
 
+  // ---------- championships ----------
+  // A championship is one competition with an overall place from the whole panel, plus a
+  // placing for each round from the one judge picked for that round.
+  const ROUND_RE = /\b(?:round|rnd|rd)\s*\.?\s*#?\s*([1-3])\b|(?:^|\s)r([1-3])\b/;
+  function ordNum(t) {
+    let m;
+    if ((m = t.match(/\b(\d{1,3})(?:st|nd|rd|th)\b/))) return +m[1];
+    if ((m = t.match(/\bplace[ds]?\s*:?\s*(\d{1,3})\b/))) return +m[1];
+    if ((m = t.match(/(?:^|[\s:=(-])(\d{1,3})(?![\d.])/))) return +m[1] <= 200 ? +m[1] : "";
+    return "";
+  }
+  function roundsIn(raw) {
+    const l = clean(raw);
+    // Compact: "R1 1st R2 3rd R3 3rd"
+    const many = [...l.matchAll(/\b(?:round|rnd|rd|r)\s*\.?\s*([1-3])\s*[:=-]?\s*(\d{1,3})(?:st|nd|rd|th)?\b/g)];
+    if (many.length > 1) return many.map((m) => ({ n: +m[1], place: +m[2], judge: "" }));
+    const m = l.match(ROUND_RE); if (!m) return null;
+    const n = +(m[1] || m[2]);
+    // Work on the original text after "Round 1" so names keep their capitals.
+    const idx = raw.toLowerCase().search(/\b(round|rnd|rd)\s*\.?\s*#?\s*[1-3]\b|(^|\s)r[1-3]\b/);
+    let rest = raw.slice(idx).replace(/^\s*(round|rnd|rd|r)\s*\.?\s*#?\s*[1-3]/i, "");
+    rest = rest.replace(/\((soft|hard|heavy|light)\s*shoe\)|\b(soft|hard|heavy)\s*shoe\b|\b(reel|slip jig|treble jig|hornpipe|set dance|set|jig)\b/ig, " ");
+    const place = ordNum(clean(rest));
+    const js = findJudges(rest);
+    let judge = js ? js[0].name : rest.replace(/\b\d{1,3}(st|nd|rd|th)?\b|\b(place[ds]?|placing|judge[ds]?|adjudicator|adj|of)\b|[^\p{L}' .-]/giu, " ").replace(/\s+/g, " ").trim().replace(/^[\s.'-]+|[\s'-]+$/g, "");
+    if (!/\p{L}{2,}.*\s.*\p{L}|\p{L}\.\s*\p{L}{2,}/u.test(judge)) judge = "";
+    return [{ n, place, judge }];
+  }
+
   // text: what was read. ctx.levels: this organization's levels.
   function parse(text, ctx) {
     const lines = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
@@ -209,6 +238,35 @@
       const d = findDance(l);
       if (!d) { if (judgeAt[i]) current = judgeAt[i]; continue; }
       let judges = judgeAt[i];
+      if (d.id === "prelim" || d.id === "open") {
+        // Read the whole championship block: rounds, overall, panel.
+        const ch = { dance: d.id, level: levelOf(l) || levelOf(d.text), place: "", entrants: findEntrants(l), marks: findMarks(l), recall: /\brecall(ed)?\b/.test(l), judges: judges || [], rounds: [], line: lines[i] };
+        let sure = false, j = i;
+        const ov0 = l.match(/\b(?:overall|final|result)\s*(?:place|placing)?\s*:?\s*(\d{1,3})(?:st|nd|rd|th)?\b/);
+        if (ov0) { ch.place = +ov0[1]; sure = true; }
+        for (j = i + 1; j < lines.length && j <= i + 12; j++) {
+          const n = clean(lines[j]);
+          const rr = roundsIn(lines[j]);
+          if (rr) { rr.forEach((x) => { if (!ch.rounds.some((y) => y.n === x.n)) ch.rounds.push(x); }); }
+          const ov = n.match(/\b(?:overall|final|result)\s*(?:place|placing)?\s*:?\s*(\d{1,3})(?:st|nd|rd|th)?\b/);
+          if (ov) { ch.place = +ov[1]; sure = true; }
+          if (!rr && findDance(n)) break;
+          if (!ch.entrants) ch.entrants = findEntrants(n);
+          if (!ch.marks) { const mk = n.match(/\b(?:overall|total|irish points|score)\s*(?:score|points)?\s*:?\s*(\d{1,4}(?:\.\d{1,2})?)\b/); if (mk) ch.marks = mk[1]; else if (!rr && !judgeAt[j]) ch.marks = findMarks(n); }
+          ch.recall = ch.recall || /\brecall(ed)?\b/.test(n);
+          if (!ch.level) ch.level = levelOf(n);
+          if (judgeAt[j] && !rr) ch.judges = judgeAt[j];
+          if (!sure && !rr && !judgeAt[j]) { const p2 = findPlace(n.replace(/\b\d{1,3}\s*(dancers|competitors|entrants|entries|danced)\b/, ""), ""); if (p2 && p2.sure) { ch.place = p2.place; sure = true; } }
+        }
+        if (!sure) { const p0 = findPlace(l, d.text); if (p0) { ch.place = p0.place; sure = p0.sure; } }
+        if (!ch.judges.length && judgeAbove && current) ch.judges = current;
+        // Round judges are on the panel too.
+        ch.rounds.sort((a, b) => a.n - b.n).forEach((x) => { if (x.judge && !ch.judges.some((y) => y.name.toLowerCase() === x.judge.toLowerCase())) ch.judges = ch.judges.concat([{ name: x.judge, marks: "" }]); });
+        ch.check = !sure || !ch.level;
+        found.push(ch);
+        i = j - 1;
+        continue;
+      }
       let level = levelOf(l);
       let p = findPlace(l, d.text);
       let entrants = findEntrants(l), marks = findMarks(l), recall = /\brecall(ed)?\b/.test(l);
@@ -226,7 +284,7 @@
       // Championship lines name the level; the dance is the championship itself.
       if (!level && (d.id === "prelim" || d.id === "open")) level = levelOf(d.text);
       found.push({
-        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall, judges: judges || [],
+        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall, judges: judges || [], rounds: [],
         check: !p || !p.sure || d.guess || !level,
         line: lines[i]
       });

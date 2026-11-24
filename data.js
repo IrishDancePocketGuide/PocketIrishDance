@@ -119,14 +119,14 @@ window.PID_DATA = {
     },
     {
       org: "clrg", id: "pc", order: 5, name: "Preliminary Championship",
-      danced: "Two or three rounds: soft shoe, hard shoe, often a set. Judged by a panel.",
+      danced: "One competition of two or three rounds (soft shoe, hard shoe, often a set), judged by a panel of usually 3. Each round is placed by one judge; the overall place comes from all the judges' scores.",
       moveUp: "Win twice, or meet your region's rules",
       perDance: false, check: true,
       parents: "Recalls and Oireachtas qualification come into play"
     },
     {
       org: "clrg", id: "oc", order: 6, name: "Open Championship",
-      danced: "Three rounds, panel of judges. The path to Nationals, All-Irelands and Worlds.",
+      danced: "One competition of three rounds with one overall place, judged by a panel (3, or 5 at majors). The path to Nationals, All-Irelands and Worlds.",
       moveUp: "The top level",
       perDance: false,
       parents: "The highest costs and the most travel"
@@ -235,7 +235,9 @@ window.PID_DATA = {
     { g: "events", term: "All-Irelands", means: "The All-Ireland Championships, held in Ireland", why: "A major championship open to dancers from abroad" },
     { g: "events", orgs: ["clrg"], term: "Worlds", alt: "Oireachtas Rince na Cruinne", say: "oh-ROCK-tus RIN-kuh nuh KRIN-yuh", means: "The CLRG World Championships", why: "Qualification only, usually through a regional or national event" },
     { g: "events", term: "Grades", alt: "grade competitions", means: "All the levels below championship (Beginner 1, Beginner 2, Novice, Open Prizewinner). Each dance is its own competition, split by level and age", why: "Where most dancers spend their first years. Not the same as grade exams" },
-    { g: "events", term: "Championship", means: "Prelim and Open competitions, danced in rounds and judged by a panel", why: "Brings recalls, marks and placements to more dancers" },
+    { g: "events", term: "Championship", means: "Prelim and Open competitions: one competition of 2 or 3 rounds, judged by a panel, with one overall place", why: "Unlike grades, where every dance is its own competition with its own award" },
+    { g: "events", term: "Round placing", means: "In a championship, where your dancer placed in one round, from the one judge picked for that round", why: "Round places can look very different from the overall place, because the other judges may have seen it differently" },
+    { g: "events", term: "Overall place", means: "A dancer's final championship result, from all the judges' scores added together", why: "This is the place that counts for awards, moving up and qualifying" },
     { g: "events", term: "Recall", means: "Being called back after the first rounds to dance the final round", why: "A recall is itself an achievement worth celebrating" },
     { g: "events", term: "Placement", alt: "podium", means: "Finishing high enough to be called up for an award", why: "How many places are awarded depends on the size of the competition" },
     { g: "events", term: "Raw score", alt: "marks", means: "Points each judge gives", why: "What the score tracker can log" },
@@ -272,7 +274,7 @@ window.PID_DATA = {
     { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Only a TCRG can enter dancers in CLRG competitions" },
     { g: "people", orgs: ["clrg"], term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
     { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner, who can run grade exams", why: "Mostly relevant to teachers" },
-    { g: "people", term: "Adjudicator", means: "A judge", why: "Championships use panels of three or more" },
+    { g: "people", term: "Adjudicator", means: "A judge", why: "In grades one judge places each dance. Championships use a panel: usually 3, 5 at major championships, and 6 at the All-Irelands with 5 counting" },
     { g: "people", orgs: ["clrg"], term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
     { g: "people", orgs: ["clrg"], term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
     { g: "people", orgs: ["clrg"], term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },

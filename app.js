@@ -68,6 +68,37 @@
       .map((name) => ({ name: name.slice(0, 60), marks: old[judgeKey(name)] || "" }));
   }
 
+  // ---------- championships ----------
+  // Grades: every dance stands alone and one judge decides the place.
+  // Championships (prelim, open): one competition of 2 or 3 rounds. Each round's placing comes from the
+  // one judge picked for that round; the overall place comes from the whole panel's scores added up.
+  const CHAMP_LEVELS = ["pc", "oc", "w_pc", "w_oc", "ac_ch"];
+  const isChamp = (r) => r.dance === "prelim" || r.dance === "open" || CHAMP_LEVELS.includes(r.level);
+  const roundsOf = (r) => (r.rounds || []).filter((x) => x && (x.judge || x.place)).sort((a, b) => a.n - b.n);
+  const roundsText = (r) => roundsOf(r).filter((x) => x.place).map((x) => `R${x.n} ${ordinal(x.place)}`).join(", ");
+  // What each judge decided. Grades: the place. Championships: only that judge's round placing,
+  // never the overall place, because the overall comes from the whole panel.
+  function judgePlacings(r) {
+    if (!isChamp(r)) return judgesOf(r).map((j) => ({ name: j.name, place: Number(r.place) || 0, marks: j.marks || r.marks || "", r, kind: "grade" }));
+    const out = [];
+    roundsOf(r).filter((x) => x.judge).forEach((x) => out.push({ name: x.judge, place: Number(x.place) || 0,
+      marks: (judgesOf(r).find((j) => judgeKey(j.name) === judgeKey(x.judge)) || {}).marks || "", r, kind: "round", round: x.n }));
+    judgesOf(r).forEach((j) => { if (!out.some((o) => judgeKey(o.name) === judgeKey(j.name))) out.push({ name: j.name, place: 0, marks: j.marks || "", r, kind: "panel" }); });
+    return out;
+  }
+  function mergePanel(judges, rounds) {
+    const out = judges.slice();
+    rounds.forEach((x) => { if (x.judge && !out.some((j) => judgeKey(j.name) === judgeKey(x.judge))) out.push({ name: x.judge, marks: "" }); });
+    return out;
+  }
+  const roundInputs = (rounds, prefix) => [1, 2, 3].map((n) => {
+    const x = (rounds || []).find((y) => y.n === n) || {};
+    return `<div class="two"><label class="field"><span>Round ${n} judge</span><input ${prefix}="r${n}judge" list="judgeList" value="${esc(x.judge || "")}" placeholder="Name" maxlength="60"></label>
+      <label class="field"><span>Round ${n} place</span><input ${prefix}="r${n}place" type="number" inputmode="numeric" min="1" max="200" value="${esc(x.place || "")}" placeholder="optional"></label></div>`;
+  }).join("");
+  const readRounds = (get) => [1, 2, 3].map((n) => ({ n, judge: String(get("r" + n + "judge") || "").trim().slice(0, 60), place: get("r" + n + "place") ? Number(get("r" + n + "place")) : "" })).filter((x) => x.judge || x.place);
+  const ROUNDS_HELP = "Each round's place comes from the one judge picked for that round. The overall place comes from the whole panel, so it can be very different.";
+
   // Fireworks for 1st places
   function cheer(dn, recs) {
     const firsts = recs.filter((x) => Number(x.place) === 1);
@@ -517,6 +548,7 @@
     const d = danceById(r.dance); const l = levelById(r.level);
     const bits = [l && l.name, r.entrants && `${r.entrants} dancers`, r.marks && `score ${r.marks}`, r.recall && "Recalled ✨"].filter(Boolean);
     const jn = judgeNames(r);
+    if (isChamp(r) && roundsText(r)) bits.push(roundsText(r));
     return `<a class="card result" href="#/result/${r.id}" style="text-decoration:none;color:inherit">${placeBadge(Number(r.place))}
       <div class="meta"><strong>${esc(d ? d.name : r.dance)}</strong><span class="small muted">${esc(r.feis || "Feis")} · ${esc(fmtDate(r.date))}</span><div class="small muted">${esc(bits.join(" · "))}</div>${jn ? `<div class="small muted">⚖️ ${esc(jn)}</div>` : ""}</div>
       ${r.photoId ? `<img class="thumb" data-photo="${esc(r.photoId)}" alt="">` : ""}</a>`;
@@ -573,29 +605,40 @@
     };
   };
 
-  function judgeStats(rs) {
-    const placed = rs.map((r) => Number(r.place)).filter((n) => n > 0);
-    const scores = rs.map((r) => parseFloat(r.marks)).filter((n) => !isNaN(n));
+  // ps: judge placings (see judgePlacings)
+  function judgeStats(ps) {
+    const placed = ps.map((p) => p.place).filter((n) => n > 0);
+    const scores = ps.map((p) => parseFloat(p.marks)).filter((n) => !isNaN(n));
     return {
-      n: rs.length, firsts: placed.filter((n) => n === 1).length, best: placed.length ? Math.min(...placed) : 0,
+      n: ps.length, firsts: placed.filter((n) => n === 1).length, best: placed.length ? Math.min(...placed) : 0,
       avg: placed.length ? placed.reduce((a, b) => a + b, 0) / placed.length : 0,
       avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
     };
   }
   function statLine(st) {
-    return [`${st.n} result${st.n === 1 ? "" : "s"}`, st.firsts && `${st.firsts} × 1st 🥇`, st.best && `best ${ordinal(st.best)}`,
+    return [`judged ${st.n} time${st.n === 1 ? "" : "s"}`, st.firsts && `${st.firsts} × 1st 🥇`, st.best && `best ${ordinal(st.best)}`,
       st.avg && `average place ${st.avg.toFixed(1)}`, st.avgScore && `average score ${st.avgScore.toFixed(1)}`].filter(Boolean).join(" · ");
   }
-  function judgeSummaries(dn, rs) {
+  function placingLabel(p) {
+    const dn = (danceById(p.r.dance) || {}).name || "";
+    if (p.kind === "round") return `${p.place ? ordinal(p.place) : "?"} · ${dn} round ${p.round}`;
+    if (p.kind === "panel") return `Panel · ${dn}`;
+    return `${p.place ? ordinal(p.place) : "NP"} · ${dn}`;
+  }
+  function judgeGroups(rs) {
     const groups = {};
-    rs.forEach((r) => judgesOf(r).forEach((j) => { const k = judgeKey(j.name); (groups[k] = groups[k] || { name: j.name, rs: [] }).rs.push(r); }));
-    const list = Object.values(groups).sort((a, b) => b.rs.length - a.rs.length || a.name.localeCompare(b.name));
-    const none = rs.filter((r) => !judgesOf(r).length).length;
+    rs.forEach((r) => judgePlacings(r).forEach((p) => { const k = judgeKey(p.name); (groups[k] = groups[k] || { name: p.name, ps: [] }).ps.push(p); }));
+    return Object.values(groups).sort((a, b) => b.ps.length - a.ps.length || a.name.localeCompare(b.name));
+  }
+  function judgeSummaries(dn, rs) {
+    const list = judgeGroups(rs);
+    const none = rs.filter((r) => !judgePlacings(r).length).length;
     if (!list.length) return `<div class="empty"><div class="big">⚖️</div>No judges added yet. Add the judge's name to a result (it's on most results sheets as the adjudicator) to see how ${esc(dn.name)} does with each one.</div>`;
-    return list.map((g) => `<a class="card judge-card" href="#/judge/${dn.id}/${encodeURIComponent(g.name)}" style="text-decoration:none;color:inherit;display:block">
+    return `<p class="small muted" style="margin:8px 4px">In grades, this is the place the judge gave. In championships, it's the place that judge gave in their round, not the overall.</p>` +
+      list.map((g) => `<a class="card judge-card" href="#/judge/${dn.id}/${encodeURIComponent(g.name)}" style="text-decoration:none;color:inherit;display:block">
         <div class="row between"><h3 style="margin:0">⚖️ ${esc(g.name)}</h3><span class="muted" aria-hidden="true">›</span></div>
-        <p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.rs)))}</p>
-        <div class="judge-places">${g.rs.slice(0, 8).map((r) => `<span class="chip ${Number(r.place) === 1 ? "gold" : "grey"}" title="${esc((danceById(r.dance) || {}).name || "")}">${r.place ? esc(ordinal(r.place)) : "NP"} · ${esc((danceById(r.dance) || {}).name || "")}</span>`).join("")}</div>
+        <p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.ps)))}</p>
+        <div class="judge-places">${g.ps.slice(0, 8).map((p) => `<span class="chip ${p.place === 1 ? "gold" : "grey"}">${esc(placingLabel(p))}</span>`).join("")}</div>
       </a>`).join("") + (none ? `<p class="small muted" style="text-align:center">${none} result${none === 1 ? " has" : "s have"} no judge yet. Open ${none === 1 ? "it" : "them"} and tap Edit to add one.</p>` : "");
   }
 
@@ -603,19 +646,32 @@
     const dn = S.dancers.find((d) => d.id === dancerId);
     if (!dn) return screens.scores();
     const k = judgeKey(name);
-    const rs = S.results.filter((r) => r.dancerId === dancerId && judgesOf(r).some((j) => judgeKey(j.name) === k)).sort((a, b) => b.date.localeCompare(a.date));
-    const st = judgeStats(rs);
-    const byDance = D.dances.filter((d) => rs.some((r) => r.dance === d.id)).map((d) => {
-      const s2 = judgeStats(rs.filter((r) => r.dance === d.id));
+    const ps = S.results.filter((r) => r.dancerId === dancerId).flatMap(judgePlacings).filter((p) => judgeKey(p.name) === k)
+      .sort((a, b) => b.r.date.localeCompare(a.r.date));
+    const st = judgeStats(ps);
+    const byDance = D.dances.filter((d) => ps.some((p) => p.r.dance === d.id)).map((d) => {
+      const s2 = judgeStats(ps.filter((p) => p.r.dance === d.id));
       return `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="small muted">${esc([`${s2.n}×`, s2.best && `best ${ordinal(s2.best)}`, s2.avg && `avg ${s2.avg.toFixed(1)}`].filter(Boolean).join(" · "))}</span></div>`;
     }).join("");
+    const champs = ps.some((p) => p.kind !== "grade");
+    const rows = ps.map((p) => {
+      const d = danceById(p.r.dance);
+      const sub = p.kind === "round" ? `Round ${p.round}: this judge's placing. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"} from the whole panel.`
+        : p.kind === "panel" ? `On the panel. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"}.`
+        : esc((levelById(p.r.level) || {}).name || "");
+      return `<a class="card result" href="#/result/${p.r.id}" style="text-decoration:none;color:inherit">${placeBadge(p.place)}
+        <div class="meta"><strong>${esc(d ? d.name : p.r.dance)}</strong><span class="small muted">${esc(p.r.feis || "Feis")} · ${esc(fmtDate(p.r.date))}</span>
+        <div class="small muted">${esc(sub)}${p.marks ? ` · score ${esc(p.marks)}` : ""}</div></div></a>`;
+    }).join("");
+    const pts = ps.filter((p) => p.place).map((p) => ({ date: p.r.date, place: p.place }));
     return {
       title: name, tab: "scores", back: true,
       html: `<div class="card"><p class="small muted" style="margin:0 0 4px">${esc(dn.name)} with this judge</p><h3 style="margin:0 0 6px">⚖️ ${esc(name)}</h3>
-          <p style="margin:0">${esc(statLine(st)) || "No results yet"}</p></div>
+          <p style="margin:0">${esc(statLine(st)) || "No results yet"}</p>
+          ${champs ? `<p class="small muted" style="margin:8px 0 0">Championship places here are the round this judge placed, not the overall. The overall comes from the whole panel.</p>` : ""}</div>
         ${byDance ? `<div class="card" style="padding:6px 14px">${byDance}</div>` : ""}
-        ${rs.length > 1 ? `<div class="card"><h3>Placings over time</h3>${chartFor(rs) || ""}</div>` : ""}
-        ${rs.map(resultRow).join("")}`
+        ${pts.length > 1 ? `<div class="card"><h3>This judge's placings over time</h3>${chartFor(pts) || ""}</div>` : ""}
+        ${rows}`
     };
   };
 
@@ -650,14 +706,21 @@
             <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
           </div>
           <div class="two">
-            <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" name="place" value="${esc(r.place)}" placeholder="e.g. 2"></label>
+            <label class="field"><span id="placeLbl">${isChamp(r) ? "Overall place" : "Place"}</span><input type="number" inputmode="numeric" min="1" max="200" name="place" value="${esc(r.place)}" placeholder="e.g. 2"></label>
             <label class="field"><span>Dancers in the competition</span><input type="number" inputmode="numeric" min="1" max="500" name="entrants" value="${esc(r.entrants)}" placeholder="optional"></label>
           </div>
           <label class="field"><span>Overall score, if shown</span><input name="marks" inputmode="decimal" value="${esc(r.marks)}" placeholder="e.g. 75 or 233.5" maxlength="30"></label>
+          <div id="champBox" ${isChamp(r) ? "" : "hidden"}>
+            <h3 style="margin:14px 0 2px">Rounds</h3>
+            <p class="small muted" style="margin:0 0 6px">${ROUNDS_HELP}</p>
+            ${roundInputs(r.rounds, "name")}
+            <h3 style="margin:14px 0 2px">Judging panel</h3>
+            <p class="small muted" style="margin:0 0 6px">Usually 3 judges, 5 at major championships, and 6 at the All-Irelands with 5 counting. Round judges are added for you. Add each judge's score if the results show it.</p>
+          </div>
           <div id="judgeRows">${rJudges.map((j) => `<div class="two judge-row"><label class="field"><span>Judge (adjudicator)</span><input name="jname" list="judgeList" value="${esc(j.name)}" placeholder="Name" maxlength="60"></label><label class="field"><span>Their score</span><input name="jmarks" inputmode="decimal" value="${esc(j.marks || "")}" placeholder="optional" maxlength="12"></label></div>`).join("")}</div>
-          <button type="button" class="btn plain sm" id="addJudge">＋ Another judge (championships have 3 or more)</button>
+          <button type="button" class="btn plain sm" id="addJudge" ${isChamp(r) ? "" : "hidden"}>＋ Another panel judge</button>
           ${judgeDatalist()}
-          <label class="toggle"><input type="checkbox" name="recall" ${r.recall ? "checked" : ""}> Recalled (championships)</label>
+          <label class="toggle" id="recallBox" ${isChamp(r) ? "" : "hidden"}><input type="checkbox" name="recall" ${r.recall ? "checked" : ""}> Recalled</label>
           <label class="field"><span>Notes</span><textarea name="notes" maxlength="500" placeholder="Anything to remember: judges' comments, how it felt…">${esc(r.notes)}</textarea></label>
         </div>
         <button class="btn block">${r.id ? "Save changes" : "Save result"}</button>
@@ -668,10 +731,18 @@
         const f = document.getElementById("resForm");
         let newPhoto = null;
         // Pre-fill level from the dancer's level in that dance
+        const setChamp = () => {
+          const c = isChamp({ dance: f.dance.value, level: f.level.value });
+          ["champBox", "addJudge", "recallBox"].forEach((id) => { document.getElementById(id).hidden = !c; });
+          document.getElementById("placeLbl").textContent = c ? "Overall place" : "Place";
+        };
+        f.level.addEventListener("change", setChamp);
         f.dance.addEventListener("change", () => {
+          setChamp();
           const d = danceById(f.dance.value); if (!d) return;
           const lv = dancerLevel(dn, d.shoe === "champ" ? "champ" : d.id);
           if (lv) f.level.value = lv;
+          setChamp();
         });
         let origFile = null;
         f.photo.addEventListener("change", async () => {
@@ -726,14 +797,15 @@
                 <label class="field"><span>Level</span><select data-k="level"><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${x.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
               </div>
               <div class="two">
-                <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
+                <label class="field"><span>${isChamp(x) ? "Overall place" : "Place"}</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
                 <label class="field"><span>Dancers in it</span><input type="number" inputmode="numeric" min="1" max="500" data-k="entrants" value="${esc(x.entrants)}" placeholder="optional"></label>
               </div>
               <div class="two">
                 <label class="field"><span>Judge${x.judges.length > 1 ? "s" : ""}</span><input data-k="judges" list="judgeList" value="${esc(x.judges.map((j) => j.name).join(", "))}" placeholder="Judge's name" maxlength="200"></label>
                 <label class="field"><span>Overall score</span><input data-k="marks" inputmode="decimal" value="${esc(x.marks)}" placeholder="optional" maxlength="30"></label>
               </div>
-              ${x.recall || x.dance === "prelim" || x.dance === "open" ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>` : ""}
+              ${isChamp(x) ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>
+                <p class="small muted" style="margin:8px 0 4px">${ROUNDS_HELP}</p>${roundInputs(x.rounds, "data-k")}` : ""}
               <p class="small muted" style="margin:4px 0 0">Read from: “${esc(x.line)}”</p>
             </div>`).join("")}
             <button type="button" class="btn block" id="saveFound">Save ${rows.length === 1 ? "this result" : "all " + rows.length + " results"}</button>
@@ -752,13 +824,20 @@
               if (!g("pick").checked) continue;
               if (!g("dance").value || !g("level").value) { toast("Choose the dance and level for each ticked result"); (g("dance").value ? g("level") : g("dance")).focus(); return; }
               picked.push({
+                _row: row.dataset.row,
                 id: uid(), dancerId, date, feis, dance: g("dance").value, level: g("level").value,
                 place: g("place").value ? Number(g("place").value) : "", entrants: g("entrants").value ? Number(g("entrants").value) : "",
                 marks: String(g("marks").value).trim(), recall: g("recall") ? g("recall").checked : false, notes: "", photoId: "",
-                judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges)
+                judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges), rounds: []
               });
             }
             if (!picked.length) { toast("Tick at least one result"); return; }
+            el.querySelectorAll(".found-row").forEach((row) => {
+              const rec = picked.find((p) => p._row === row.dataset.row); if (!rec || !isChamp(rec)) return;
+              rec.rounds = readRounds((k) => (row.querySelector(`[data-k="${k}"]`) || {}).value);
+              rec.judges = mergePanel(rec.judges, rec.rounds);
+            });
+            picked.forEach((p) => { delete p._row; });
             if (newPhoto) {
               const pid = "ph_" + picked[0].id + "_" + Date.now().toString(36);
               try { await photos.put(pid, newPhoto); picked.forEach((p) => { p.photoId = pid; }); }
@@ -785,6 +864,8 @@
             marks: String(fd.get("marks") || "").trim(), recall: !!fd.get("recall"), notes: String(fd.get("notes") || "").trim(), photoId: r.photoId || "",
             judges: fd.getAll("jname").map((n, i) => ({ name: String(n).trim(), marks: String(fd.getAll("jmarks")[i] || "").trim() })).filter((j) => j.name)
           };
+          if (isChamp(rec)) { rec.rounds = readRounds((k) => fd.get(k)); rec.judges = mergePanel(rec.judges, rec.rounds); }
+          else { rec.rounds = []; rec.recall = false; }
           if (newPhoto) {
             const pid = "ph_" + rec.id + "_" + Date.now().toString(36);
             try { await photos.put(pid, newPhoto); releasePhoto(rec.photoId, rec.id); rec.photoId = pid; }
@@ -809,9 +890,10 @@
       <div class="card"><dl class="facts">
         <dt>Dance</dt><dd>${esc(d ? d.name : r.dance)}</dd>
         <dt>Level</dt><dd>${esc(l ? l.name : "")}</dd>
-        <dt>Place</dt><dd>${r.place ? esc(ordinal(r.place)) : "Not placed"}${r.entrants ? ` of ${esc(r.entrants)}` : ""}</dd>
+        <dt>${isChamp(r) ? "Overall place" : "Place"}</dt><dd>${r.place ? esc(ordinal(r.place)) : "Not placed"}${r.entrants ? ` of ${esc(r.entrants)}` : ""}</dd>
+        ${isChamp(r) && roundsOf(r).length ? `<dt>Rounds</dt><dd>${roundsOf(r).map((x) => `Round ${x.n}: ${x.place ? esc(ordinal(x.place)) : "?"}${x.judge ? ` (<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(x.judge)}">${esc(x.judge)}</a>)` : ""}`).join("<br>")}<div class="small muted" style="margin-top:4px">${ROUNDS_HELP}</div></dd>` : ""}
         ${r.marks ? `<dt>Overall score</dt><dd>${esc(r.marks)}</dd>` : ""}
-        ${judgesOf(r).length ? `<dt>Judge${judgesOf(r).length > 1 ? "s" : ""}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}`).join("<br>")}</dd>` : ""}
+        ${judgesOf(r).length ? `<dt>${isChamp(r) ? "Judging panel" : "Judge" + (judgesOf(r).length > 1 ? "s" : "")}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}`).join("<br>")}</dd>` : ""}
         ${r.recall ? `<dt>Recall</dt><dd>Yes ✨</dd>` : ""}
         ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ""}
       </dl></div>
