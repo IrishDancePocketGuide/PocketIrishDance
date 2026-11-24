@@ -80,14 +80,35 @@
     easy: { name: "Easy", size: 10, count: 8, dirs: [[1, 0], [0, 1], [1, 1]], note: "Words go across, down or diagonally." },
     tricky: { name: "Tricky", size: 12, count: 10, dirs: [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]], note: "Words can go any direction, even backwards." }
   };
+  // Feis day bingo: kind, fun things to spot at a feis. "e" is the picture, "t" the words on the square.
+  const BINGO = [
+    ["💎", "Found a loose gem"], ["🌈", "A rainbow dress"], ["👔", "A boy in a blue tie"], ["🥇", "Someone wearing a medal"],
+    ["🏆", "A giant trophy"], ["🧦", "Socks slipping down"], ["🧴", "Sock glue in action"], ["👞", "Clicks in the hallway"],
+    ["🎻", "A fiddle player"], ["🪗", "An accordion player"], ["7️⃣", "A competitor number with a 7"], ["0️⃣", "A number ending in 0"],
+    ["💇", "A wig being brushed"], ["👑", "A sparkly tiara"], ["👯", "Matching school costumes"], ["💗", "A pink dress"],
+    ["💜", "A purple dress"], ["💙", "A blue dress"], ["💚", "A green dress"], ["❤️", "A red dress"],
+    ["🖤", "A black dress with sparkles"], ["🦋", "A dress with butterflies"], ["🌟", "A dress with stars"], ["🍀", "A shamrock on something"],
+    ["🇮🇪", "An Irish flag"], ["☕", "A parent holding two coffees"], ["🥨", "A dancer eating a snack"], ["😴", "A dancer napping on a chair"],
+    ["🧘", "A dancer stretching"], ["🦶", "Steps in the hallway"], ["🎀", "A big hair bow"], ["🪞", "A dancer checking the mirror"],
+    ["🧳", "A rolling dress bag"], ["📋", "Results posted on the wall"], ["📣", "Stage numbers called"], ["🤞", "Wishing someone luck"],
+    ["🫶", "A friendly hug"], ["🎉", "Someone cheering loudly"], ["📸", "A family photo with a medal"], ["🧒", "A tiny first-feis dancer"],
+    ["👦", "A boy dancing"], ["🩰", "Ghillies being laced up"], ["🧥", "A dance school jacket"], ["🍀", "A lucky charm"],
+    ["🎟️", "A raffle table"], ["🛍️", "A dance shop stall"], ["🎵", "A hornpipe playing"], ["🎶", "A reel playing"],
+    ["💧", "A water bottle refill"], ["🧸", "A teddy or mascot"], ["🎒", "A huge feis bag"], ["🙇", "A dancer bowing"],
+    ["🎗️", "A winner's sash"], ["💐", "Flowers for a dancer"], ["🍪", "A bake sale"], ["⏰", "A stage running late"],
+    ["🩹", "Tape on a hard shoe"], ["🌀", "Curls bouncing"], ["😊", "A dancer smiling on stage"], ["🙌", "A teacher giving a high five"]
+  ].map(([e, t]) => ({ e, t }));
   const KEY = "pid.games";
   const FILL = "ABCDEFGHIJKLMNOPRSTUWY"; // filler letters (skips Q, V, X, Z so it looks less random)
 
   // ---------- small helpers ----------
-  function load() { try { return Object.assign({ ws: {}, streak: { last: "", count: 0, best: 0 }, level: "easy" }, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { return { ws: {}, streak: { last: "", count: 0, best: 0 }, level: "easy" }; } }
+  const fresh = () => ({ ws: {}, bingo: {}, streak: { last: "", count: 0, best: 0 }, level: "easy" });
+  function load() { try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { return fresh(); } }
   function store(G) {
     const keys = Object.keys(G.ws).sort(); // keep the last 20 puzzles only
     while (keys.length > 20) delete G.ws[keys.shift()];
+    const bk = Object.keys(G.bingo || {}).sort(); // and the last 7 bingo cards
+    while (bk.length > 7) delete G.bingo[bk.shift()];
     try { localStorage.setItem(KEY, JSON.stringify(G)); } catch (e) { /* private mode: still playable */ }
   }
   function localDate(offsetDays) { const d = new Date(); d.setDate(d.getDate() + (offsetDays || 0)); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
@@ -127,6 +148,22 @@
     return { n, letters: grid.flat(), words: placed, level: levelId };
   }
 
+  // 5 x 5 card, the middle square is free. The seed mixes today's date with this phone's id.
+  function makeCard(seedText) {
+    const r = rng(hash("bingo|" + seedText));
+    const pool = BINGO.slice();
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const squares = pool.slice(0, 24);
+    squares.splice(12, 0, { e: "☘️", t: "Free: you made it to the feis!", free: true });
+    return squares;
+  }
+  const LINES = (() => {
+    const L = [];
+    for (let i = 0; i < 5; i++) { L.push([0, 1, 2, 3, 4].map((k) => i * 5 + k)); L.push([0, 1, 2, 3, 4].map((k) => k * 5 + i)); }
+    L.push([0, 6, 12, 18, 24], [4, 8, 12, 16, 20]);
+    return L;
+  })();
+
   window.PID_GAMES = function (A) {
     const { ext, esc, toast } = A;
     let G = load();
@@ -157,11 +194,68 @@
             <span class="small game-status">${esc(status)}</span></span>
           <span class="btn sm">${p && p.done ? "View" : p ? "Keep going" : "Play"}</span>
         </a>
+        <a class="card game-card" href="#/games/bingo">
+          <span class="ico" aria-hidden="true">🎯</span>
+          <span class="game-body"><strong>Feis day bingo</strong>
+            <span class="small muted">Spot things around the feis and race your friends. A new card every day</span>
+            <span class="small game-status">${esc(bingoStatus())}</span></span>
+          <span class="btn sm">${(G.bingo[localDate()] || {}).marks ? "Keep going" : "Play"}</span>
+        </a>
         ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
         <div class="card" style="text-align:center">
           <p class="small muted" style="margin:0">More games are on the way. Got an idea for one? Tell us in Settings, Help and feedback.</p>
         </div>`
       };
+    }
+
+    // ---------- feis day bingo ----------
+    function bingoState() { const d = localDate(); return G.bingo[d] || (G.bingo[d] = { marks: [], lines: 0 }); }
+    function linesDone(marks) { const m = new Set(marks.concat(12)); return LINES.filter((l) => l.every((i) => m.has(i))).length; }
+    function bingoStatus() {
+      const b = G.bingo[localDate()];
+      if (!b || !b.marks.length) return "Today's card is ready";
+      const n = linesDone(b.marks);
+      return b.marks.length >= 24 ? "Full card! ✓" : n ? `Bingo! ${n} line${n === 1 ? "" : "s"} ✓` : `${b.marks.length} spotted`;
+    }
+    // Each phone gets its own card (so families can race each other), still new every day.
+    function deviceId() { if (!G.dev) { G.dev = Math.random().toString(36).slice(2, 10); store(G); } return G.dev; }
+    function bingo() {
+      const card = makeCard(localDate() + "|" + deviceId());
+      const cardNo = 1000 + (hash(localDate() + deviceId()) % 9000);
+      const b = bingoState();
+      const dateLabel = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+      const sq = card.map((c, i) => `<button type="button" class="bingo-sq${c.free || b.marks.includes(i) ? " on" : ""}${c.free ? " free" : ""}" data-bingo="${i}" aria-pressed="${c.free || b.marks.includes(i)}"${c.free ? " disabled" : ""}><span class="bingo-e" aria-hidden="true">${c.e}</span><span class="bingo-t">${esc(c.t)}</span></button>`).join("");
+      return {
+        title: "Feis day bingo", tab: "home", back: true,
+        html: `
+        <div class="row between ws-top">
+          <div><strong>${esc(dateLabel)}</strong><div class="small muted ws-note">Spot it at the feis, then tap the square. Everyone's card is different, so race your friends to 5 in a row!</div></div>
+          <span class="chip">Card ${cardNo}</span>
+        </div>
+        <div class="row between ws-stats small"><span id="bingoCount">${esc(bingoStatus())}</span><span>A new card every day</span></div>
+        <div class="bingo-grid" id="bingoGrid">${sq}</div>
+        <p class="small muted ws-help">Tapped one by mistake? Tap it again to clear it.</p>
+        ${b.marks.length ? `<button class="btn ghost block" type="button" data-bingo-clear>Clear my card</button>` : ""}`
+      };
+    }
+    function tapBingo(i) {
+      const b = bingoState();
+      const before = linesDone(b.marks);
+      if (b.marks.includes(i)) b.marks = b.marks.filter((x) => x !== i); else b.marks.push(i);
+      const after = linesDone(b.marks);
+      store(G);
+      const el = document.querySelector(`[data-bingo="${i}"]`);
+      if (el) { const on = b.marks.includes(i); el.classList.toggle("on", on); el.setAttribute("aria-pressed", on); }
+      const ct = document.getElementById("bingoCount"); if (ct) ct.textContent = bingoStatus();
+      document.querySelectorAll(".bingo-sq.win").forEach((x) => x.classList.remove("win"));
+      const m = new Set(b.marks.concat(12));
+      LINES.filter((l) => l.every((k) => m.has(k))).forEach((l) => l.forEach((k) => { const x = document.querySelector(`[data-bingo="${k}"]`); if (x) x.classList.add("win"); }));
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) { /* ignore */ }
+      if (b.marks.length === 24 && !b.full) { b.full = true; store(G); if (window.PID_CELEBRATE) window.PID_CELEBRATE("Full card!", "You spotted everything on today's card. Feis day champion! 🏆"); }
+      else if (after > before && after > (b.lines || 0)) {
+        b.lines = after; store(G);
+        if (window.PID_CELEBRATE) window.PID_CELEBRATE("Bingo!", after === 1 ? "Five in a row! Keep going for another line, or the whole card." : `That's ${after} lines! Can you fill the whole card?`);
+      }
     }
 
     // ---------- word search ----------
@@ -300,7 +394,9 @@
 
     // ---------- buttons ----------
     document.getElementById("app").addEventListener("click", (e) => {
-      const t = e.target.closest("[data-ws-level], [data-ws-bonus]"); if (!t) return;
+      const t = e.target.closest("[data-ws-level], [data-ws-bonus], [data-bingo], [data-bingo-clear]"); if (!t) return;
+      if (t.dataset.bingo !== undefined) { tapBingo(Number(t.dataset.bingo)); return; }
+      if (t.dataset.bingoClear !== undefined) { if (!confirm("Clear all the squares on today's card?")) return; G.bingo[localDate()] = { marks: [], lines: 0 }; store(G); A.rerender(); return; }
       if (t.dataset.wsLevel) { G.level = t.dataset.wsLevel; store(G); A.rerender(); return; }
       if (t.dataset.wsBonus !== undefined) {
         const lv = G.level in LEVELS ? G.level : "easy";
@@ -312,10 +408,12 @@
 
     ext.games = (parts) => {
       G = load();
+      if (parts[1] === "bingo") return bingo();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };
   };
 
   window.PID_GAMES.makePuzzle = makePuzzle; // for tests
+  window.PID_GAMES.makeCard = makeCard;
 })();

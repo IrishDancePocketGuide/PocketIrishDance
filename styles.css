@@ -398,3 +398,19 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .workon-cta span span { display: block; font-size: .85rem; opacity: .95; }
 .workon-cta > span:last-child { margin-left: auto; font-size: 1.4rem; }
 .pill-tabs button.workon-pill:not(.on) { border-color: var(--gold); color: #c4553f; font-weight: 600; }
+
+/* Feis day bingo */
+.bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; max-width: 480px; margin: 0 auto; }
+.bingo-sq {
+  aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer;
+  font-size: 10px; line-height: 1.15; text-align: center; overflow: hidden; color: var(--ink); transition: background .12s, transform .12s;
+}
+.bingo-e { font-size: 20px; line-height: 1; }
+.bingo-t { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bingo-sq.on { background: var(--green); border-color: var(--green); color: var(--card); }
+.bingo-sq.free { background: var(--gold); border-color: var(--gold); color: #fff; cursor: default; }
+.bingo-sq.win { box-shadow: 0 0 0 3px var(--gold); }
+.bingo-sq.free.win { box-shadow: 0 0 0 3px var(--green); }
+.bingo-sq:active { transform: scale(.96); }
+@media (min-width: 420px) { .bingo-sq { font-size: 11.5px; } .bingo-e { font-size: 24px; } }
