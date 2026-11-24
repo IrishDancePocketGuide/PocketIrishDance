@@ -26,7 +26,8 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {} });
+  const APP_VERSION = "30"; // keep in step with VERSION in sw.js
+  const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
@@ -61,12 +62,64 @@
     return Object.values(seen).sort((a, b) => a.localeCompare(b));
   }
   const judgeDatalist = () => `<datalist id="judgeList">${knownJudges().map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`;
+  // What parents know about a judge: the school they teach at, or another role (dressmaker,
+  // choreographer...). Kept per judge, so it shows for every child and every result. Typed in by the parent.
+  const JUDGE_ROLES = [
+    { id: "teacher", name: "Teacher", ico: "🏫" }, { id: "dressmaker", name: "Dressmaker", ico: "🧵" },
+    { id: "choreographer", name: "Choreographer", ico: "💃" }, { id: "musician", name: "Musician", ico: "🎻" },
+    { id: "wigs", name: "Wigs or tan", ico: "💇" }, { id: "other", name: "Other", ico: "✏️" }
+  ];
+  const judgeInfo = (name) => ((S.judgeInfo || {})[judgeKey(name)]) || null;
+  function judgeRoleNames(i) {
+    return (i.roles || []).map((id) => id === "other" ? (i.other || "") : (JUDGE_ROLES.find((x) => x.id === id) || {}).name)
+      .filter((x) => x && !(x === "Teacher" && i.school));
+  }
+  // One short line for lists: "Trinity Academy · Dressmaker · Chicago"
+  function judgeTagline(name) {
+    const i = judgeInfo(name); if (!i) return "";
+    return [i.school, ...judgeRoleNames(i), i.where].filter(Boolean).join(" · ");
+  }
+  function knownSchools() {
+    const seen = {}; Object.values(S.judgeInfo || {}).forEach((i) => { if (i && i.school) seen[i.school.toLowerCase()] = i.school; });
+    return Object.values(seen).sort((a, b) => a.localeCompare(b));
+  }
   // "A. Byrne, C. Walsh" -> [{name, marks}], keeping scores already known for the same names
   function judgesFromText(text, before) {
     const old = {}; (before || []).forEach((j) => { old[judgeKey(j.name)] = j.marks || ""; });
     return String(text || "").split(/\s*[,;&\/]\s*|\s+and\s+/).map((n) => n.trim()).filter((n) => n.length > 1)
       .map((name) => ({ name: name.slice(0, 60), marks: old[judgeKey(name)] || "" }));
   }
+
+  // ---------- championships ----------
+  // Grades: every dance stands alone and one judge decides the place.
+  // Championships (prelim, open): one competition of 2 or 3 rounds. Each round's placing comes from the
+  // one judge picked for that round; the overall place comes from the whole panel's scores added up.
+  const CHAMP_LEVELS = ["pc", "oc", "w_pc", "w_oc", "ac_ch"];
+  const isChamp = (r) => r.dance === "prelim" || r.dance === "open" || CHAMP_LEVELS.includes(r.level);
+  const roundsOf = (r) => (r.rounds || []).filter((x) => x && (x.judge || x.place)).sort((a, b) => a.n - b.n);
+  const roundsText = (r) => roundsOf(r).filter((x) => x.place).map((x) => `R${x.n} ${ordinal(x.place)}`).join(", ");
+  // What each judge decided. Grades: the place. Championships: only that judge's round placing,
+  // never the overall place, because the overall comes from the whole panel.
+  function judgePlacings(r) {
+    if (!isChamp(r)) return judgesOf(r).map((j) => ({ name: j.name, place: Number(r.place) || 0, marks: j.marks || r.marks || "", r, kind: "grade" }));
+    const out = [];
+    roundsOf(r).filter((x) => x.judge).forEach((x) => out.push({ name: x.judge, place: Number(x.place) || 0,
+      marks: (judgesOf(r).find((j) => judgeKey(j.name) === judgeKey(x.judge)) || {}).marks || "", r, kind: "round", round: x.n }));
+    judgesOf(r).forEach((j) => { if (!out.some((o) => judgeKey(o.name) === judgeKey(j.name))) out.push({ name: j.name, place: 0, marks: j.marks || "", r, kind: "panel" }); });
+    return out;
+  }
+  function mergePanel(judges, rounds) {
+    const out = judges.slice();
+    rounds.forEach((x) => { if (x.judge && !out.some((j) => judgeKey(j.name) === judgeKey(x.judge))) out.push({ name: x.judge, marks: "" }); });
+    return out;
+  }
+  const roundInputs = (rounds, prefix) => [1, 2, 3].map((n) => {
+    const x = (rounds || []).find((y) => y.n === n) || {};
+    return `<div class="two"><label class="field"><span>Round ${n} judge</span><input ${prefix}="r${n}judge" list="judgeList" value="${esc(x.judge || "")}" placeholder="Name" maxlength="60"></label>
+      <label class="field"><span>Round ${n} place</span><input ${prefix}="r${n}place" type="number" inputmode="numeric" min="1" max="200" value="${esc(x.place || "")}" placeholder="optional"></label></div>`;
+  }).join("");
+  const readRounds = (get) => [1, 2, 3].map((n) => ({ n, judge: String(get("r" + n + "judge") || "").trim().slice(0, 60), place: get("r" + n + "place") ? Number(get("r" + n + "place")) : "" })).filter((x) => x.judge || x.place);
+  const ROUNDS_HELP = "Each round's place comes from the one judge picked for that round. The overall place comes from the whole panel, so it can be very different.";
 
   // Fireworks for 1st places
   function cheer(dn, recs) {
@@ -158,8 +211,9 @@
     const p = S.profile; const lv = levelById(p.level);
     const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     return {
-      title: "Pocket Irish Dance", tab: "home",
+      title: "Home", tab: "home",
       html: `
+      <div class="brand"><img src="icons/wordmark.png" alt="Pocket Irish Dance" width="720" height="194"></div>
       <section class="hero">
         <h2>Irish dance, explained</h2>
         <p>The words, the levels, the rules and what to do next, in plain language.</p>
@@ -181,6 +235,7 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>First feis, solo dress, Oireachtas</span></a>
         <a class="tile" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
+        <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
         <a class="tile wide" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Search for Irish dance schools near you</span></a>
       </div>
 
@@ -190,7 +245,7 @@
         <button class="btn sm" id="installBtn" hidden>Install the app</button>
       </div>`}
 
-      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}). Content is being checked and may change.</p>`
+      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}, update ${APP_VERSION}). Content is being checked and may change.</p>`
     };
   };
 
@@ -216,14 +271,16 @@
   };
 
   // ----- find a school -----
+  // Only lists of Irish dance schools. Shannon asked for no general map search, because Google Maps
+  // can't be told to hide non-Irish dance studios.
   const SCHOOL_ORGS = [
-    { id: "any", name: "No preference", hint: "Just show me schools near me", q: "Irish dance school" },
-    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: "Irish dance school TCRG" },
-    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", q: "Irish dance school An Comhdháil", locator: "https://web.irishdancingorg.com/index.php/school-locator" },
-    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: "Irish dance school WIDA", locator: "https://www.irish.dance/teachers" }
+    { id: "any", name: "No preference", hint: "Show me all the school lists" },
+    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name" },
+    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", locator: "https://web.irishdancingorg.com/index.php/school-locator" },
+    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", locator: "https://www.irish.dance/teachers" }
   ];
   screens.schools = function () {
-    const st = screens.schools.st || { org: curOrg(), place: "" };
+    const st = screens.schools.st || { org: curOrg() };
     screens.schools.st = st;
     if (!st.org) {
       return {
@@ -241,20 +298,13 @@
       ${o.locator ? `<div class="card" style="margin-top:10px"><h3>Official school locator</h3>
         <p class="small muted" style="margin:0 0 8px">${esc(o.name)} has its own list of registered schools and teachers. This is the most reliable place to look.</p>
         <a class="btn block" href="${esc(o.locator)}" target="_blank" rel="noopener">Open ${esc(o.name)}'s school locator ↗</a></div>
-        <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
+` : ""}
       ${o.id === "any" || o.id === "clrg" ? `<div class="card" style="margin-top:10px"><h3>Planxti school list</h3>
         <p class="small muted" style="margin:0 0 8px">A growing list of Irish dance schools, mostly in the US and Canada, which you can filter by region. It doesn't show which organization each school belongs to, so ask the school.</p>
-        <a class="btn ghost block" href="https://planxti.com/schools" target="_blank" rel="noopener">Open the Planxti school list ↗</a></div>
-        <div class="card"><h3>Irish Dancing Magazine school list</h3>
+        <a class="btn ghost block" href="https://planxti.com/schools" target="_blank" rel="noopener">Open the Planxti school list ↗</a></div>` : ""}
+      <div class="card" style="margin-top:10px"><h3>Irish Dancing Magazine school list</h3>
         <p class="small muted" style="margin:0 0 8px">Schools around the world, grouped by country or region (USA, Canada, Mexico, UK, Ireland, Australia, Europe and more). It doesn't show the organization either, and some listings are paid “featured” spots.</p>
         <a class="btn ghost block" href="https://irishdancing.com/resources/dance-schools" target="_blank" rel="noopener">Open the Irish Dancing Magazine list ↗</a></div>
-        <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
-      <form id="schoolForm" class="card" style="margin-top:10px">
-        <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
-        <button class="btn block">Search the map</button>
-        <button type="button" class="btn ghost block" id="nearMe" style="margin-top:8px">📍 Use my location</button>
-        <p class="small muted" style="margin:8px 0 0">This opens Google Maps with a search for Irish dance schools. Your location goes only to Google Maps, not to this app.</p>
-      </form>
       <div class="card small">
         <h3>Before you sign up, ask the school:</h3>
         <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
@@ -266,19 +316,106 @@
         </ul>
       </div>
       ${o.id === "clrg" || o.id === "any" ? `<p class="small muted">Official CLRG information: <a href="https://www.clrg.ie" target="_blank" rel="noopener">clrg.ie ↗</a></p>` : ""}
-      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`,
+      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`
+    };
+  };
+
+  // ---------- feis calendar ----------
+  // feis.json is refreshed every few hours by a GitHub Action that reads each organization's
+  // own public feis calendar (scripts/update-feis.mjs). The app only reads it.
+  const FEIS_ORGS = [
+    { id: "clrg", name: "CLRG", where: "North America", calendar: "https://idtana.org/feiseanna/" },
+    { id: "comhdhail", name: "An Comhdháil", where: "Ireland, UK and beyond", calendar: "https://web.irishdancingorg.com/index.php/feis" },
+    { id: "wida", name: "WIDA", where: "Mainly mainland Europe and the UK", calendar: "https://www.irish.dance/competitions-list" }
+  ];
+  // IDTANA's national list has the bigger events; most local CLRG feiseanna are on these regional calendars.
+  const CLRG_REGION_CALENDARS = [
+    ["Eastern Canada", "https://www.idtac-er.com/regional-feiseanna"],
+    ["Western Canada", "https://www.wcidta.ca/feis-dates"],
+    ["Mid-America", "https://midamericaregion.com/region-information/feis-calendar/"],
+    ["Mid-Atlantic", "https://www.mid-atlanticregion.com/feis-info"],
+    ["New England", "https://www.neidt.org/feiseanna"],
+    ["Southern US", "https://www.idtana-southernregion.com/calendar"],
+    ["Western US", "https://www.westernusregion.com/feiseanna"]
+  ];
+  let feisData = null, feisLoading = false, feisFailed = false;
+  function loadFeis() {
+    if (feisData || feisLoading) return;
+    feisLoading = true;
+    fetch("feis.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then((d) => { feisData = d; }).catch(() => { feisFailed = true; })
+      .then(() => { feisLoading = false; if (location.hash.startsWith("#/feis")) rerender(); });
+  }
+  function feisDates(e) {
+    const opt = { weekday: "short", day: "numeric", month: "short" };
+    const a = new Date(e.start + "T12:00:00"), b = new Date((e.end || e.start) + "T12:00:00");
+    if (e.end === e.start || !e.end) return a.toLocaleDateString(undefined, opt);
+    const f = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
+    return f.formatRange ? f.formatRange(a, b) : `${f.format(a)} – ${f.format(b)}`;
+  }
+  screens.feis = function () {
+    loadFeis();
+    const st = screens.feis.st || (screens.feis.st = { org: FEIS_ORGS.some((o) => o.id === curOrg()) ? curOrg() : "all", q: "" });
+    const tabs = `<div class="pill-tabs">${[{ id: "all", name: "All" }].concat(FEIS_ORGS).map((o) => `<button data-feis-org="${o.id}" class="${st.org === o.id ? "on" : ""}">${esc(o.name)}</button>`).join("")}</div>`;
+    const head = `<p class="muted" style="margin:0 4px 10px">Upcoming feiseanna from the organizations' official calendars and regional feis lists, kept up to date automatically.</p>${tabs}`;
+    if (!feisData) {
+      return { title: "Feis calendar", tab: "home", back: true, html: head + (feisFailed
+        ? `<div class="empty"><div class="big">📅</div><p>The feis calendar couldn't load. Check your connection, or open an official calendar:</p>${FEIS_ORGS.map((o) => `<a class="btn ghost block" style="margin-top:8px" href="${o.calendar}" target="_blank" rel="noopener">${esc(o.name)} calendar ↗</a>`).join("")}</div>`
+        : `<div class="empty"><div class="spinner" style="margin:0 auto 10px"></div><p>Loading feiseanna…</p></div>`) };
+    }
+    const t = today();
+    const list = (feisData.events || []).filter((e) => (e.end || e.start) >= t && (st.org === "all" || e.org === st.org));
+    let lastMonth = "";
+    const cards = list.map((e) => {
+      const m = new Date(e.start + "T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      const h = m !== lastMonth ? `<div class="az" data-feis-month>${esc(m.toUpperCase())}</div>` : "";
+      lastMonth = m;
+      const find = norm([e.name, e.place, e.region, e.kind, e.organiser, orgName(e.org)].join(" "));
+      return h + `<article class="card feis${e.cancelled ? " cancelled" : ""}" data-find="${esc(find)}">
+        <div class="feis-date">${esc(feisDates(e))}</div>
+        <h3>${esc(e.name)}</h3>
+        ${e.place ? `<p class="small" style="margin:2px 0 0">📍 ${esc(e.place)}</p>` : ""}
+        <div class="chips" style="margin-top:6px">${st.org === "all" ? `<span class="chip">${esc(orgName(e.org))}</span>` : ""}${e.cancelled ? `<span class="chip gold">Cancelled</span>` : ""}${e.kind ? `<span class="chip grey">${esc(e.kind)}</span>` : ""}${e.region ? `<span class="chip grey">${esc(e.region)}</span>` : ""}</div>
+        ${e.organiser ? `<p class="small muted" style="margin:6px 0 0">Organiser: ${esc(e.organiser)}</p>` : ""}
+        ${e.host ? `<p class="small muted" style="margin:6px 0 0">Hosted by ${esc(e.host)}</p>` : ""}
+        ${e.source === "found" ? `<p class="small muted" style="margin:4px 0 0">Found on ${esc(e.foundOn || "the host's website")}</p>` : ""}
+        <div class="row wrap" style="gap:8px;margin-top:8px"><a class="btn ghost sm" href="${esc(e.url)}" target="_blank" rel="noopener">Details ↗</a>${e.syllabus ? `<a class="btn ghost sm" href="${esc(e.syllabus)}" target="_blank" rel="noopener">Syllabus ↗</a>` : ""}</div>
+      </article>`;
+    }).join("");
+    const shown = st.org === "all" ? FEIS_ORGS : FEIS_ORGS.filter((o) => o.id === st.org);
+    const srcs = (feisData.sources || []).filter((s) => s.org === "all" || shown.some((o) => o.id === s.org));
+    const checked = feisData.checked ? new Date(feisData.checked).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+    return {
+      title: "Feis calendar", tab: "home", back: true,
+      html: head + `
+      <div class="search" style="margin-top:10px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="feisFind" value="${esc(st.q)}" placeholder="Search by name, city or region" aria-label="Search feiseanna"></div>
+      <p class="small muted" style="margin:8px 4px 0" id="feisCount"></p>
+      <div id="feisList">${cards || `<div class="empty"><div class="big">📅</div><p>No upcoming feiseanna listed here right now.</p></div>`}</div>
+      <div class="empty" id="feisNone" hidden><div class="big">🔎</div><p>No feiseanna match your search.</p></div>
+      ${st.org === "clrg" || st.org === "all" ? `<div class="card" style="margin-top:14px"><h3>More CLRG feiseanna in North America</h3>
+        <p class="small muted" style="margin:0 0 8px">The national list above has the bigger events. Most local feiseanna are listed by your region:</p>
+        <div class="row wrap" style="gap:6px">${CLRG_REGION_CALENDARS.map(([n, u]) => `<a class="btn ghost sm" href="${u}" target="_blank" rel="noopener">${esc(n)} ↗</a>`).join("")}</div>
+        <p class="small muted" style="margin:8px 0 0">Outside North America, ask your teacher for your region's feis list.</p></div>` : ""}
+      <div class="card small" style="margin-top:14px"><strong>Where these come from</strong>
+        <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">${srcs.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>` : esc(s.name)}${s.problem ? ` <span class="muted">(couldn't be read on the last check, so these may be a little out of date)</span>` : ""}</li>`).join("")}</ul>
+        <p class="muted" style="margin:6px 0 0">${checked ? `Last checked ${esc(checked)}. ` : ""}Always confirm dates, entry deadlines and fees on the official page before you register.</p></div>`,
       after() {
-        const open = (where) => window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(o.q + " " + where), "_blank", "noopener");
-        document.getElementById("schoolForm").addEventListener("submit", (e) => {
-          e.preventDefault(); st.place = e.target.place.value.trim();
-          open(st.place ? "near " + st.place : "near me");
-        });
-        document.getElementById("nearMe").addEventListener("click", () => {
-          if (!navigator.geolocation) { open("near me"); return; }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => window.open(`https://www.google.com/maps/search/${encodeURIComponent(o.q)}/@${pos.coords.latitude.toFixed(3)},${pos.coords.longitude.toFixed(3)},12z`, "_blank", "noopener"),
-            () => open("near me"), { timeout: 8000 });
-        });
+        const input = document.getElementById("feisFind");
+        const apply = () => {
+          const q = norm(input.value).trim(); st.q = input.value;
+          let n = 0;
+          document.querySelectorAll("#feisList .feis").forEach((c) => { const on = !q || c.dataset.find.includes(q); c.hidden = !on; if (on) n++; });
+          // Hide a month heading when every feis under it is hidden.
+          document.querySelectorAll("#feisList [data-feis-month]").forEach((h) => {
+            let el = h.nextElementSibling, any = false;
+            while (el && !el.hasAttribute("data-feis-month")) { if (!el.hidden) any = true; el = el.nextElementSibling; }
+            h.hidden = !any;
+          });
+          document.getElementById("feisCount").textContent = list.length ? `${n} upcoming feis${n === 1 ? "" : "eanna"}` : "";
+          document.getElementById("feisNone").hidden = !(list.length && !n);
+        };
+        input.addEventListener("input", apply);
+        apply();
       }
     };
   };
@@ -286,7 +423,10 @@
   screens.words = function () {
     const group = screens.words.group || "all";
     const allOrgs = screens.words.allOrgs;
-    const list = D.glossary.filter((t) => allOrgs || inOrg(t)).filter((t) => group === "all" || t.g === group).slice().sort((a, b) => a.term.localeCompare(b.term));
+    const wq = screens.words.q || ""; const nq = norm(wq).trim();
+    const list = D.glossary.filter((t) => allOrgs || inOrg(t)).filter((t) => group === "all" || t.g === group)
+      .filter((t) => !nq || norm(t.term + " " + (t.alt || "") + " " + t.means + " " + (t.say || "") + " " + (t.why || "")).includes(nq))
+      .slice().sort((a, b) => a.term.localeCompare(b.term));
     let lastLetter = "";
     const body = list.map((t) => {
       const L = t.term[0].toUpperCase(); let h = "";
@@ -295,13 +435,14 @@
     }).join("");
     return {
       title: "Words", tab: "words",
-      html: `${searchBox("", "Search the words")}
+      html: `${searchBox(wq, "Search the words")}
       <div class="pill-tabs" style="margin-top:12px">
         <button data-group="all" class="${group === "all" ? "on" : ""}">All</button>
         ${D.glossaryGroups.map((g) => `<button data-group="${g.id}" class="${group === g.id ? "on" : ""}">${esc(g.name)}</button>`).join("")}
       </div>
       ${curOrg() ? `<label class="toggle small" style="margin:10px 4px 0"><input type="checkbox" data-words-all ${allOrgs ? "checked" : ""}> Include words used by other organizations</label>` : ""}
       <p class="small muted" style="margin:8px 4px 0">Tap the gold button to hear a word. It uses your phone's voice for now; real recordings are coming.</p>
+      ${nq && !list.length ? `<div class="empty"><div class="big">🔎</div><p>No words match “${esc(wq)}”${group !== "all" ? " in this group" : ""}.</p><a class="btn ghost" href="#/search?q=${encodeURIComponent(wq)}">Search the whole app</a></div>` : ""}
       ${body}`
     };
   };
@@ -465,9 +606,12 @@
       title: "Score tracker", tab: "scores",
       html: `${S.dancers.map((dn) => {
         const n = S.results.filter((r) => r.dancerId === dn.id).length;
-        return `<a class="card row" style="text-decoration:none;color:inherit" href="#/dancer/${dn.id}"><span class="place">${esc(dn.name[0] || "?")}</span><div class="meta" style="flex:1"><strong>${esc(dn.name)}</strong><span class="small muted">${n} result${n === 1 ? "" : "s"}</span></div><span class="muted">›</span></a>`;
+        const firsts = S.results.filter((r) => r.dancerId === dn.id && Number(r.place) === 1).length;
+        const last = S.results.filter((r) => r.dancerId === dn.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+        return `<a class="card row" style="text-decoration:none;color:inherit" href="#/dancer/${dn.id}"><span class="place">${esc(dn.name[0] || "?")}</span><div class="meta" style="flex:1"><strong>${esc(dn.name)}</strong><span class="small muted">${n} result${n === 1 ? "" : "s"}${firsts ? ` · ${firsts} × 1st 🥇` : ""}${last ? ` · last: ${esc(last.feis || fmtDate(last.date))}` : ""}</span></div><span class="muted">›</span></a>`;
       }).join("")}
-      <a class="btn ghost block" href="#/dancer/new" style="margin-top:8px">Add another dancer</a>`
+      <a class="btn ghost block" href="#/dancer/new" style="margin-top:8px">＋ Add another child</a>
+      <p class="small muted" style="text-align:center">Each child has their own results, levels, judge history and celebrations.</p>`
     };
   };
 
@@ -508,8 +652,9 @@
     const d = danceById(r.dance); const l = levelById(r.level);
     const bits = [l && l.name, r.entrants && `${r.entrants} dancers`, r.marks && `score ${r.marks}`, r.recall && "Recalled ✨"].filter(Boolean);
     const jn = judgeNames(r);
+    if (isChamp(r) && roundsText(r)) bits.push(roundsText(r));
     return `<a class="card result" href="#/result/${r.id}" style="text-decoration:none;color:inherit">${placeBadge(Number(r.place))}
-      <div class="meta"><strong>${esc(d ? d.name : r.dance)}</strong><span class="small muted">${esc(r.feis || "Feis")} · ${esc(fmtDate(r.date))}</span><div class="small muted">${esc(bits.join(" · "))}</div>${jn ? `<div class="small muted">⚖️ ${esc(jn)}</div>` : ""}</div>
+      <div class="meta"><strong>${esc(d ? d.name : r.dance)}</strong><span class="small muted">${esc(r.feis || "Feis")} · ${esc(fmtDate(r.date))}</span><div class="small muted">${esc(bits.join(" · "))}</div>${jn ? `<div class="judge-line">⚖️ ${judgesOf(r).map((j) => esc(j.name) + (judgeTagline(j.name) ? ` <span class="muted">(${esc(judgeTagline(j.name))})</span>` : "")).join(", ")}</div>` : ""}</div>
       ${r.photoId ? `<img class="thumb" data-photo="${esc(r.photoId)}" alt="">` : ""}</a>`;
   }
 
@@ -551,8 +696,9 @@
       html: `
       ${sugg.map((s) => `<div class="banner"><span>🎉 ${esc(ordinal(s.r.place))} in ${esc(s.dance.name)} at ${esc(s.from.name)}. That usually means moving up to <strong>${esc(s.to.name)}</strong> in ${esc(s.dance.name)}.</span>
         <button class="btn sm" data-moveup="${s.r.id}">Move up</button><button class="btn plain sm" data-dismiss="${s.r.id}" aria-label="Not yet">✕</button></div>`).join("")}
+      <nav class="kid-switch" aria-label="Your dancers">${S.dancers.map((d) => `<a href="#/dancer/${d.id}" class="${d.id === dn.id ? "on" : ""}" ${d.id === dn.id ? 'aria-current="page"' : ""}>${esc(d.name)}</a>`).join("")}<a href="#/dancer/new" class="add">＋ ${S.dancers.length > 1 ? "Add child" : "Add another child"}</a></nav>
       <div class="row" style="gap:8px">
-        <a class="btn" style="flex:1" href="#/add/${dn.id}">＋ Add a result</a>
+        <a class="btn" style="flex:1" href="#/add/${dn.id}">＋ Add a result for ${esc(dn.name)}</a>
         <a class="btn ghost" href="#/dancer/${dn.id}/edit">Levels</a>
       </div>
       <div class="card" style="padding:6px 14px">
@@ -564,29 +710,40 @@
     };
   };
 
-  function judgeStats(rs) {
-    const placed = rs.map((r) => Number(r.place)).filter((n) => n > 0);
-    const scores = rs.map((r) => parseFloat(r.marks)).filter((n) => !isNaN(n));
+  // ps: judge placings (see judgePlacings)
+  function judgeStats(ps) {
+    const placed = ps.map((p) => p.place).filter((n) => n > 0);
+    const scores = ps.map((p) => parseFloat(p.marks)).filter((n) => !isNaN(n));
     return {
-      n: rs.length, firsts: placed.filter((n) => n === 1).length, best: placed.length ? Math.min(...placed) : 0,
+      n: ps.length, firsts: placed.filter((n) => n === 1).length, best: placed.length ? Math.min(...placed) : 0,
       avg: placed.length ? placed.reduce((a, b) => a + b, 0) / placed.length : 0,
       avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
     };
   }
   function statLine(st) {
-    return [`${st.n} result${st.n === 1 ? "" : "s"}`, st.firsts && `${st.firsts} × 1st 🥇`, st.best && `best ${ordinal(st.best)}`,
+    return [`judged ${st.n} time${st.n === 1 ? "" : "s"}`, st.firsts && `${st.firsts} × 1st 🥇`, st.best && `best ${ordinal(st.best)}`,
       st.avg && `average place ${st.avg.toFixed(1)}`, st.avgScore && `average score ${st.avgScore.toFixed(1)}`].filter(Boolean).join(" · ");
   }
-  function judgeSummaries(dn, rs) {
+  function placingLabel(p) {
+    const dn = (danceById(p.r.dance) || {}).name || "";
+    if (p.kind === "round") return `${p.place ? ordinal(p.place) : "?"} · ${dn} round ${p.round}`;
+    if (p.kind === "panel") return `Panel · ${dn}`;
+    return `${p.place ? ordinal(p.place) : "NP"} · ${dn}`;
+  }
+  function judgeGroups(rs) {
     const groups = {};
-    rs.forEach((r) => judgesOf(r).forEach((j) => { const k = judgeKey(j.name); (groups[k] = groups[k] || { name: j.name, rs: [] }).rs.push(r); }));
-    const list = Object.values(groups).sort((a, b) => b.rs.length - a.rs.length || a.name.localeCompare(b.name));
-    const none = rs.filter((r) => !judgesOf(r).length).length;
+    rs.forEach((r) => judgePlacings(r).forEach((p) => { const k = judgeKey(p.name); (groups[k] = groups[k] || { name: p.name, ps: [] }).ps.push(p); }));
+    return Object.values(groups).sort((a, b) => b.ps.length - a.ps.length || a.name.localeCompare(b.name));
+  }
+  function judgeSummaries(dn, rs) {
+    const list = judgeGroups(rs);
+    const none = rs.filter((r) => !judgePlacings(r).length).length;
     if (!list.length) return `<div class="empty"><div class="big">⚖️</div>No judges added yet. Add the judge's name to a result (it's on most results sheets as the adjudicator) to see how ${esc(dn.name)} does with each one.</div>`;
-    return list.map((g) => `<a class="card judge-card" href="#/judge/${dn.id}/${encodeURIComponent(g.name)}" style="text-decoration:none;color:inherit;display:block">
+    return `<p class="small muted" style="margin:8px 4px">In grades, this is the place the judge gave. In championships, it's the place that judge gave in their round, not the overall.</p>` +
+      list.map((g) => `<a class="card judge-card" href="#/judge/${dn.id}/${encodeURIComponent(g.name)}" style="text-decoration:none;color:inherit;display:block">
         <div class="row between"><h3 style="margin:0">⚖️ ${esc(g.name)}</h3><span class="muted" aria-hidden="true">›</span></div>
-        <p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.rs)))}</p>
-        <div class="judge-places">${g.rs.slice(0, 8).map((r) => `<span class="chip ${Number(r.place) === 1 ? "gold" : "grey"}" title="${esc((danceById(r.dance) || {}).name || "")}">${r.place ? esc(ordinal(r.place)) : "NP"} · ${esc((danceById(r.dance) || {}).name || "")}</span>`).join("")}</div>
+        ${judgeTagline(g.name) ? `<p class="judge-tag">${esc(judgeTagline(g.name))}</p>` : ""}<p class="small muted" style="margin:4px 0 6px">${esc(statLine(judgeStats(g.ps)))}</p>
+        <div class="judge-places">${g.ps.slice(0, 8).map((p) => `<span class="chip ${p.place === 1 ? "gold" : "grey"}">${esc(placingLabel(p))}</span>`).join("")}</div>
       </a>`).join("") + (none ? `<p class="small muted" style="text-align:center">${none} result${none === 1 ? " has" : "s have"} no judge yet. Open ${none === 1 ? "it" : "them"} and tap Edit to add one.</p>` : "");
   }
 
@@ -594,21 +751,92 @@
     const dn = S.dancers.find((d) => d.id === dancerId);
     if (!dn) return screens.scores();
     const k = judgeKey(name);
-    const rs = S.results.filter((r) => r.dancerId === dancerId && judgesOf(r).some((j) => judgeKey(j.name) === k)).sort((a, b) => b.date.localeCompare(a.date));
-    const st = judgeStats(rs);
-    const byDance = D.dances.filter((d) => rs.some((r) => r.dance === d.id)).map((d) => {
-      const s2 = judgeStats(rs.filter((r) => r.dance === d.id));
+    const ps = S.results.filter((r) => r.dancerId === dancerId).flatMap(judgePlacings).filter((p) => judgeKey(p.name) === k)
+      .sort((a, b) => b.r.date.localeCompare(a.r.date));
+    const st = judgeStats(ps);
+    const byDance = D.dances.filter((d) => ps.some((p) => p.r.dance === d.id)).map((d) => {
+      const s2 = judgeStats(ps.filter((p) => p.r.dance === d.id));
       return `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="small muted">${esc([`${s2.n}×`, s2.best && `best ${ordinal(s2.best)}`, s2.avg && `avg ${s2.avg.toFixed(1)}`].filter(Boolean).join(" · "))}</span></div>`;
     }).join("");
+    const champs = ps.some((p) => p.kind !== "grade");
+    const rows = ps.map((p) => {
+      const d = danceById(p.r.dance);
+      const sub = p.kind === "round" ? `Round ${p.round}: this judge's placing. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"} from the whole panel.`
+        : p.kind === "panel" ? `On the panel. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"}.`
+        : esc((levelById(p.r.level) || {}).name || "");
+      return `<a class="card result" href="#/result/${p.r.id}" style="text-decoration:none;color:inherit">${placeBadge(p.place)}
+        <div class="meta"><strong>${esc(d ? d.name : p.r.dance)}</strong><span class="small muted">${esc(p.r.feis || "Feis")} · ${esc(fmtDate(p.r.date))}</span>
+        <div class="small muted">${esc(sub)}${p.marks ? ` · score ${esc(p.marks)}` : ""}</div></div></a>`;
+    }).join("");
+    const pts = ps.filter((p) => p.place).map((p) => ({ date: p.r.date, place: p.place }));
     return {
       title: name, tab: "scores", back: true,
-      html: `<div class="card"><p class="small muted" style="margin:0 0 4px">${esc(dn.name)} with this judge</p><h3 style="margin:0 0 6px">⚖️ ${esc(name)}</h3>
-          <p style="margin:0">${esc(statLine(st)) || "No results yet"}</p></div>
+      html: `${judgeProfile(name)}
+        <div class="card"><p class="small muted" style="margin:0 0 4px">${esc(dn.name)} with this judge</p>
+          <p style="margin:0">${esc(statLine(st)) || "No results yet"}</p>
+          ${champs ? `<p class="small muted" style="margin:8px 0 0">Championship places here are the round this judge placed, not the overall. The overall comes from the whole panel.</p>` : ""}</div>
         ${byDance ? `<div class="card" style="padding:6px 14px">${byDance}</div>` : ""}
-        ${rs.length > 1 ? `<div class="card"><h3>Placings over time</h3>${chartFor(rs) || ""}</div>` : ""}
-        ${rs.map(resultRow).join("")}`
+        ${pts.length > 1 ? `<div class="card"><h3>This judge's placings over time</h3>${chartFor(pts) || ""}</div>` : ""}
+        ${rows}`,
+      after: judgeProfileAfter(name)
     };
   };
+
+  function judgeProfile(name) {
+    const i = judgeInfo(name) || {};
+    const has = i.school || (i.roles || []).length || i.where || i.note;
+    // Opens a web search; the parent reads it and types in what they find. Nothing is saved automatically.
+    const lookup = `<a class="btn ghost sm" href="https://www.google.com/search?q=${encodeURIComponent('"' + name + '" ADCRG Irish dance')}" target="_blank" rel="noopener">🔎 Look up this judge</a>`;
+    const roles = (i.roles || []).filter((id) => !(id === "teacher" && i.school)).map((id) => {
+      const x = JUDGE_ROLES.find((y) => y.id === id) || {}; return `<li>${x.ico || "•"} ${esc(id === "other" ? (i.other || "Other") : x.name)}</li>`; }).join("");
+    return `<section class="card judge-profile">
+      <div class="judge-head"><div class="judge-avatar" aria-hidden="true">⚖️</div><div><h2>${esc(name)}</h2>
+        ${has ? `<p class="judge-tag" style="margin:0">${esc(judgeTagline(name)) || "Judge"}</p>` : `<p class="small muted" style="margin:0">Judge</p>`}</div></div>
+      <div id="jView">
+      ${has ? `<ul class="judge-facts">
+          ${i.school ? `<li>🏫 Teaches at <strong>${esc(i.school)}</strong></li>` : ""}${roles}
+          ${i.where ? `<li>📍 ${esc(i.where)}</li>` : ""}</ul>
+          ${i.note ? `<p class="small" style="margin:6px 0 0">${esc(i.note)}</p>` : ""}
+          <div class="row" style="gap:8px;margin-top:10px"><button type="button" class="btn ghost sm" id="jEdit">Edit details</button>${lookup}</div>`
+        : `<p class="small muted" style="margin:10px 0">Add what you know about this judge: the school they teach at, or if they're a dressmaker, choreographer or something else.</p>
+          <div class="row" style="gap:8px"><button type="button" class="btn sm" id="jEdit">＋ Add details</button>${lookup}</div>`}
+      </div>
+      <form id="jForm" hidden>
+        <label class="field"><span>School they teach at</span><input name="school" list="schoolList" value="${esc(i.school || "")}" placeholder="e.g. Trinity Academy" maxlength="80"></label>
+        <datalist id="schoolList">${knownSchools().map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+        <fieldset class="field role-pick"><legend>Also known as (tick any)</legend>
+          ${JUDGE_ROLES.map((x) => `<label><input type="checkbox" name="role" value="${x.id}" ${(i.roles || []).includes(x.id) ? "checked" : ""}> ${x.ico} ${esc(x.name)}</label>`).join("")}
+        </fieldset>
+        <label class="field" id="jOtherWrap" ${(i.roles || []).includes("other") ? "" : "hidden"}><span>Other role</span><input name="other" value="${esc(i.other || "")}" placeholder="e.g. Shoe maker" maxlength="60"></label>
+        <label class="field"><span>Where they're from</span><input name="where" value="${esc(i.where || "")}" placeholder="e.g. Chicago, IL" maxlength="60"></label>
+        <label class="field"><span>Note (optional)</span><textarea name="note" rows="2" maxlength="200" placeholder="e.g. Also teaches at a summer camp">${esc(i.note || "")}</textarea></label>
+        <p class="small muted" style="margin:4px 0 10px">Saved on this phone only. Stick to facts you know or found on their school's or business's own website.</p>
+        <div class="row" style="gap:8px"><button class="btn" style="flex:1">Save</button><button type="button" class="btn ghost" id="jCancel">Cancel</button>
+          ${has ? `<button type="button" class="btn plain" id="jClear">Clear</button>` : ""}</div>
+      </form>
+    </section>`;
+  }
+  function judgeProfileAfter(name) {
+    return function () {
+      const f = document.getElementById("jForm"), view = document.getElementById("jView");
+      if (!f) return;
+      const k = judgeKey(name);
+      document.getElementById("jEdit").addEventListener("click", () => { view.hidden = true; f.hidden = false; f.school.focus(); });
+      document.getElementById("jCancel").addEventListener("click", () => { f.hidden = true; view.hidden = false; });
+      f.addEventListener("change", (e) => { if (e.target.name === "role") document.getElementById("jOtherWrap").hidden = !f.querySelector('input[value="other"]').checked; });
+      const clear = document.getElementById("jClear");
+      if (clear) clear.addEventListener("click", () => { delete S.judgeInfo[k]; save(); toast("Details cleared"); route(); });
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const roles = [...f.querySelectorAll('input[name="role"]:checked')].map((x) => x.value);
+        const info = { name, school: f.school.value.trim(), roles, other: roles.includes("other") ? f.other.value.trim() : "",
+          where: f.where.value.trim(), note: f.note.value.trim(), updated: today() };
+        S.judgeInfo = S.judgeInfo || {};
+        if (info.school || roles.length || info.where || info.note) S.judgeInfo[k] = info; else delete S.judgeInfo[k];
+        save(); toast("Saved"); route();
+      });
+    };
+  }
 
   screens.resultForm = function (dancerId, resultId) {
     const dn = S.dancers.find((d) => d.id === dancerId);
@@ -628,6 +856,7 @@
           <div id="readProg" class="read-prog" hidden><span class="spinner" aria-hidden="true"></span><span id="readMsg">Reading the results…</span></div>`}
         </div>
         <div class="card">
+          ${S.dancers.length > 1 ? `<div class="field" style="margin-top:0"><span>Who is this for?</span><div class="who-pick">${S.dancers.map((d) => `<label><input type="radio" name="who" value="${d.id}" ${d.id === dancerId ? "checked" : ""}><span>${esc(d.name)}</span></label>`).join("")}</div></div>` : ""}
           <div class="two">
             <label class="field"><span>Date</span><input type="date" name="date" required value="${esc(r.date)}"></label>
             <label class="field"><span>Feis or event</span><input name="feis" value="${esc(lastFeis)}" placeholder="e.g. Feis Mid-America" maxlength="80"></label>
@@ -641,15 +870,22 @@
             <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
           </div>
           <div class="two">
-            <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" name="place" value="${esc(r.place)}" placeholder="e.g. 2"></label>
+            <label class="field"><span id="placeLbl">${isChamp(r) ? "Overall place" : "Place"}</span><input type="number" inputmode="numeric" min="1" max="200" name="place" value="${esc(r.place)}" placeholder="e.g. 2"></label>
             <label class="field"><span>Dancers in the competition</span><input type="number" inputmode="numeric" min="1" max="500" name="entrants" value="${esc(r.entrants)}" placeholder="optional"></label>
           </div>
           <label class="field"><span>Overall score, if shown</span><input name="marks" inputmode="decimal" value="${esc(r.marks)}" placeholder="e.g. 75 or 233.5" maxlength="30"></label>
+          <div id="champBox" ${isChamp(r) ? "" : "hidden"}>
+            <h3 style="margin:14px 0 2px">Rounds</h3>
+            <p class="small muted" style="margin:0 0 6px">${ROUNDS_HELP}</p>
+            ${roundInputs(r.rounds, "name")}
+            <h3 style="margin:14px 0 2px">Judging panel</h3>
+            <p class="small muted" style="margin:0 0 6px">Usually 3 judges, 5 at major championships, and 6 at the All-Irelands with 5 counting. Round judges are added for you. Add each judge's score if the results show it.</p>
+          </div>
           <div id="judgeRows">${rJudges.map((j) => `<div class="two judge-row"><label class="field"><span>Judge (adjudicator)</span><input name="jname" list="judgeList" value="${esc(j.name)}" placeholder="Name" maxlength="60"></label><label class="field"><span>Their score</span><input name="jmarks" inputmode="decimal" value="${esc(j.marks || "")}" placeholder="optional" maxlength="12"></label></div>`).join("")}</div>
-          <button type="button" class="btn plain sm" id="addJudge">＋ Another judge (championships have 3 or more)</button>
+          <button type="button" class="btn plain sm" id="addJudge" ${isChamp(r) ? "" : "hidden"}>＋ Another panel judge</button>
           ${judgeDatalist()}
-          <label class="toggle"><input type="checkbox" name="recall" ${r.recall ? "checked" : ""}> Recalled (championships)</label>
-          <label class="field"><span>Notes</span><textarea name="notes" maxlength="500" placeholder="Anything to remember: judges' comments, how it felt…">${esc(r.notes)}</textarea></label>
+          <label class="toggle" id="recallBox" ${isChamp(r) ? "" : "hidden"}><input type="checkbox" name="recall" ${r.recall ? "checked" : ""}> Recalled</label>
+          <label class="field"><span>Comments and notes</span><textarea name="notes" maxlength="500" placeholder="Anything to remember: judges' comments, how it felt…">${esc(r.notes)}</textarea></label>
         </div>
         <button class="btn block">${r.id ? "Save changes" : "Save result"}</button>
         </div>
@@ -657,12 +893,22 @@
       </form>`,
       after() {
         const f = document.getElementById("resForm");
+        // Which child this result is for (families can have several dancers).
+        const who = () => S.dancers.find((d) => d.id === (f.who ? f.who.value : dancerId)) || dn;
         let newPhoto = null;
         // Pre-fill level from the dancer's level in that dance
+        const setChamp = () => {
+          const c = isChamp({ dance: f.dance.value, level: f.level.value });
+          ["champBox", "addJudge", "recallBox"].forEach((id) => { document.getElementById(id).hidden = !c; });
+          document.getElementById("placeLbl").textContent = c ? "Overall place" : "Place";
+        };
+        f.level.addEventListener("change", setChamp);
         f.dance.addEventListener("change", () => {
+          setChamp();
           const d = danceById(f.dance.value); if (!d) return;
-          const lv = dancerLevel(dn, d.shoe === "champ" ? "champ" : d.id);
+          const lv = dancerLevel(who(), d.shoe === "champ" ? "champ" : d.id);
           if (lv) f.level.value = lv;
+          setChamp();
         });
         let origFile = null;
         f.photo.addEventListener("change", async () => {
@@ -681,7 +927,16 @@
           box.hidden = true; prog.hidden = false; document.getElementById("manual").hidden = true;
           try {
             const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
-            const out = window.PID_READER.parse(text, { levels: orgLevels() });
+            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges() });
+            // If the sheet names exactly one of the children, pick that child.
+            if (f.who) {
+              const low = " " + text.toLowerCase().replace(/[^a-z\u00c0-\u024f]+/g, " ") + " ";
+              const named = S.dancers.filter((d) => d.name.trim().length > 1 && low.includes(" " + d.name.toLowerCase().trim() + " "));
+              if (named.length === 1 && f.who.value !== named[0].id) {
+                f.querySelector(`input[name="who"][value="${named[0].id}"]`).checked = true;
+                toast("This looks like " + named[0].name + "'s results");
+              }
+            }
             prog.hidden = true;
             if (out.date) f.date.value = out.date;
             if (out.feis && (!f.feis.value || f.feis.value === lastFeis)) f.feis.value = out.feis;
@@ -698,9 +953,11 @@
           const lvCount = {}; out.results.forEach((x) => { if (x.level) lvCount[x.level] = (lvCount[x.level] || 0) + 1; });
           const guessLevel = Object.keys(lvCount).sort((a, b) => lvCount[b] - lvCount[a])[0] || "";
           const rows = out.results.map((x) => {
-            if (!x.level) x.level = dancerLevel(dn, x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
+            if (!x.level) x.level = dancerLevel(who(), x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
             return x;
           });
+          // A photo of a results history (FeisWorx "Personal Results") can cover several feiseanna.
+          const manyFeis = new Set(rows.map((x) => x.feis).filter(Boolean)).size > 1;
           const said = `<details class="small" style="margin-top:8px"><summary>Show everything the app read</summary><pre class="read-text">${esc(out.text || "(no words found)")}</pre></details>`;
           manual.hidden = !!rows.length;
           if (!rows.length) {
@@ -709,7 +966,7 @@
             return;
           }
           el.innerHTML = `<div class="card"><h3>Found ${rows.length} result${rows.length > 1 ? "s" : ""}</h3>
-            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(dn.name)}'s, then save.</p>${said}</div>
+            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(who().name)}'s, then save.${manyFeis ? " This photo covers more than one feis and doesn't show dates, so check the date on each." : ""}</p>${said}</div>
             ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
               <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
               <div class="two">
@@ -717,14 +974,18 @@
                 <label class="field"><span>Level</span><select data-k="level"><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${x.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
               </div>
               <div class="two">
-                <label class="field"><span>Place</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
+                <label class="field"><span>${isChamp(x) ? "Overall place" : "Place"}</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
                 <label class="field"><span>Dancers in it</span><input type="number" inputmode="numeric" min="1" max="500" data-k="entrants" value="${esc(x.entrants)}" placeholder="optional"></label>
               </div>
               <div class="two">
                 <label class="field"><span>Judge${x.judges.length > 1 ? "s" : ""}</span><input data-k="judges" list="judgeList" value="${esc(x.judges.map((j) => j.name).join(", "))}" placeholder="Judge's name" maxlength="200"></label>
                 <label class="field"><span>Overall score</span><input data-k="marks" inputmode="decimal" value="${esc(x.marks)}" placeholder="optional" maxlength="30"></label>
               </div>
-              ${x.recall || x.dance === "prelim" || x.dance === "open" ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>` : ""}
+              ${manyFeis ? `<div class="two"><label class="field"><span>Feis</span><input data-k="feis" value="${esc(x.feis || "")}" maxlength="80"></label>
+                <label class="field"><span>Date</span><input type="date" data-k="date" value="${esc(f.date.value || today())}"></label></div>` : ""}
+              <label class="field"><span>Comments and notes</span><textarea data-k="notes" rows="2" maxlength="500" placeholder="Judge's comments, anything to remember">${esc(x.notes || "")}</textarea></label>
+              ${isChamp(x) ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>
+                <p class="small muted" style="margin:8px 0 4px">${ROUNDS_HELP}</p>${roundInputs(x.rounds, "data-k")}` : ""}
               <p class="small muted" style="margin:4px 0 0">Read from: “${esc(x.line)}”</p>
             </div>`).join("")}
             <button type="button" class="btn block" id="saveFound">Save ${rows.length === 1 ? "this result" : "all " + rows.length + " results"}</button>
@@ -743,21 +1004,28 @@
               if (!g("pick").checked) continue;
               if (!g("dance").value || !g("level").value) { toast("Choose the dance and level for each ticked result"); (g("dance").value ? g("level") : g("dance")).focus(); return; }
               picked.push({
-                id: uid(), dancerId, date, feis, dance: g("dance").value, level: g("level").value,
+                _row: row.dataset.row,
+                id: uid(), dancerId: who().id, date: (g("date") && g("date").value) || date, feis: (g("feis") && g("feis").value.trim()) || feis, dance: g("dance").value, level: g("level").value,
                 place: g("place").value ? Number(g("place").value) : "", entrants: g("entrants").value ? Number(g("entrants").value) : "",
-                marks: String(g("marks").value).trim(), recall: g("recall") ? g("recall").checked : false, notes: "", photoId: "",
-                judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges)
+                marks: String(g("marks").value).trim(), recall: g("recall") ? g("recall").checked : false, notes: String(g("notes").value || "").trim().slice(0, 500), photoId: "",
+                judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges), rounds: []
               });
             }
             if (!picked.length) { toast("Tick at least one result"); return; }
+            el.querySelectorAll(".found-row").forEach((row) => {
+              const rec = picked.find((p) => p._row === row.dataset.row); if (!rec || !isChamp(rec)) return;
+              rec.rounds = readRounds((k) => (row.querySelector(`[data-k="${k}"]`) || {}).value);
+              rec.judges = mergePanel(rec.judges, rec.rounds);
+            });
+            picked.forEach((p) => { delete p._row; });
             if (newPhoto) {
               const pid = "ph_" + picked[0].id + "_" + Date.now().toString(36);
               try { await photos.put(pid, newPhoto); picked.forEach((p) => { p.photoId = pid; }); }
               catch (err) { toast("Photo couldn't be saved, but the results were"); }
             }
             S.results.push(...picked);
-            save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + dancerId;
-            cheer(dn, picked);
+            save(); toast(picked.length === 1 ? "Result saved" : picked.length + " results saved"); location.hash = "#/dancer/" + who().id;
+            cheer(who(), picked);
           });
           el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -770,12 +1038,14 @@
           e.preventDefault();
           const fd = new FormData(f);
           const rec = {
-            id: r.id || uid(), dancerId,
+            id: r.id || uid(), dancerId: who().id,
             date: fd.get("date"), feis: String(fd.get("feis") || "").trim(), dance: fd.get("dance"), level: fd.get("level"),
             place: fd.get("place") ? Number(fd.get("place")) : "", entrants: fd.get("entrants") ? Number(fd.get("entrants")) : "",
             marks: String(fd.get("marks") || "").trim(), recall: !!fd.get("recall"), notes: String(fd.get("notes") || "").trim(), photoId: r.photoId || "",
             judges: fd.getAll("jname").map((n, i) => ({ name: String(n).trim(), marks: String(fd.getAll("jmarks")[i] || "").trim() })).filter((j) => j.name)
           };
+          if (isChamp(rec)) { rec.rounds = readRounds((k) => fd.get(k)); rec.judges = mergePanel(rec.judges, rec.rounds); }
+          else { rec.rounds = []; rec.recall = false; }
           if (newPhoto) {
             const pid = "ph_" + rec.id + "_" + Date.now().toString(36);
             try { await photos.put(pid, newPhoto); releasePhoto(rec.photoId, rec.id); rec.photoId = pid; }
@@ -783,8 +1053,8 @@
           }
           const i = S.results.findIndex((x) => x.id === rec.id);
           if (i >= 0) S.results[i] = rec; else S.results.push(rec);
-          save(); toast("Result saved"); location.hash = "#/dancer/" + dancerId;
-          if (Number(r.place) !== 1) cheer(dn, [rec]);
+          save(); toast("Result saved"); location.hash = "#/dancer/" + who().id;
+          if (Number(r.place) !== 1) cheer(who(), [rec]);
         });
       }
     };
@@ -800,9 +1070,10 @@
       <div class="card"><dl class="facts">
         <dt>Dance</dt><dd>${esc(d ? d.name : r.dance)}</dd>
         <dt>Level</dt><dd>${esc(l ? l.name : "")}</dd>
-        <dt>Place</dt><dd>${r.place ? esc(ordinal(r.place)) : "Not placed"}${r.entrants ? ` of ${esc(r.entrants)}` : ""}</dd>
+        <dt>${isChamp(r) ? "Overall place" : "Place"}</dt><dd>${r.place ? esc(ordinal(r.place)) : "Not placed"}${r.entrants ? ` of ${esc(r.entrants)}` : ""}</dd>
+        ${isChamp(r) && roundsOf(r).length ? `<dt>Rounds</dt><dd>${roundsOf(r).map((x) => `Round ${x.n}: ${x.place ? esc(ordinal(x.place)) : "?"}${x.judge ? ` (<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(x.judge)}">${esc(x.judge)}</a>)` : ""}`).join("<br>")}<div class="small muted" style="margin-top:4px">${ROUNDS_HELP}</div></dd>` : ""}
         ${r.marks ? `<dt>Overall score</dt><dd>${esc(r.marks)}</dd>` : ""}
-        ${judgesOf(r).length ? `<dt>Judge${judgesOf(r).length > 1 ? "s" : ""}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}`).join("<br>")}</dd>` : ""}
+        ${judgesOf(r).length ? `<dt>${isChamp(r) ? "Judging panel" : "Judge" + (judgesOf(r).length > 1 ? "s" : "")}</dt><dd>${judgesOf(r).map((j) => `<a href="#/judge/${esc(r.dancerId)}/${encodeURIComponent(j.name)}">${esc(j.name)}</a>${j.marks ? ` (${esc(j.marks)})` : ""}${judgeTagline(j.name) ? `<div class="small muted">${esc(judgeTagline(j.name))}</div>` : ""}`).join("<br>")}</dd>` : ""}
         ${r.recall ? `<dt>Recall</dt><dd>Yes ✨</dd>` : ""}
         ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ""}
       </dl></div>
@@ -835,11 +1106,11 @@
 
       <h2 style="margin-top:22px">About</h2>
       <div class="card small"><p style="margin-top:0">Pocket Irish Dance is an independent guide for parents. It is not an official publication of any Irish dance organization. Always check important decisions with your teacher and the current official rules.</p>
-      <p style="margin-bottom:0" class="muted">Version ${esc(D.version)}</p></div>`,
+      <p style="margin-bottom:0" class="muted">Version ${esc(D.version)} · update ${APP_VERSION}</p></div>`,
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
           e.preventDefault(); const fd = new FormData(e.target);
-          viewOrg = ""; screens.schools.st = null; S.profile = { org: fd.get("org") || "", region: fd.get("region") || "", level: fd.get("level") || "" };
+          viewOrg = ""; screens.schools.st = null; screens.feis.st = null; S.profile = { org: fd.get("org") || "", region: fd.get("region") || "", level: fd.get("level") || "" };
           screens.rules.f = null; save(); toast("Saved"); location.hash = "#/";
         });
         document.getElementById("exportBtn").addEventListener("click", () => {
@@ -882,6 +1153,7 @@
       case "result": v = screens.result(parts[1]); break;
       case "settings": v = screens.settings(); break;
       case "schools": v = screens.schools(); break;
+      case "feis": v = screens.feis(); break;
       default: v = ext[parts[0]] ? ext[parts[0]](parts, q) : screens.home();
     }
     titleEl.textContent = v.title;
@@ -908,9 +1180,10 @@
     const t = e.target.closest("button, [data-say]");
     if (!t) return;
     if (t.dataset.say) { e.preventDefault(); speak(t.dataset.say); return; }
-    if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
+    if (t.dataset.setOrg) { S.profile.org = t.dataset.setOrg; viewOrg = ""; screens.rules.f = null; screens.schools.st = null; screens.feis.st = null; save(); toast("Showing " + orgName(t.dataset.setOrg)); location.hash = "#/"; route(); return; }
     if (t.dataset.viewOrg !== undefined) { viewOrg = t.dataset.viewOrg; screens.schools.st = null; toast(viewOrg ? "Looking at " + orgName(viewOrg) : "Back to " + orgName(S.profile.org)); location.hash = "#/"; route(); return; }
     if (t.dataset.searchAll !== undefined) { screens.search.all = !!t.dataset.searchAll; rerender(); return; }
+    if (t.dataset.feisOrg) { screens.feis.st.org = t.dataset.feisOrg; rerender(); return; }
     if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }
     if (t.dataset.dview) { screens.dancer.view = t.dataset.dview; rerender(); return; }
@@ -954,6 +1227,7 @@
   app.addEventListener("submit", (e) => {
     const f = e.target.closest("[data-search]"); if (!f) return;
     e.preventDefault(); const q = f.q.value.trim();
+    if (location.hash.startsWith("#/words")) { f.q.blur(); return; } // Words page filters as you type
     location.hash = "#/search?q=" + encodeURIComponent(q);
   });
   // Live search as you type on the search page and the Words page
@@ -962,7 +1236,11 @@
     const q = e.target.value;
     clearTimeout(app._st);
     app._st = setTimeout(() => {
-      if (location.hash.startsWith("#/search")) {
+      if (location.hash.startsWith("#/words")) {
+        screens.words.q = q;
+        const pos = e.target.selectionStart; rerender();
+        const inp = app.querySelector("[data-search] input"); inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (_) {}
+      } else if (location.hash.startsWith("#/search")) {
         history.replaceState(null, "", "#/search?q=" + encodeURIComponent(q));
         const pos = e.target.selectionStart; rerender();
         const inp = app.querySelector("[data-search] input"); inp.focus(); try { inp.setSelectionRange(pos, pos); } catch (_) {}
