@@ -260,7 +260,7 @@
     if (!isFinite(n)) return "";
     if (n > 100 && /^\d{3}$/.test(t)) return String(n / 10);
     if (n > 100 && /^\d{4}$/.test(t)) return String(n / 100);
-    return n <= 100 ? String(n) : "";
+    return n >= 20 && n <= 100 ? String(n) : "";
   }
   function fwTop(raw) {
     const m = raw.match(/^[^a-z]*([a-z][a-z' .&-]*?\s*[-–]?\s*(20\d\d))[\s|\[\]:;'"`*.-]*(did\s*not\s*place|dnp|\d{1,3})[\s|\[\]:;'"`*-]+(\d{2,4}(?:[.,]\d{1,2})?)[\s|\[\]:;'"`*-]+([a-z].+)$/i);
@@ -272,6 +272,35 @@
       marks: fixScore(m[4]),
       judges: judge.split(" ").length >= 2 && /\p{L}{2}/u.test(judge) ? [{ name: judge, marks: "" }] : []
     };
+  }
+  // When the top row is too garbled for fwTop, still rescue what we can: the judge before ", ADCRG",
+  // "Did Not Place", and the feis name.
+  function fwTopLoose(raw) {
+    if (!/\b20\d\d\b/.test(raw) && !/[a-z]{2}\s*,?\s*[a-z]?d?c?r\s*g\b/i.test(raw)) return null;
+    raw = raw.replace(/did\s*not\s*place/i, " dnp ");
+    const jm = raw.match(/([A-Z][\p{Ll}'’.-]+(?:\s+[A-Z][\p{Ll}'’.-]+){1,3})\s*[,.]?\s*(?:A|S|B|T)?D?C?R\s*[G6]\b/u);
+    if (!jm) return null;
+    const fm = raw.match(/^[^a-z]*([a-z][a-z' .&-]*?\s*[-–]?\s*20\d\d)/i);
+    const after = fm ? raw.slice(raw.indexOf(fm[1]) + fm[1].length, raw.indexOf(jm[1])) : "";
+    const np = /\bdnp\b/.test(after);
+    const nums = after.match(/\d{1,4}(?:[.,]\d{1,2})?/g) || [];
+    let place = "", marks = "";
+    if (np) marks = nums.length ? fixScore(nums[nums.length - 1]) : "";
+    else if (nums.length >= 2) { place = +nums[0] <= 200 ? +nums[0] : ""; marks = fixScore(nums[nums.length - 1]); }
+    return { feis: fm ? fm[1].replace(/\s*[-–]?\s*(20\d\d)$/, " - $1").trim() : "", place, np, marks, judges: [{ name: jm[1].trim(), marks: "" }], loose: true };
+  }
+  // Names read slightly differently on different rows ("Iris Gray Shamick") are the same judge:
+  // use the spelling seen most often on the sheet, or one already saved in the app.
+  function tidyJudgeNames(found, known) {
+    const count = {};
+    found.forEach((x) => x.judges.forEach((j) => { count[j.name] = (count[j.name] || 0) + 1; }));
+    const byCount = Object.keys(count).sort((a, b) => count[b] - count[a]);
+    const close = (a, b) => editDist(squash(a), squash(b)) <= Math.max(2, Math.floor(squash(b).length / 6));
+    found.forEach((x) => x.judges.forEach((j) => {
+      const saved = (known || []).find((k) => k !== j.name && close(j.name, k));
+      const common = byCount.find((n) => n !== j.name && count[n] > count[j.name] && close(j.name, n));
+      if (saved) j.name = saved; else if (common) j.name = common;
+    }));
   }
   function fwBottom(raw) {
     const after = raw.replace(/^.*?\((?:u|o|under|over)\s*\d{1,2}\)\s*\)?/i, "");
@@ -333,6 +362,7 @@
     // Is the judge named above each group of results, or underneath each result?
     const firstJudge = judgeAt.findIndex(Boolean);
     const firstDance = lines.findIndex((x, n) => !isComment[n] && findDance(clean(x)));
+    const fwSheet = /your\s*place|top\s*scores|max\s*place|feisworx/i.test(text) || lines.filter((x) => fwTop(x)).length >= 2;
     const judgeAbove = firstJudge >= 0 && firstJudge < firstDance;
     for (let i = 0; i < lines.length; i++) {
       if (isComment[i]) continue;
@@ -370,11 +400,14 @@
         continue;
       }
       // The top row is just above; a line of screen noise can sit between them.
-      const top = (i > 0 && fwTop(lines[i - 1])) || (i > 1 && !findDance(clean(lines[i - 1])) && fwTop(lines[i - 2])) || null;
+      const prev2ok = i > 1 && !findDance(clean(lines[i - 1]));
+      let top = (i > 0 && fwTop(lines[i - 1])) || (prev2ok && fwTop(lines[i - 2])) || null;
+      // On a FeisWorx sheet (or a row that looks like one), fall back to the loose reader.
+      if (!top && (fwSheet || /\(\s*u\s*\d{1,2}\s*\)/i.test(lines[i]))) top = (i > 0 && fwTopLoose(lines[i - 1])) || (prev2ok && fwTopLoose(lines[i - 2])) || null;
       if (top) {
         const bot = fwBottom(lines[i]);
         found.push({ dance: d.id, level: levelOf(l), place: top.place, entrants: bot.entrants, marks: top.marks, recall: false,
-          judges: top.judges, rounds: [], note: bot.note, feis: top.feis, check: !levelOf(l) || d.guess || (!top.place && !top.np), line: lines[i] });
+          judges: top.judges, rounds: [], note: bot.note, feis: top.feis, check: !levelOf(l) || d.guess || (!top.place && !top.np) || !!top.loose, line: lines[i] });
         continue;
       }
       const note = trailingComment(lines[i]);
@@ -411,6 +444,7 @@
     const starts = found.map((x) => lines.indexOf(x.line));
     found.forEach((x) => { x.notes = x.note || ""; delete x.note; });
     tidyFeisNames(found);
+    tidyJudgeNames(found, ctx && ctx.judges);
     comments.forEach((c) => {
       let k = -1; starts.forEach((st, n) => { if (st >= 0 && st < c.at) k = n; });
       const add = (x) => { x.notes = x.notes ? x.notes + " " + c.text : c.text; };

@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "27"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "28"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -925,7 +925,7 @@
           box.hidden = true; prog.hidden = false; document.getElementById("manual").hidden = true;
           try {
             const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
-            const out = window.PID_READER.parse(text, { levels: orgLevels() });
+            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges() });
             // If the sheet names exactly one of the children, pick that child.
             if (f.who) {
               const low = " " + text.toLowerCase().replace(/[^a-z\u00c0-\u024f]+/g, " ") + " ";
