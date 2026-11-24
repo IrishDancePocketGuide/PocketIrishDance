@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "26"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "27"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -245,7 +245,7 @@
         <button class="btn sm" id="installBtn" hidden>Install the app</button>
       </div>`}
 
-      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}). Content is being checked and may change.</p>`
+      <p class="small muted" style="text-align:center;margin-top:18px">First test version (${esc(D.version)}, update ${APP_VERSION}). Content is being checked and may change.</p>`
     };
   };
 
@@ -1103,8 +1103,7 @@
 
       <h2 style="margin-top:22px">About</h2>
       <div class="card small"><p style="margin-top:0">Pocket Irish Dance is an independent guide for parents. It is not an official publication of any Irish dance organization. Always check important decisions with your teacher and the current official rules.</p>
-        <p class="small muted" style="margin-bottom:0">App version ${APP_VERSION}</p>
-      <p style="margin-bottom:0" class="muted">Version ${esc(D.version)}</p></div>`,
+      <p style="margin-bottom:0" class="muted">Version ${esc(D.version)} · update ${APP_VERSION}</p></div>`,
       after() {
         document.getElementById("profForm").addEventListener("submit", (e) => {
           e.preventDefault(); const fd = new FormData(e.target);
