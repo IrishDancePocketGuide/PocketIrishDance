@@ -270,54 +270,16 @@
   };
 
   // ----- find a school -----
-  // Every map search in the app uses this. The quotes make Google Maps look for the exact words
-  // "Irish dance", not any dance studio. Google can still mix in nearby places, so the screen
-  // tells parents to check the school's name.
-  const IRISH_Q = '"Irish dance" school';
-  // Google Places key (locked to this website in Google Cloud). With a key, the app lists schools
-  // itself and drops any whose name doesn't say "Irish". Without one, it falls back to opening Google Maps.
-  const PLACES_KEY = "";
-  const PLACES_WEBSITES = true; // website links cost more on Google's side (fewer free searches a month)
-  const isIrishSchool = (name) => /\birish\b/i.test(name) && !/\b(pub|bar|tavern|restaurant|grill|inn|bakery|shop|store|gifts?|imports?)\b/i.test(name);
-  function kmBetween(a, b) {
-    const R = 6371, rad = (x) => (x * Math.PI) / 180;
-    const dLa = rad(b.latitude - a.latitude), dLo = rad(b.longitude - a.longitude);
-    const h = Math.sin(dLa / 2) ** 2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLo / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(h));
-  }
-  async function findSchools(place, here) {
-    const body = { textQuery: place ? "Irish dance school near " + place : "Irish dance school", pageSize: 20 };
-    if (here) body.locationBias = { circle: { center: here, radius: 50000 } };
-    const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": PLACES_KEY,
-        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.googleMapsUri,places.location" + (PLACES_WEBSITES ? ",places.websiteUri" : "") },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error("search failed " + res.status);
-    const all = ((await res.json()).places || []).map((x) => ({ name: (x.displayName || {}).text || "", address: x.formattedAddress || "",
-      url: x.googleMapsUri || "", web: /^https?:\/\//i.test(x.websiteUri || "") ? x.websiteUri : "", km: here && x.location ? kmBetween(here, x.location) : null }));
-    const keep = all.filter((x) => isIrishSchool(x.name));
-    if (here) keep.sort((a, b) => a.km - b.km);
-    return { keep, hidden: all.length - keep.length };
-  }
-  function schoolList(out, us) {
-    if (!out.keep.length) return `<div class="card"><p style="margin:0">No Irish dance schools found there. Try a nearby bigger town, or use the school lists above.</p></div>`;
-    const dist = (km) => km == null ? "" : us ? `${(km * 0.621).toFixed(km < 16 ? 1 : 0)} mi` : `${km.toFixed(km < 10 ? 1 : 0)} km`;
-    return `<p class="small muted" style="margin:14px 4px 6px">${out.keep.length} Irish dance school${out.keep.length === 1 ? "" : "s"}${out.hidden ? `. We left out ${out.hidden} other place${out.hidden === 1 ? "" : "s"} that aren't Irish dance schools.` : ""}</p>` +
-      out.keep.map((x) => `<div class="card school-hit">
-        <div class="row between"><h3 style="margin:0">${esc(x.name)}</h3>${x.km != null ? `<span class="chip">${dist(x.km)}</span>` : ""}</div>
-        <p class="small muted" style="margin:4px 0 8px">${esc(x.address)}</p>
-        <div class="row" style="gap:8px">${x.web ? `<a class="btn sm" href="${esc(x.web)}" target="_blank" rel="noopener">Website ↗</a>` : ""}${x.url ? `<a class="btn ghost sm" href="${esc(x.url)}" target="_blank" rel="noopener">Map ↗</a>` : ""}</div></div>`).join("");
-  }
+  // Only lists of Irish dance schools. Shannon asked for no general map search, because Google Maps
+  // can't be told to hide non-Irish dance studios.
   const SCHOOL_ORGS = [
-    { id: "any", name: "No preference", hint: "Just show me schools near me", q: IRISH_Q },
-    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: IRISH_Q },
-    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", q: IRISH_Q, locator: "https://web.irishdancingorg.com/index.php/school-locator" },
-    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: IRISH_Q, locator: "https://www.irish.dance/teachers" }
+    { id: "any", name: "No preference", hint: "Show me all the school lists" },
+    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name" },
+    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", locator: "https://web.irishdancingorg.com/index.php/school-locator" },
+    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", locator: "https://www.irish.dance/teachers" }
   ];
   screens.schools = function () {
-    const st = screens.schools.st || { org: curOrg(), place: "" };
+    const st = screens.schools.st || { org: curOrg() };
     screens.schools.st = st;
     if (!st.org) {
       return {
@@ -335,21 +297,13 @@
       ${o.locator ? `<div class="card" style="margin-top:10px"><h3>Official school locator</h3>
         <p class="small muted" style="margin:0 0 8px">${esc(o.name)} has its own list of registered schools and teachers. This is the most reliable place to look.</p>
         <a class="btn block" href="${esc(o.locator)}" target="_blank" rel="noopener">Open ${esc(o.name)}'s school locator ↗</a></div>
-        <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
+` : ""}
       ${o.id === "any" || o.id === "clrg" ? `<div class="card" style="margin-top:10px"><h3>Planxti school list</h3>
         <p class="small muted" style="margin:0 0 8px">A growing list of Irish dance schools, mostly in the US and Canada, which you can filter by region. It doesn't show which organization each school belongs to, so ask the school.</p>
-        <a class="btn ghost block" href="https://planxti.com/schools" target="_blank" rel="noopener">Open the Planxti school list ↗</a></div>
-        <div class="card"><h3>Irish Dancing Magazine school list</h3>
+        <a class="btn ghost block" href="https://planxti.com/schools" target="_blank" rel="noopener">Open the Planxti school list ↗</a></div>` : ""}
+      <div class="card" style="margin-top:10px"><h3>Irish Dancing Magazine school list</h3>
         <p class="small muted" style="margin:0 0 8px">Schools around the world, grouped by country or region (USA, Canada, Mexico, UK, Ireland, Australia, Europe and more). It doesn't show the organization either, and some listings are paid “featured” spots.</p>
         <a class="btn ghost block" href="https://irishdancing.com/resources/dance-schools" target="_blank" rel="noopener">Open the Irish Dancing Magazine list ↗</a></div>
-        <p class="small muted" style="margin:14px 4px 0">Or search the map:</p>` : ""}
-      <form id="schoolForm" class="card" style="margin-top:10px">
-        <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
-        <button class="btn block">${PLACES_KEY ? "Find schools" : "Search the map"}</button>
-        <button type="button" class="btn ghost block" id="nearMe" style="margin-top:8px">📍 Use my location</button>
-        <p class="small muted" style="margin:8px 0 0">${PLACES_KEY ? "Only schools with “Irish” in their name are shown. Your search goes to Google to find them, and nothing is saved." : "This opens Google Maps searching only for “Irish dance” schools. Google sometimes adds other places nearby, so look for “Irish dance” or “Irish dancing” in the school's name. Your location goes only to Google Maps, not to this app."}</p>
-      </form>
-      <div id="schoolResults" aria-live="polite"></div>
       <div class="card small">
         <h3>Before you sign up, ask the school:</h3>
         <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
@@ -361,42 +315,7 @@
         </ul>
       </div>
       ${o.id === "clrg" || o.id === "any" ? `<p class="small muted">Official CLRG information: <a href="https://www.clrg.ie" target="_blank" rel="noopener">clrg.ie ↗</a></p>` : ""}
-      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`,
-      after() {
-        if (PLACES_KEY) {
-          const box = document.getElementById("schoolResults");
-          const us = /^en-US$/i.test(navigator.language || "");
-          const run = async (place, here) => {
-            box.innerHTML = `<div class="read-prog"><span class="spinner" aria-hidden="true"></span><span>Finding Irish dance schools…</span></div>`;
-            try { box.innerHTML = schoolList(await findSchools(place, here), us); }
-            catch (err) { box.innerHTML = `<div class="card"><p style="margin:0">Couldn't search right now. Check your internet connection and try again, or use the school lists above.</p></div>`; }
-          };
-          document.getElementById("schoolForm").addEventListener("submit", (e) => {
-            e.preventDefault(); st.place = e.target.place.value.trim();
-            if (st.place) run(st.place, null); else document.getElementById("nearMe").click();
-          });
-          document.getElementById("nearMe").addEventListener("click", () => {
-            if (!navigator.geolocation) { box.innerHTML = `<div class="card"><p style="margin:0">Type your town instead.</p></div>`; return; }
-            box.innerHTML = `<div class="read-prog"><span class="spinner" aria-hidden="true"></span><span>Finding where you are…</span></div>`;
-            navigator.geolocation.getCurrentPosition(
-              (pos) => run("", { latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-              () => { box.innerHTML = `<div class="card"><p style="margin:0">Couldn't get your location. Type your town instead.</p></div>`; }, { timeout: 8000 });
-          });
-          return;
-        }
-        const open = (where) => window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(o.q + " " + where), "_blank", "noopener");
-        // "near me" makes Google guess; with no place typed, use the phone's location instead.
-        document.getElementById("schoolForm").addEventListener("submit", (e) => {
-          e.preventDefault(); st.place = e.target.place.value.trim();
-          if (st.place) open("near " + st.place); else document.getElementById("nearMe").click();
-        });
-        document.getElementById("nearMe").addEventListener("click", () => {
-          if (!navigator.geolocation) { open("near me"); return; }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => window.open(`https://www.google.com/maps/search/${encodeURIComponent(o.q)}/@${pos.coords.latitude.toFixed(3)},${pos.coords.longitude.toFixed(3)},12z`, "_blank", "noopener"),
-            () => open("near me"), { timeout: 8000 });
-        });
-      }
+      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`
     };
   };
 
