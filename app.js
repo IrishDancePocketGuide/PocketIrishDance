@@ -257,7 +257,7 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>Feis bag, feis day, championships</span></a>
         <a class="tile" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Irish dance school lists</span></a>
-        <a class="tile wide" href="#/games"><span class="ico">🧩</span><strong>Games</strong><span>Boredom busters for feis day, like daily trivia, word search, bingo and rhythm tap</span></a>
+        <a class="tile wide" href="#/games"><span class="ico">🧩</span><strong>Games</strong><span>Boredom busters for feis day, like daily trivia, word search, bingo, rhythm tap and Name that dance</span></a>
       </div>
 
       ${standalone ? "" : `<div class="card install show" style="flex-direction:column;gap:6px">

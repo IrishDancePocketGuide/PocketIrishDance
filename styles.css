@@ -462,3 +462,11 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .tq-review-h { margin: 18px 4px 8px; font-size: 16px; }
 .tq-review { padding: 12px 14px; }
 .tq-review .small { margin-top: 4px; }
+
+/* Name that dance */
+.nd-intro { text-align: center; }
+.nd-intro h3 { margin: 6px 0; }
+.nd-play { font-size: 34px; line-height: 1; width: min(38vw, 150px); }
+.nd-play.playing { animation: nd-beat .5s ease-in-out infinite alternate; }
+@keyframes nd-beat { to { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .nd-play.playing { animation: none; } }

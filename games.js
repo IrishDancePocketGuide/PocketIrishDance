@@ -169,6 +169,7 @@
     let G = load();
     const RT = window.PID_RHYTHM ? window.PID_RHYTHM(A) : null; // rhythm.js
     const TQ = window.PID_TRIVIA ? window.PID_TRIVIA(A) : null; // trivia.js
+    const ND = window.PID_NAMEDANCE ? window.PID_NAMEDANCE(A) : null; // namedance.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -215,6 +216,13 @@
           <span class="game-body"><strong>Rhythm tap</strong>
             <span class="small muted">Tap on the beat of a reel, jig, slip jig or hornpipe</span>
             <span class="small game-status">${esc(RT.bestText())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+        ${ND ? `<a class="card game-card" href="#/games/namedance">
+          <span class="ico" aria-hidden="true">🎶</span>
+          <span class="game-body"><strong>Name that dance</strong>
+            <span class="small muted">Hear a tune and guess: reel, jig, slip jig or hornpipe?</span>
+            <span class="small game-status">${esc(ND.status())}</span></span>
           <span class="btn sm">Play</span>
         </a>` : ""}
                 ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
@@ -427,6 +435,7 @@
       if (parts[1] === "bingo") return bingo();
       if (parts[1] === "rhythm" && RT) return RT.screen();
       if (parts[1] === "trivia" && TQ) return TQ.screen();
+      if (parts[1] === "namedance" && ND) return ND.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };
