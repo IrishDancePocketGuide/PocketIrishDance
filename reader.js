@@ -391,61 +391,10 @@
       recall: false, judges, rounds: [], notes: notes.slice(0, 1200), check: !level, line: lines.find((x) => /your\s*rank/i.test(x)) || "" };
   }
 
-  // ---------- iFeis result page ----------
-  // A title ("499 - Adults Traditional Set") with the place under it ("4th Place"),
-  // a Judge | Dress Check | Comments table, then RESULTS / SUMMARY: Place, Competitor, Total.
-  const IF_ROW = /^\W{0,3}(\d{1,3})\s+(\d{1,4})\s*[-\u2013\u2014~]\s*(.+?)\s+(\d{1,3}(?:[.,]\d{1,2})?)\s*$/;
-  function ifeisSheet(lines, text, levelOf, ctx) {
-    if (!/dress\s*check/i.test(text) && !/place\s*competitor\s*total/i.test(text)) return null;
-    const rows = lines.map((l) => l.match(IF_ROW)).filter(Boolean)
-      .map((m) => ({ place: +m[1], name: m[3].replace(/[^\p{L}' .-]/gu, " ").replace(/\s+/g, " ").trim(), total: m[4].replace(",", ".") }));
-    let title = "", place = "";
-    for (const l of lines) {
-      const c = clean(l);
-      if (!title && /^\W{0,3}\d{2,5}[a-z]{0,3}\s*-\s*\S/i.test(c) && !IF_ROW.test(l) && findDance(c)) title = c;
-      const pm = c.match(/\b(\d{1,3})(?:st|nd|rd|th)\s*place\b/);
-      if (pm && place === "") place = +pm[1];
-    }
-    // Which row is this dancer? The place under the title, or a child's name from the app.
-    let mine = place !== "" ? rows.find((r) => r.place === place) : null;
-    if (!mine) {
-      const names = ((ctx && ctx.names) || []).map((n) => n.toLowerCase().trim()).filter((n) => n.length > 1);
-      const hit = rows.filter((r) => names.some((n) => (" " + r.name.toLowerCase() + " ").includes(" " + n + " ")));
-      if (hit.length === 1) mine = hit[0];
-    }
-    if (mine && place === "") place = mine.place;
-    // Judges: the rows between the "Judge" heading and "Results". Name first, then the comment.
-    const judges = []; const notes = [];
-    const start = lines.findIndex((l) => /^\W*judge\b/i.test(l));
-    if (start >= 0) {
-      for (let i = start + 1; i < lines.length; i++) {
-        const l = lines[i];
-        if (/^\W*(results|summary|place\s*competitor)\b/i.test(l) || IF_ROW.test(l)) break;
-        const words = l.replace(/[|\[\]]/g, " ").replace(/\s+/g, " ").trim().split(" ");
-        if (!words[0] || !/^\p{Lu}/u.test(words[0])) continue;
-        const known = ((ctx && ctx.judges) || []).find((k) => l.toLowerCase().startsWith(k.toLowerCase() + " ") || l.toLowerCase() === k.toLowerCase());
-        const nameWords = known ? known.split(" ").length : Math.min(2, words.length);
-        const name = known || words.slice(0, nameWords).join(" ");
-        // Drop a lone tick or X from the Dress Check column.
-        const comment = words.slice(nameWords).filter((w, n) => !(n === 0 && /^[\W_xX\u2713\u2714]{1,2}$/.test(w))).join(" ").trim();
-        judges.push({ name, marks: "" });
-        if (comment) notes.push(name + ": " + comment);
-      }
-    }
-    if (!rows.length && !judges.length) return null;
-    if (mine && judges.length === 1) judges[0].marks = mine.total;
-    const d = title ? findDance(title) : null;
-    const level = title ? levelOf(title) : "";
-    return { dance: d ? d.id : "", level, place, entrants: "", marks: mine ? mine.total : "", recall: false, judges, rounds: [],
-      notes: notes.join("\n").slice(0, 1200), check: !d || !level || place === "" || !mine, line: title || (mine ? mine.name : "") };
-  }
-
   function parse(text, ctx) {
     const raw = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
     const sheet = champSheet(raw, String(text || ""), levelMatcher((ctx && ctx.levels) || []));
     if (sheet) return { results: [sheet], date: findDate(String(text)), feis: findFeis(raw), text: raw.join("\n") };
-    const ifeis = ifeisSheet(raw, String(text || ""), levelMatcher((ctx && ctx.levels) || []), ctx);
-    if (ifeis) { tidyJudgeNames([ifeis], ctx && ctx.judges); return { results: [ifeis], date: findDate(String(text)), feis: findFeis(raw), text: raw.join("\n") }; }
     // A label on its own line ("Adjudicator") with the name on the next line.
     const lines = [];
     for (let i = 0; i < raw.length; i++) {

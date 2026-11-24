@@ -1056,7 +1056,7 @@
           box.hidden = true; prog.hidden = false; document.getElementById("manual").hidden = true;
           try {
             const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
-            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges(), names: S.dancers.map((d) => d.name) });
+            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges() });
             // If the sheet names exactly one of the children, pick that child.
             if (f.who) {
               const low = " " + text.toLowerCase().replace(/[^a-z\u00c0-\u024f]+/g, " ") + " ";
