@@ -477,60 +477,267 @@ window.PID_DATA = {
       a: "Your dancer can keep competing straight away, with no ban. The new teacher tells the old teacher in writing. Your dancer can't use the old school's steps (except traditional sets), so they compete once they've learned the new school's steps." }
   ],
 
+  // Parent checklists. Each item has a short key (k) so ticks stay put if items are reordered.
+  // Items are ideas gathered from parent tips, feis vendors and Irish Dancing Magazine, written fresh for the app.
   checklists: [
     {
-      id: "started", name: "Just started",
-      items: [
-        "Find out which organization your school belongs to (ask: is your teacher a TCRG?)",
-        "Ask what level your dancer starts at and which dances they're learning",
-        "Buy soft shoes (ghillies or reel shoes) with your teacher's advice on fit",
-        "Join the school's parent group or mailing list",
-        "Ask when the school expects dancers to try their first feis",
-        "Set up your dancer's profile in this app"
+      id: "new", name: "Just started", icon: "🌱",
+      blurb: "The first few months. What to ask, what to buy, and what can wait.",
+      sections: [
+        { title: "Ask the teacher", items: [
+          { k: "org", t: "Which organization does the school belong to?", tip: "CLRG, An Comhdháil, WIDA and others each have their own rules and levels. The app shows the right ones once you pick." },
+          { k: "lvl", t: "What level does my dancer start at, and which dances are they learning?" },
+          { k: "fees", t: "What are the yearly costs?", tip: "Ask about class fees, registration, shoes, school costume rental and feis entry fees so there are no surprises." },
+          { k: "when", t: "When does the school usually send dancers to their first feis?" },
+          { k: "comm", t: "How does the school share news: app, email, or a parent group chat?" }
+        ]},
+        { title: "Buy (only what you need)", items: [
+          { k: "soft", t: "Soft shoes (ghillies for girls, reel shoes for boys)", tip: "Have the teacher check the fit. They should be snug, like a second skin, and will stretch." },
+          { k: "socks", t: "White socks for class (poodle socks come later for feiseanna)" },
+          { k: "wear", t: "Class wear the school asks for, often shorts or leggings and a school t-shirt" },
+          { k: "bottle", t: "A named water bottle and a bag that's just for dance" },
+          { k: "wait", t: "Hold off on hard shoes, wigs and dresses until the teacher says", tip: "Lots of families buy too early. Second-hand is very common for all of these." }
+        ]},
+        { title: "Get settled", items: [
+          { k: "name", t: "Write your dancer's name inside both shoes" },
+          { k: "prac", t: "Agree a little home practice routine, even 10 minutes a few times a week" },
+          { k: "buddy", t: "Find a 'been there' parent at the school you can text questions to" },
+          { k: "app", t: "Add your dancer in this app's score tracker so you're ready for results" }
+        ]}
       ]
     },
     {
-      id: "firstfeis", name: "First feis",
-      items: [
-        "Check with your teacher that your dancer is ready and which dances to enter",
-        "Read the feis syllabus: competitions, age group and fees",
-        "Register before the deadline (usually through an online feis registration site)",
-        "Plan the outfit your school uses for beginners",
-        "Pack: shoes, poodle socks, sock glue, safety pins for the number, water, snacks",
-        "Arrive early and pick up the competitor number",
-        "Find your dancer's stage in the program",
-        "Photograph the results and add them to the score tracker"
+      id: "enter", name: "Entering a feis", icon: "📝",
+      blurb: "Two to six weeks out. Picking a feis and getting the entry right.",
+      sections: [
+        { title: "Choose and enter", items: [
+          { k: "ok", t: "Check with the teacher that your dancer is ready and which feis to go to" },
+          { k: "syl", t: "Read the syllabus", tip: "It lists the competitions by number, the age groups, the fees, the entry deadline and any special rules." },
+          { k: "age", t: "Work out your dancer's competition age", tip: "Most feiseanna use the dancer's age on January 1 of the year, not their age on the day." },
+          { k: "comps", t: "Enter only the dances and level the teacher approved" },
+          { k: "deadline", t: "Register before the deadline", tip: "Late entries often cost extra, and some feiseanna cap entries or close early." },
+          { k: "confirm", t: "Save the confirmation email and any competitor number" }
+        ]},
+        { title: "Plan the day", items: [
+          { k: "where", t: "Look up the venue, parking and drive time" },
+          { k: "sched", t: "Watch for the stage schedule, often posted a few days before", tip: "Screenshot it. Wi-Fi at venues can be poor." },
+          { k: "hotel", t: "Book a hotel early if it's far away" },
+          { k: "costume", t: "Confirm what to wear with the school: class costume, skirt and top, or school outfit" },
+          { k: "ride", t: "Make a plan for siblings and who's driving" }
+        ]},
+        { title: "The week before", items: [
+          { k: "fit", t: "Try on the whole outfit, shoes included, in case your dancer has grown" },
+          { k: "shoes", t: "Clean and check shoes: laces, straps and buckles" },
+          { k: "hair", t: "Do a practice run of the competition hair or wig", tip: "Wig and bun pins take practice. A trial run saves a stressful morning." },
+          { k: "rest", t: "Ask the teacher whether to practice right up to the day or ease off" },
+          { k: "sleep", t: "Protect sleep the last two nights" }
+        ]}
       ]
     },
     {
-      id: "solodress", name: "First solo dress",
-      items: [
-        "Check the current rules on when a solo dress is allowed at your dancer's level",
-        "Ask your teacher before ordering; many schools have guidance on styles and makers",
-        "Decide new versus second-hand and set a budget",
-        "Allow plenty of time for a made-to-order dress",
-        "Ask about wig, tan and makeup rules for that level and age"
+      id: "bag", name: "Pack the feis bag", icon: "🎒",
+      blurb: "The packing list. Pack the night before and keep this list in the bag.",
+      sections: [
+        { title: "Shoes and socks", items: [
+          { k: "soft", t: "Soft shoes" },
+          { k: "hard", t: "Hard shoes (if your dancer dances them)" },
+          { k: "socks", t: "Poodle socks or tights, plus a spare pair", tip: "Socks get dirty and laddered tights happen. Keep a clean pair in a zip bag." },
+          { k: "glue", t: "Sock glue, in a sealed bag so it can't leak" },
+          { k: "laces", t: "Spare laces, plus a spare buckle or strap for hard shoes" },
+          { k: "tape", t: "Electrical tape and sports tape", tip: "Used to secure laces and straps, and to fix almost anything in a hurry." },
+          { k: "grip", t: "Something for slippery stages (ask the teacher what's allowed)" },
+          { k: "marker", t: "A black marker to touch up scuffs on hard shoes" },
+          { k: "flats", t: "Comfortable shoes or slides for walking around between dances" }
+        ]},
+        { title: "Costume and number", items: [
+          { k: "costume", t: "Costume or school outfit, on a hanger in a garment bag" },
+          { k: "under", t: "Dance briefs, bloomers or shorts, and a spare" },
+          { k: "cover", t: "A cover-up or zip jacket to wear over the costume" },
+          { k: "pins", t: "Safety pins or number clips for the competitor number" },
+          { k: "num", t: "The competitor number, if you got it ahead of time" },
+          { k: "crown", t: "Headpiece, tiara or brooch, if your dancer wears one" }
+        ]},
+        { title: "Hair, wig and makeup", items: [
+          { k: "wig", t: "Wig or bun wig, in its box or a bag so curls don't crush" },
+          { k: "bobby", t: "Lots of hair pins and wig grips" },
+          { k: "bands", t: "Hair ties and a headband for the wig" },
+          { k: "spray", t: "Hairspray and a brush" },
+          { k: "makeup", t: "Makeup and tan, only if allowed for your dancer's age and level", tip: "Rules on makeup and tan depend on the organization and the dancer's age. Check the Rules section." },
+          { k: "wipes", t: "Baby wipes and makeup wipes" }
+        ]},
+        { title: "Fix-it kit", items: [
+          { k: "sew", t: "Needle, thread and small scissors" },
+          { k: "crystal", t: "Spare crystals and glue, sealed in their own bag" },
+          { k: "stain", t: "A stain pen" },
+          { k: "zips", t: "Zip-top bags to keep everything sorted and dry" }
+        ]},
+        { title: "First aid and comfort", items: [
+          { k: "plasters", t: "Plasters (band-aids) and blister pads" },
+          { k: "meds", t: "Pain relief and any regular medicine your dancer needs" },
+          { k: "ice", t: "An instant ice pack" },
+          { k: "deo", t: "Deodorant (the thing everyone forgets)" },
+          { k: "tissue", t: "Tissues and hand sanitizer" },
+          { k: "warm", t: "A warm layer and a blanket; halls can be cold" },
+          { k: "fun", t: "A book, cards or something quiet to pass the waiting time" }
+        ]},
+        { title: "Food and drink", items: [
+          { k: "water", t: "Plenty of water, plus a sports drink for long days" },
+          { k: "snacks", t: "Snacks that won't stain or crumble on the costume", tip: "Think bananas, crackers, cereal bars, pretzels. Skip anything red, orange or sticky near the costume." },
+          { k: "lunch", t: "A packed lunch; venue food lines can be long" },
+          { k: "allergy", t: "Any allergy needs covered, since feis food is limited" },
+          { k: "coffee", t: "Coffee or snacks for you too" }
+        ]},
+        { title: "Phone and paperwork", items: [
+          { k: "sched", t: "Stage schedule screenshot and entry confirmation" },
+          { k: "charge", t: "A charged phone and a power bank" },
+          { k: "cash", t: "Some cash for parking, programs, raffles or vendors" },
+          { k: "pen", t: "A pen and the teacher's phone number" }
+        ]}
       ]
     },
     {
-      id: "oireachtas", name: "Oireachtas season",
-      items: [
-        "Confirm your dancer is eligible and entered through the school",
-        "Book travel and a hotel early; they fill up fast",
-        "Check the schedule for your dancer's competition day and time",
-        "Plan costume, wig and tan for the day",
-        "Learn how recalls and qualifying places work",
-        "Record the result and any recall in the score tracker"
+      id: "day", name: "Feis day", icon: "☘️",
+      blurb: "Step by step, from the parking lot to the car ride home.",
+      sections: [
+        { title: "Morning", items: [
+          { k: "breakfast", t: "A good breakfast before the costume goes on" },
+          { k: "hairfirst", t: "Hair, wig and any makeup done before leaving, or allow extra time at the venue" },
+          { k: "early", t: "Arrive at least 45 minutes before your first competition", tip: "Stages can run early, and parking and check-in take longer than you'd think." }
+        ]},
+        { title: "At the venue", items: [
+          { k: "checkin", t: "Check in at the registration desk and collect the competitor number" },
+          { k: "number", t: "Pin the number on the front where the judge can see it" },
+          { k: "stage", t: "Find your dancer's stage and check which competition it's on now" },
+          { k: "camp", t: "Set up a base near the school's group, without blocking walkways" },
+          { k: "teacher", t: "Let the teacher know you've arrived" },
+          { k: "warm", t: "Warm up: gentle moving, skips and pointing feet, not long stretches on a cold floor" }
+        ]},
+        { title: "Before each dance", items: [
+          { k: "side", t: "Get to side stage when the competition before yours starts", tip: "If your dancer misses their turn, the competition usually won't wait." },
+          { k: "check", t: "Quick check: shoes tied and taped, socks up, number straight, wig secure" },
+          { k: "calm", t: "Keep it short and positive. One focus point, then a hug" },
+          { k: "watch", t: "Watch, cheer, and don't film unless the feis allows it" }
+        ]},
+        { title: "After dancing", items: [
+          { k: "next", t: "Check the next competition time and stage" },
+          { k: "change", t: "Cover up the costume to eat and drink" },
+          { k: "results", t: "Find out where results are posted or announced", tip: "Results may go up on a board, be read out at awards, or appear online. Some feiseanna also give out comment sheets." },
+          { k: "photo", t: "Photograph the results and any comment sheets" },
+          { k: "track", t: "Add the results to the score tracker in this app" }
+        ]},
+        { title: "The ride home", items: [
+          { k: "proud", t: "Start with 'I loved watching you dance'" },
+          { k: "listen", t: "Let your dancer talk first; save feedback for another day" },
+          { k: "judge", t: "Don't pick apart the judging", tip: "Each judge sees things a little differently. If you have questions, ask the teacher privately later." },
+          { k: "teach", t: "Share the results and comment sheets with the teacher" },
+          { k: "unpack", t: "Unpack, air out shoes and hang up the costume that night" }
+        ]}
       ]
     },
     {
-      id: "major", name: "Traveling to a major",
-      items: [
-        "Check passports and visas well ahead for travel abroad",
-        "Carry the dress, shoes and wig in hand luggage",
-        "Pack spares: socks, sock glue, hair pins, safety pins, laces",
-        "Note the time difference for practice and rest",
-        "Save the results website so you can follow other rounds"
+      id: "manners", name: "Feis manners", icon: "🤝",
+      blurb: "The unwritten rules. Good habits that other families will notice.",
+      sections: [
+        { title: "Around the hall", items: [
+          { k: "seats", t: "Don't save rows of seats or spread bags across chairs" },
+          { k: "walk", t: "Keep doorways, stairs and side stage clear" },
+          { k: "cross", t: "Never walk in front of a stage while a dancer is on it" },
+          { k: "quiet", t: "Keep voices down near the stages" },
+          { k: "video", t: "Follow the feis's photo and video rules", tip: "Most competitions ban filming dancers on stage to protect children and choreography." },
+          { k: "tidy", t: "Clean up your spot before you leave" }
+        ]},
+        { title: "Being a good sport", items: [
+          { k: "clap", t: "Clap for every dancer, not just your school's" },
+          { k: "win", t: "Celebrate wins warmly but not loudly; the child beside you may be heartbroken" },
+          { k: "online", t: "Never criticize judges, dancers or other schools, including online" },
+          { k: "judges", t: "Never approach a judge about a result", tip: "Questions about marks go to your teacher. Organizations have their own process for formal concerns." },
+          { k: "thanks", t: "Thank the volunteers, musicians and stage helpers" },
+          { k: "welcome", t: "Help the family who looks lost; you were new once too" }
+        ]}
+      ]
+    },
+    {
+      id: "solo", name: "Moving up and solo dress", icon: "👗",
+      blurb: "When your dancer moves up a level and the bigger costume questions start.",
+      sections: [
+        { title: "Before you buy", items: [
+          { k: "rules", t: "Check the rules for when a solo dress, wig and makeup are allowed", tip: "It depends on your organization, region and level. Some beginner levels don't allow them at all." },
+          { k: "teacher", t: "Talk to the teacher before ordering anything" },
+          { k: "budget", t: "Set a budget, and decide new or second-hand", tip: "Second-hand dresses are very common and keep their value. Many sell again later." },
+          { k: "time", t: "For a new made-to-order dress, allow several months" },
+          { k: "try", t: "Try second-hand dresses on in person, or get a return window if buying online" }
+        ]},
+        { title: "When it arrives", items: [
+          { k: "fit", t: "Check the fit with the teacher, and ask about room to grow" },
+          { k: "length", t: "Check skirt length so it can't catch on kicks" },
+          { k: "store", t: "Store it hung up in a breathable garment bag, away from sunlight" },
+          { k: "wig", t: "Buy a wig that matches your dancer's hair color, and learn to pin it" },
+          { k: "tan", t: "If tan is used, do a test run well before a feis" }
+        ]},
+        { title: "Moving up", items: [
+          { k: "move", t: "Learn your organization's moving-up rules for each dance" },
+          { k: "levels", t: "Update your dancer's levels in the score tracker" },
+          { k: "fees", t: "Expect higher entry fees and longer days at higher levels" },
+          { k: "shoes", t: "Check shoe size every few months while your dancer is growing" }
+        ]}
+      ]
+    },
+    {
+      id: "champ", name: "Championship season", icon: "🏆",
+      blurb: "Oireachtas, regionals and nationals. Bigger events with more planning.",
+      sections: [
+        { title: "Months before", items: [
+          { k: "elig", t: "Confirm your dancer is eligible and how entries are made", tip: "Entries usually go through the teacher or school, not the parent." },
+          { k: "hotel", t: "Book the hotel as soon as the venue is announced" },
+          { k: "time", t: "Ask for time off work and school if needed" },
+          { k: "learn", t: "Learn how recalls and qualifying places work for this event" },
+          { k: "costs", t: "Budget for entry, travel, hotel, food, extra lessons and costume care" }
+        ]},
+        { title: "Weeks before", items: [
+          { k: "sched", t: "Find your dancer's day and approximate time" },
+          { k: "costume", t: "Get the dress cleaned, crystals checked and any repairs done" },
+          { k: "wig", t: "Book wig styling or tan appointments if you use them" },
+          { k: "shoes", t: "Make sure shoes are broken in, not brand new" },
+          { k: "extra", t: "Keep up extra classes or workshops the school offers" }
+        ]},
+        { title: "At the event", items: [
+          { k: "food", t: "Pack enough food and drink for a long day" },
+          { k: "rest", t: "Plan rest between rounds: feet up, quiet, away from the crowd" },
+          { k: "recall", t: "Know where and when recalls are posted" },
+          { k: "results", t: "Save the results link so you can follow the rounds" },
+          { k: "track", t: "Record each round and the overall result in the score tracker", tip: "Each round placing is from one judge. The overall result is from the whole panel." }
+        ]},
+        { title: "Whatever happens", items: [
+          { k: "proud", t: "Tell your dancer you're proud of the work they put in" },
+          { k: "talk", t: "Let the teacher explain results; ask privately if you have questions" },
+          { k: "plan", t: "Talk about goals for next season after a few days off" }
+        ]}
+      ]
+    },
+    {
+      id: "major", name: "Traveling to a major", icon: "✈️",
+      blurb: "Nationals, Worlds or any big trip away from home.",
+      sections: [
+        { title: "Well ahead", items: [
+          { k: "pass", t: "Check passports and visas, and check expiry dates" },
+          { k: "insure", t: "Get travel insurance that covers the costume and luggage" },
+          { k: "book", t: "Book flights and the hotel early; host cities fill up" },
+          { k: "near", t: "Stay close to the venue if you can, to make rest breaks easy" }
+        ]},
+        { title: "Packing", items: [
+          { k: "carry", t: "Carry the dress, shoes and wig in hand luggage, never checked", tip: "If a suitcase goes missing, you can replace clothes but not a solo dress the day before." },
+          { k: "spares", t: "Double up on spares: socks, glue, pins, laces, tape" },
+          { k: "liquids", t: "Pack tan, hairspray and glue to fit airline liquid rules, or buy at the venue" },
+          { k: "plug", t: "A plug adapter for hair tools and chargers" },
+          { k: "medic", t: "Any regular medicine in hand luggage" }
+        ]},
+        { title: "When you get there", items: [
+          { k: "jet", t: "Plan around jet lag; arrive a few days early if you can" },
+          { k: "venue", t: "Visit the venue ahead of the day to find stages and changing rooms" },
+          { k: "practice", t: "Ask the teacher about practice space and timing" },
+          { k: "routine", t: "Keep meals and sleep as normal as possible" },
+          { k: "fun", t: "Plan something fun for after, whatever the result" }
+        ]}
       ]
     }
   ]

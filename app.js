@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "30"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "33"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -233,7 +233,7 @@
         <a class="tile" href="#/words"><span class="ico">🗣️</span><strong>Words</strong><span>${D.glossary.filter(inOrg).length} terms with how to say them</span></a>
         <a class="tile" href="#/levels"><span class="ico">🪜</span><strong>Levels</strong><span>Beginner to Open Championship</span></a>
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
-        <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>First feis, solo dress, Oireachtas</span></a>
+        <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>Feis bag, feis day, championships</span></a>
         <a class="tile" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
         <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
         <a class="tile wide" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Search for Irish dance schools near you</span></a>
@@ -259,7 +259,7 @@
     const rules = D.rules.filter(ok).filter((r) => norm(r.q + " " + r.a + " " + r.topic).includes(n));
     const levels = D.levels.filter(ok).filter((l) => norm(l.name + " " + (l.alt || "") + " " + l.danced).includes(n));
     const checks = [];
-    D.checklists.forEach((c) => c.items.forEach((it) => { if (norm(it).includes(n)) checks.push({ c, it }); }));
+    D.checklists.forEach((c) => clItems(c).forEach((it) => { if (norm(it.t + " " + (it.tip || "")).includes(n)) checks.push({ c, it: it.t }); }));
     const total = words.length + rules.length + levels.length + checks.length;
     if (curOrg()) html += `<p class="small muted" style="margin:10px 4px 0">${all ? "Searching all organizations." : "Searching " + esc(orgName(curOrg())) + " only."} <button class="btn plain sm" data-search-all="${all ? "" : "1"}">${all ? "Just " + esc(orgName(curOrg())) : "Search all organizations"}</button></p>`;
     html += `<p class="muted small" style="margin:10px 4px">${total ? total + " result" + (total === 1 ? "" : "s") : "Nothing found yet. Try a different spelling, or tell us the word so we can add it."}</p>`;
@@ -543,16 +543,20 @@
     return topics.map((t) => `<div class="az">${esc(t.toUpperCase())}</div>` + list.filter((r) => r.topic === t).map(ruleCard).join("")).join("");
   }
 
+  function clItems(c) { return c.sections.flatMap((sec) => sec.items); }
+  function clDone(c) { return clItems(c).filter((it) => S.checks[c.id + ":" + it.k]).length; }
+
   screens.guide = function () {
     return {
       title: "Parent checklists", tab: "home", back: true,
       html: `<h2>What am I supposed to be doing?</h2>
-      <p class="muted" style="margin-top:0">Checklists for the big moments. Ticks are saved on this phone.</p>
+      <p class="muted" style="margin-top:0">Checklists for every stage, from the first class to a trip to the Worlds. Ticks are saved on this phone.</p>
       ${D.checklists.map((c) => {
-        const done = c.items.filter((_, i) => S.checks[c.id + ":" + i]).length;
+        const total = clItems(c).length; const done = clDone(c);
         return `<a class="card" style="display:block;text-decoration:none;color:inherit" href="#/guide/${c.id}">
-          <div class="row between"><h3>${esc(c.name)}</h3><span class="small muted">${done} of ${c.items.length}</span></div>
-          <div class="progress"><i style="width:${(done / c.items.length) * 100}%"></i></div>
+          <div class="row between"><h3>${c.icon ? c.icon + " " : ""}${esc(c.name)}</h3><span class="small muted">${done} of ${total}</span></div>
+          ${c.blurb ? `<p class="small muted" style="margin:4px 0 0">${esc(c.blurb)}</p>` : ""}
+          <div class="progress"><i style="width:${(done / total) * 100}%"></i></div>
         </a>`;
       }).join("")}`
     };
@@ -561,12 +565,15 @@
   screens.checklist = function (id) {
     const c = D.checklists.find((x) => x.id === id);
     if (!c) return screens.guide();
+    const total = clItems(c).length; const done = clDone(c);
     return {
       title: c.name, tab: "home", back: true,
-      html: `<div class="card">${c.items.map((it, i) => {
-        const k = c.id + ":" + i; const on = !!S.checks[k];
-        return `<label class="check ${on ? "done" : ""}"><input type="checkbox" data-check="${esc(k)}" ${on ? "checked" : ""}><span>${esc(it)}</span></label>`;
-      }).join("")}</div>
+      html: `${c.blurb ? `<p class="muted" style="margin:0 4px 6px">${esc(c.blurb)}</p>` : ""}
+      <p class="small muted" style="margin:0 4px"><span id="cl-done">${done}</span> of ${total} done</p>
+      ${c.sections.map((sec) => `<div class="az">${esc(sec.title.toUpperCase())}</div><div class="card">${sec.items.map((it) => {
+        const k = c.id + ":" + it.k; const on = !!S.checks[k];
+        return `<label class="check ${on ? "done" : ""}"><input type="checkbox" data-check="${esc(k)}" ${on ? "checked" : ""}><span><span class="ct">${esc(it.t)}</span>${it.tip ? `<small class="tip">${esc(it.tip)}</small>` : ""}</span></label>`;
+      }).join("")}</div>`).join("")}
       <button class="btn plain" data-reset-check="${esc(c.id)}">Clear ticks</button>`
     };
   };
@@ -1219,7 +1226,7 @@
 
   app.addEventListener("change", (e) => {
     const t = e.target;
-    if (t.dataset.check) { if (t.checked) S.checks[t.dataset.check] = true; else delete S.checks[t.dataset.check]; save(); t.closest(".check").classList.toggle("done", t.checked); }
+    if (t.dataset.check) { if (t.checked) S.checks[t.dataset.check] = true; else delete S.checks[t.dataset.check]; save(); t.closest(".check").classList.toggle("done", t.checked); const cd = document.getElementById("cl-done"); if (cd) cd.textContent = document.querySelectorAll("input[data-check]:checked").length; }
     if (t.hasAttribute && t.hasAttribute("data-words-all")) { screens.words.allOrgs = t.checked; rerender(); return; }
     if (t.dataset.rf) { screens.rules.f[t.dataset.rf] = t.value; rerender(); }
   });
