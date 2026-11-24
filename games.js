@@ -167,6 +167,7 @@
   window.PID_GAMES = function (A) {
     const { ext, esc, toast } = A;
     let G = load();
+    const RT = window.PID_RHYTHM ? window.PID_RHYTHM(A) : null; // rhythm.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -201,7 +202,14 @@
             <span class="small game-status">${esc(bingoStatus())}</span></span>
           <span class="btn sm">${(G.bingo[localDate()] || {}).marks ? "Keep going" : "Play"}</span>
         </a>
-        ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
+        ${RT ? `<a class="card game-card" href="#/games/rhythm">
+          <span class="ico" aria-hidden="true">🥁</span>
+          <span class="game-body"><strong>Rhythm tap</strong>
+            <span class="small muted">Tap on the beat of a reel, jig, slip jig or hornpipe</span>
+            <span class="small game-status">${esc(RT.bestText())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+                ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
         <div class="card" style="text-align:center">
           <p class="small muted" style="margin:0">More games are on the way. Got an idea for one? Tell us in Settings, Help and feedback.</p>
         </div>`
@@ -409,6 +417,7 @@
     ext.games = (parts) => {
       G = load();
       if (parts[1] === "bingo") return bingo();
+      if (parts[1] === "rhythm" && RT) return RT.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };
