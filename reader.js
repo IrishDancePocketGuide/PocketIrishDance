@@ -182,10 +182,16 @@
   }
 
   // "Adjudicator: Mary Smith", "Judges: A. Byrne, C. Walsh", "Judge 2 - Sean Kelly 78"
-  const NOT_NAMES = /^(place|placing|score|scores|marks?|points|comp|competition|result|results|name|dancer|school|total|rank|age|level|dance)$/i;
+  const NOT_NAMES = /^(place|placing|score|scores|marks?|points|comp|competition|result|results|name|dancer|school|total|rank|age|level|dance|comments?|remarks?|notes?|sheet|panel)$/i;
+  // "Adjudicator", plus the ways the reader often gets it slightly wrong (Adjudlcator, Adjudicat0r),
+  // "Judge", "Judged by", "Adj." and "Examiner".
+  const JUDGE_LABEL = /\b(adj[a-z0-9]{0,10}?(?:\(s\))?|judge[ds]?(?:\s+by)?|examiner)\b\.?\s*(?:#?\d\s*)?(?:name)?\s*(?:[:\-–=]|\s)\s*(.*)$/i;
+  const LABEL_ONLY = /^\W*(adj[a-z0-9]{0,10}(?:\(s\))?|judge[ds]?(?:\s+by)?|examiner)\W*(name)?\W*$/i;
+  // Letters after a teacher's or judge's name: ADCRG, TCRG, SDCRG, BDCRG, TMRF...
+  const QUALS = /\b(A|S|B|T)?D?CRG\b|\bTMRF\b|\bADCRG\b|\bTCRG\b/g;
   function findJudges(raw) {
-    const m = raw.match(/\b(adjudicators?|judges?|adj)\b\.?\s*(?:#?\d\s*)?(?:[:\-–=]|\s)\s*(.*)$/i);
-    if (!m) return null;
+    const m = raw.replace(QUALS, " ").match(JUDGE_LABEL);
+    if (!m || /^adjust/i.test(m[1])) return null;
     const out = [];
     m[2].split(/\s*(?:,|;|&|\/|\band\b|\|)\s*/i).forEach((part) => {
       const sc = part.match(/(\d{1,3}(?:\.\d{1,2})?)\s*$/);
@@ -225,17 +231,38 @@
   }
 
   // text: what was read. ctx.levels: this organization's levels.
+  // "Comments: Lovely timing, watch your turnout" (and the lines after it, until the next heading)
+  const COMMENT_LABEL = /^\W*(adjudicator'?s?\s+)?(comments?|remarks?|notes?|feedback|critique)\b\s*[:\-–]?\s*(.*)$/i;
   function parse(text, ctx) {
-    const lines = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const raw = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    // A label on its own line ("Adjudicator") with the name on the next line.
+    const lines = [];
+    for (let i = 0; i < raw.length; i++) {
+      if (LABEL_ONLY.test(raw[i]) && raw[i + 1] && !findDance(clean(raw[i + 1]))) { lines.push(raw[i].replace(/\W*$/, "") + ": " + raw[i + 1]); i++; }
+      else lines.push(raw[i]);
+    }
+    // Comments: pull them out, remembering which line they came after.
+    const comments = []; const isComment = lines.map(() => false);
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(COMMENT_LABEL); if (!m) continue;
+      const parts = [m[3]]; isComment[i] = true;
+      for (let j = i + 1; j < lines.length && j <= i + 6; j++) {
+        if (findDance(clean(lines[j])) || findJudges(lines[j]) || COMMENT_LABEL.test(lines[j]) || /^\W*(round|overall|place|score|total)\b/i.test(lines[j])) break;
+        parts.push(lines[j]); isComment[j] = true;
+      }
+      const t = parts.join(" ").replace(/\s+/g, " ").trim();
+      if (t.length > 2) comments.push({ at: i, text: t.slice(0, 500) });
+    }
     const levelOf = levelMatcher((ctx && ctx.levels) || []);
     const found = [];
     const judgeAt = lines.map(findJudges);
     let current = null;
     // Is the judge named above each group of results, or underneath each result?
     const firstJudge = judgeAt.findIndex(Boolean);
-    const firstDance = lines.findIndex((x) => findDance(clean(x)));
+    const firstDance = lines.findIndex((x, n) => !isComment[n] && findDance(clean(x)));
     const judgeAbove = firstJudge >= 0 && firstJudge < firstDance;
     for (let i = 0; i < lines.length; i++) {
+      if (isComment[i]) continue;
       const l = clean(lines[i]);
       const d = findDance(l);
       if (!d) { if (judgeAt[i]) current = judgeAt[i]; continue; }
@@ -294,6 +321,14 @@
     // Judges listed only after the results belong to all of them.
     const later = judgeAt.find(Boolean);
     if (later) found.forEach((x) => { if (!x.judges.length) x.judges = later; });
+    // Each comment goes with the result just above it; comments above every result go with all of them.
+    const starts = found.map((x) => lines.indexOf(x.line));
+    found.forEach((x) => { x.notes = ""; });
+    comments.forEach((c) => {
+      let k = -1; starts.forEach((st, n) => { if (st >= 0 && st < c.at) k = n; });
+      const add = (x) => { x.notes = x.notes ? x.notes + " " + c.text : c.text; };
+      if (k >= 0) add(found[k]); else found.forEach(add);
+    });
     return { results: found, date: findDate(text), feis: findFeis(lines), text: lines.join("\n") };
   }
 
