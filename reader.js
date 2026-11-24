@@ -189,6 +189,10 @@
       if (mo > 12 && d <= 12) [mo, d] = [d, mo];
       return iso(y, mo, d);
     }
+    // "8 Nov" or "Nov 8" with the year somewhere else on the page (or this year).
+    const yr = (t.match(/\b(20\d\d)\b/) || [])[1] || String(new Date().getFullYear());
+    if ((m = t.match(new RegExp("(?:^|\\s)(\\d{1,2})(?:st|nd|rd|th)?\\s+" + mon + "(?:\\s|$)", "m"))))
+      return iso(+yr, MONTHS.indexOf(m[2]) + 1, +m[1]);
     return "";
   }
   function iso(y, mo, d) {
@@ -349,8 +353,48 @@
 
   // "Comments: Lovely timing, watch your turnout" (and the lines after it, until the next heading)
   const COMMENT_LABEL = /^\W*(adjudicator'?s?\s+)?(comments?|remarks?|notes?|feedback|critique)\b\s*[:\-–]?\s*(.*)$/i;
+  // ---------- championship score sheet ----------
+  // "Your Rank is 7 of 18 competitors. | Your Total Points: 154.000", then for each judge:
+  //   Catherine Leneghan  Hard Shoe 76.000 2 extend legs...
+  //   Score Rank Points   Soft Shoe 79.000 5 lovely foot placement...
+  //   232.750 5 56.000    Set Dance 77.750 4 push heels forward...
+  // Every judge gives a score and rank for every round, plus their own overall rank for the dancer.
+  const SHEET_ROUND = /\b(hard\s*shoe|heavy\s*shoe|soft\s*shoe|light\s*shoe|set\s*dance|set\s*round|own\s*choice)\s+(\d{1,3}(?:[.,]\d{1,3})?)\s+(\d{1,3})\b\s*(.*)$/i;
+  const roundNo = (t) => /soft|light/i.test(t) ? 1 : /hard|heavy/i.test(t) ? 2 : 3;
+  const num = (t) => String(Number(String(t).replace(",", ".")));
+  function champSheet(lines, text, levelOf) {
+    const head = text.match(/your\s*rank\s*is\s*(\d{1,3})\s*of\s*(\d{1,3})/i);
+    if (!head) return null;
+    const pts = text.match(/total\s*points\s*:?\s*(\d{1,4}(?:[.,]\d{1,3})?)/i);
+    const hl = clean(lines.find((x) => /champ|prelim|\b[po]c\b/i.test(x)) || "");
+    const isPrelim = /prelim|\bpc\b|\d{2,4}pc\b/.test(hl);
+    const judges = []; let cur = null;
+    for (const raw of lines) {
+      const m = raw.match(SHEET_ROUND);
+      if (!m) { if (judges.length && /\b(final|total)\b.*\b(rank|point)/i.test(raw)) break; continue; }
+      const before = raw.slice(0, m.index).replace(/[|\[\]]/g, " ").trim();
+      const tot = before.match(/^(\d{1,4}(?:[.,]\d{1,3})?)\s+(\d{1,3})\s+(\d{1,4}(?:[.,]\d{1,3})?)$/);
+      if (/\p{L}{2}/u.test(before) && !/^score\b/i.test(before)) {
+        cur = { name: before.replace(QUALS, " ").replace(/[^\p{L}' .-]/gu, " ").replace(/\s+/g, " ").trim(), marks: "", rank: "", points: "", rounds: [] };
+        judges.push(cur);
+      } else if (tot && cur) { cur.marks = num(tot[1]); cur.rank = +tot[2]; cur.points = num(tot[3]); }
+      if (!cur) continue;
+      const comment = m[4].replace(/[|\[\]]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+      cur.rounds.push({ n: roundNo(m[1]), score: num(m[2]), rank: +m[3], comment });
+    }
+    if (!judges.length) return null;
+    judges.forEach((j) => j.rounds.sort((a, b) => a.n - b.n));
+    const names = { 1: "Soft shoe", 2: "Hard shoe", 3: "Set" };
+    const notes = judges.map((j) => j.name + ": " + j.rounds.filter((r) => r.comment).map((r) => `${names[r.n]}: ${r.comment}`).join("; ")).join("\n");
+    const level = levelOf(hl) || levelOf(isPrelim ? "preliminary championship" : "open championship");
+    return { dance: isPrelim ? "prelim" : "open", level, place: +head[1], entrants: +head[2], marks: pts ? num(pts[1]) : "",
+      recall: false, judges, rounds: [], notes: notes.slice(0, 1200), check: !level, line: lines.find((x) => /your\s*rank/i.test(x)) || "" };
+  }
+
   function parse(text, ctx) {
     const raw = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const sheet = champSheet(raw, String(text || ""), levelMatcher((ctx && ctx.levels) || []));
+    if (sheet) return { results: [sheet], date: findDate(String(text)), feis: findFeis(raw), text: raw.join("\n") };
     // A label on its own line ("Adjudicator") with the name on the next line.
     const lines = [];
     for (let i = 0; i < raw.length; i++) {

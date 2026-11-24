@@ -326,3 +326,11 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .role-pick legend { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
 .role-pick label { display: inline-flex; gap: 6px; align-items: center; margin: 0 14px 6px 0; font-size: 0.95rem; }
 .school-hit h3 { font-size: 1rem; }
+
+/* championship score sheet: every judge's rank for every round */
+.grid-wrap { overflow-x: auto; margin-top: 6px; }
+.panel-grid { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.panel-grid th, .panel-grid td { border-bottom: 1px solid var(--line); padding: 6px 6px; text-align: center; vertical-align: top; }
+.panel-grid thead th { font-size: 0.75rem; color: var(--ink-2); font-weight: 600; }
+.panel-grid tbody th { text-align: left; font-weight: 600; }
+.panel-grid td strong { color: var(--green); }
