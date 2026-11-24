@@ -263,7 +263,7 @@ window.PID_DATA = {
 
     // People and organizations
     { g: "people", orgs: ["clrg"], term: "CLRG", alt: "An Coimisiún", say: "un KUM-ish-oon", means: "An Coimisiún le Rincí Gaelacha, the largest Irish dance organization, based in Dublin", why: "Sets the rules your dancer competes under" },
-    { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Only a TCRG can enter dancers in CLRG competitions" },
+    { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Your dancer competes as their TCRG's pupil. Families register for regular feiseanna themselves, but the TCRG registers dancers for majors like the Oireachtas, Nationals and Worlds" },
     { g: "people", orgs: ["clrg"], term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
     { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner, who can run grade exams", why: "Mostly relevant to teachers" },
     { g: "people", term: "Adjudicator", means: "A judge", why: "In grades one judge places each dance. Championships use a panel: usually 3, 5 at major championships, and 6 at the All-Irelands with 5 counting" },
@@ -308,8 +308,8 @@ window.PID_DATA = {
       q: "How does my dancer move up from Prelim to Open in the Southern Region?",
       a: "In the US Southern Region, a dancer needs 3 Preliminary Championship wins to move up to Open Championship. Other regions set their own rules, so check with your teacher if you dance elsewhere." },
     { orgId: "clrg", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "CLRG",
-      q: "Who can enter my dancer in a CLRG feis?",
-      a: "Only a teacher registered with CLRG: a TCRG for solo dances, or a TCRG or TMRF for teams. So entries normally go through your school." },
+      q: "Who registers my dancer for a CLRG feis?",
+      a: "For a regular feis, you do: families register their own dancer, usually online. It's wise to check with your teacher (TCRG) first about which feis and which dances. For majors such as the Oireachtas, Nationals and Worlds, the teacher registers the dancer, not the family. Either way, your dancer must be taught by a CLRG-registered teacher (a TCRG for solos, a TCRG or TMRF for teams)." },
     { orgId: "clrg", topic: "Entering competitions", sec: "1.1, 3.1", levels: [], regions: [], org: "CLRG",
       q: "Can my dancer also compete in other organizations' competitions?",
       a: "No. Dancers of a CLRG teacher may not compete in events that aren't run under CLRG, apart from a few CLRG recognises (such as Scór) and approved \"open platform\" events. Check with your teacher before entering anything else." },
@@ -507,7 +507,7 @@ window.PID_DATA = {
           { k: "syl", t: "Read the syllabus", tip: "It lists the competitions by number, the age groups, the fees, the entry deadline and any special rules." },
           { k: "age", t: "Work out your dancer's competition age", tip: "Most feiseanna use the dancer's age on January 1 of the year, not their age on the day." },
           { k: "comps", t: "Enter only the dances and level the teacher approved" },
-          { k: "deadline", t: "Register before the deadline", tip: "Late entries often cost extra, and some feiseanna cap entries or close early." },
+          { k: "deadline", t: "Register before the deadline", tip: "For a regular feis you register your dancer yourself, usually online, after checking with the teacher. Late entries often cost extra, and some feiseanna cap entries or close early." },
           { k: "confirm", t: "Save the confirmation email and any competitor number" }
         ]},
         { title: "Plan the day", items: [
@@ -679,7 +679,7 @@ window.PID_DATA = {
       blurb: "Oireachtas, regionals and nationals. Bigger events with more planning.",
       sections: [
         { title: "Months before", items: [
-          { k: "elig", t: "Confirm your dancer is eligible and how entries are made", tip: "Entries usually go through the teacher or school, not the parent." },
+          { k: "elig", t: "Confirm your dancer is eligible and how entries are made", tip: "In CLRG, the teacher (TCRG) registers dancers for majors like the Oireachtas, Nationals and Worlds, not the parent. Make sure they have everything they need from you in time." },
           { k: "hotel", t: "Book the hotel as soon as the venue is announced" },
           { k: "time", t: "Ask for time off work and school if needed" },
           { k: "learn", t: "Learn how recalls and qualifying places work for this event" },
