@@ -10,7 +10,7 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | --- | --- |
 | `index.html` | The website at pocketirishdance.com: what the app does and how to add it to a home screen. The installed app and app links skip it and go to `app.html`. |
 | `app.html` | The app itself. |
-| `site/` | Screenshots used on the website. |
+| `site/` | Screenshots and fonts (Fraunces and Nunito, SIL Open Font License) used on the website. |
 | `data.js` | All the content: glossary, levels, organizations, rules, checklists. Edit this to change wording. |
 | `app.js` | The screens and the score tracker. |
 | `reader.js` | Reads a results screenshot or photo and suggests results to save. |
