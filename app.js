@@ -953,6 +953,8 @@
             if (!x.level) x.level = dancerLevel(who(), x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
             return x;
           });
+          // A photo of a results history (FeisWorx "Personal Results") can cover several feiseanna.
+          const manyFeis = new Set(rows.map((x) => x.feis).filter(Boolean)).size > 1;
           const said = `<details class="small" style="margin-top:8px"><summary>Show everything the app read</summary><pre class="read-text">${esc(out.text || "(no words found)")}</pre></details>`;
           manual.hidden = !!rows.length;
           if (!rows.length) {
@@ -961,7 +963,7 @@
             return;
           }
           el.innerHTML = `<div class="card"><h3>Found ${rows.length} result${rows.length > 1 ? "s" : ""}</h3>
-            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(who().name)}'s, then save.</p>${said}</div>
+            <p class="small muted" style="margin:0">Everything is filled in from the photo. Have a quick look, untick any that aren't ${esc(who().name)}'s, then save.${manyFeis ? " This photo covers more than one feis and doesn't show dates, so check the date on each." : ""}</p>${said}</div>
             ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
               <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
               <div class="two">
@@ -976,6 +978,8 @@
                 <label class="field"><span>Judge${x.judges.length > 1 ? "s" : ""}</span><input data-k="judges" list="judgeList" value="${esc(x.judges.map((j) => j.name).join(", "))}" placeholder="Judge's name" maxlength="200"></label>
                 <label class="field"><span>Overall score</span><input data-k="marks" inputmode="decimal" value="${esc(x.marks)}" placeholder="optional" maxlength="30"></label>
               </div>
+              ${manyFeis ? `<div class="two"><label class="field"><span>Feis</span><input data-k="feis" value="${esc(x.feis || "")}" maxlength="80"></label>
+                <label class="field"><span>Date</span><input type="date" data-k="date" value="${esc(f.date.value || today())}"></label></div>` : ""}
               <label class="field"><span>Comments and notes</span><textarea data-k="notes" rows="2" maxlength="500" placeholder="Judge's comments, anything to remember">${esc(x.notes || "")}</textarea></label>
               ${isChamp(x) ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>
                 <p class="small muted" style="margin:8px 0 4px">${ROUNDS_HELP}</p>${roundInputs(x.rounds, "data-k")}` : ""}
@@ -998,7 +1002,7 @@
               if (!g("dance").value || !g("level").value) { toast("Choose the dance and level for each ticked result"); (g("dance").value ? g("level") : g("dance")).focus(); return; }
               picked.push({
                 _row: row.dataset.row,
-                id: uid(), dancerId: who().id, date, feis, dance: g("dance").value, level: g("level").value,
+                id: uid(), dancerId: who().id, date: (g("date") && g("date").value) || date, feis: (g("feis") && g("feis").value.trim()) || feis, dance: g("dance").value, level: g("level").value,
                 place: g("place").value ? Number(g("place").value) : "", entrants: g("entrants").value ? Number(g("entrants").value) : "",
                 marks: String(g("marks").value).trim(), recall: g("recall") ? g("recall").checked : false, notes: String(g("notes").value || "").trim().slice(0, 500), photoId: "",
                 judges: judgesFromText(g("judges").value, rows[Number(row.dataset.row)].judges), rounds: []

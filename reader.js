@@ -70,7 +70,7 @@
     ["lightjig", /\b(light\s*jig|l\.?\s*jig)\b/],
     ["slipjig", /\b(slip\s*jig|s\.?\s*jig)\b/],
     ["singlejig", /\b(single\s*jig|hop\s*jig)\b/],
-    ["hornpipe", /\b(horn\s*pipe|hpipe|h\.?\s*pipe)\b/],
+    ["hornpipe", /\b(horn\s*pipe|hompipe|hornplpe|hpipe|h\.?\s*pipe)\b/],
     ["reel", /(?<!treble\s)(?<!treble)\breel\b/],
     ["set", /\bset\s*dance\b|\bset\b(?!\s*\d)/],
     // Short forms some results sites use
@@ -102,6 +102,7 @@
       .replace(/[|]/g, " ").replace(/[‘’`]/g, "'").replace(/[–—]/g, "-")
       .replace(/(\d)\s+(st|nd|rd|th)\b/g, "$1$2")        // "1 st" -> "1st"
       .replace(/\b[il](st)\b/g, "1$1")                    // "lst" -> "1st"
+      .replace(/\bp[nr]?[iln]?ze\s*winner/g, "prizewinner")  // "Pnzewinner", "Przewinner"
       .replace(/\s+/g, " ").trim();
   }
 
@@ -143,6 +144,24 @@
     return "";
   }
 
+  // Several judges' marks on one line: "85, 82, 80"
+  function scoreList(l) {
+    const m = l.match(/(?:^|[\s(])(\d{2,3}(?:\.\d{1,2})?(?:\s*[,;\/]\s*\d{2,3}(?:\.\d{1,2})?){1,5})(?![\d.])/);
+    if (!m) return null;
+    const xs = m[1].split(/\s*[,;\/]\s*/).map(Number);
+    return xs.every((n) => n >= 20 && n <= 100) ? xs : null;
+  }
+  // Words written after the last number on a results line are the judge's comments:
+  // "... (3) 85, 82, 80 NICE LEG EXTENSION; HIGHER UP ON TOES"
+  function trailingComment(raw) {
+    const m = raw.match(/\d[\d.,;\s)\]]*\s+([A-Za-z\u00c0-\u024f][^\d]{7,})$/);
+    if (!m) return "";
+    const t = m[1].replace(/^[\s|:;,.)\]-]+|[\s|]+$/g, "").trim();
+    if (t.split(/\s+/).length < 2 || findDance(clean(t)) || /\b(recall(ed)?|not placed|no place|dancers|competitors|entrants|of)\b/i.test(t)) return "";
+    // Shouted capitals read better as a sentence.
+    const out = t === t.toUpperCase() ? t.toLowerCase().replace(/(^|[.;!?]\s*)([a-z])/g, (a, b, c) => b + c.toUpperCase()) : t;
+    return out.slice(0, 500);
+  }
   function findMarks(l) {
     const m = l.match(/\b(?:score|marks?|points|pts|total)\s*:?\s*(\d{1,4}(?:\.\d{1,2})?)\b/) || l.match(/\b(\d{2,3}\.\d{1,2})\b/);
     return m ? m[1] : "";
@@ -174,7 +193,7 @@
   function findFeis(lines) {
     for (const raw of lines) {
       const l = raw.toLowerCase();
-      if (/\b(feis|feiseanna|oireachtas|feile|f[eé]ile|championships?|festival|classic)\b/.test(l) && !findDance(l) && raw.length < 70 && !/\bresults?\s*$/.test(l)) {
+      if (/\b(feis|feiseanna|oireachtas|feile|f[eé]ile|championships?|festival|classic)\b/.test(l) && !findDance(l) && raw.length < 70 && !/\bresults?\s*$/.test(l) && !/\b(your place|your score|adjudicator|competition|dancers)\b/.test(l)) {
         return raw.replace(/\b(results?|my results)\b/ig, "").replace(/[^\p{L}\p{N}' &.-]/gu, " ").replace(/\s+/g, " ").trim();
       }
     }
@@ -231,6 +250,59 @@
   }
 
   // text: what was read. ctx.levels: this organization's levels.
+  // ---------- FeisWorx "Personal Solo Results" ----------
+  // Each result is two rows:
+  //   Cherokee Capital Feis - 2026 | 2 | 82 | Iris Gray Sharnick, ADCRG      (feis, place, your score, judge)
+  //   511RL Prizewinner, Reel (U11) | 9 (3) | 85, 82, 80 | NICE LEG EXTENSION (dance, dancers (places given), top scores, comments)
+  // The reader often drops decimal points (72.5 -> 725), so scores over 100 get them back.
+  function fixScore(t) {
+    const n = Number(String(t).replace(",", "."));
+    if (!isFinite(n)) return "";
+    if (n > 100 && /^\d{3}$/.test(t)) return String(n / 10);
+    if (n > 100 && /^\d{4}$/.test(t)) return String(n / 100);
+    return n <= 100 ? String(n) : "";
+  }
+  function fwTop(raw) {
+    const m = raw.match(/^[^a-z]*([a-z][a-z' .&-]*?\s*[-–]?\s*(20\d\d))\s*[-|]?\s*(did\s*not\s*place|dnp|\d{1,3})\s+(\d{2,4}(?:[.,]\d{1,2})?)\s+(.+)$/i);
+    if (!m) return null;
+    const judge = m[5].replace(QUALS, " ").split(",")[0].replace(/[^\p{L}' .-]/gu, " ").replace(/\s+/g, " ").trim();
+    return {
+      feis: m[1].replace(/\s*[-–]\s*(20\d\d)$/, " - $1").replace(/\s+/g, " ").trim(),
+      place: /^\d/.test(m[3]) ? +m[3] : "", np: !/^\d/.test(m[3]),
+      marks: fixScore(m[4]),
+      judges: judge.split(" ").length >= 2 && /\p{L}{2}/u.test(judge) ? [{ name: judge, marks: "" }] : []
+    };
+  }
+  function fwBottom(raw) {
+    const after = raw.replace(/^.*?\((?:u|o|under|over)\s*\d{1,2}\)\s*\)?/i, "");
+    let m = after.match(/(?:^|\s)(\d{1,2})\s*\((\d{1,2})\)/) || after.match(/(?:^|\s)(\d)\(?(\d)\)/);
+    const entrants = m ? +m[1] : "";
+    const rest = m ? after.slice(after.indexOf(m[0]) + m[0].length) : after;
+    const c = rest.match(/^[\s\d.,;]*([A-Za-z\u00c0-\u024f].*)$/);
+    let note = c ? c[1].replace(/[\s|:;,.]+$/, "").trim() : "";
+    if (note.length < 3 || !/[a-z]{3}/i.test(note)) note = "";
+    if (note && note === note.toUpperCase()) note = note.toLowerCase().replace(/(^|[.;!?]\s*)([a-z])/g, (a, b, ch) => b + ch.toUpperCase());
+    return { entrants, note: note.slice(0, 500) };
+  }
+  function editDist(a, b) {
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  // "Rea Fern Feis - 2026" and "Red Fem Fors 2026" are misreads of "Red Fern Feis - 2026": use the most common spelling.
+  const squash = (t) => t.toLowerCase().replace(/[^a-z0-9]/g, "");
+  function tidyFeisNames(found) {
+    const count = {}; found.forEach((x) => { if (x.feis) count[x.feis] = (count[x.feis] || 0) + 1; });
+    const names = Object.keys(count).sort((a, b) => count[b] - count[a]);
+    found.forEach((x) => {
+      if (!x.feis) return;
+      const best = names.find((n) => count[n] > (count[x.feis] || 0) && editDist(squash(n), squash(x.feis)) <= Math.max(3, squash(n).length / 3));
+      if (best) x.feis = best;
+    });
+  }
+
   // "Comments: Lovely timing, watch your turnout" (and the lines after it, until the next heading)
   const COMMENT_LABEL = /^\W*(adjudicator'?s?\s+)?(comments?|remarks?|notes?|feedback|critique)\b\s*[:\-–]?\s*(.*)$/i;
   function parse(text, ctx) {
@@ -296,15 +368,26 @@
         i = j - 1;
         continue;
       }
-      let level = levelOf(l);
-      let p = findPlace(l, d.text);
-      let entrants = findEntrants(l), marks = findMarks(l), recall = /\brecall(ed)?\b/.test(l);
+      // The top row is just above; a line of screen noise can sit between them.
+      const top = (i > 0 && fwTop(lines[i - 1])) || (i > 1 && !findDance(clean(lines[i - 1])) && fwTop(lines[i - 2])) || null;
+      if (top) {
+        const bot = fwBottom(lines[i]);
+        found.push({ dance: d.id, level: levelOf(l), place: top.place, entrants: bot.entrants, marks: top.marks, recall: false,
+          judges: top.judges, rounds: [], note: bot.note, feis: top.feis, check: !levelOf(l) || d.guess || (!top.place && !top.np), line: lines[i] });
+        continue;
+      }
+      const note = trailingComment(lines[i]);
+      const lineNoNote = note ? clean(lines[i].slice(0, lines[i].length - (lines[i].match(/\s+[A-Za-z\u00c0-\u024f][^\d]{7,}$/) || [""])[0].length)) : l;
+      let level = levelOf(lineNoNote);
+      let p = findPlace(lineNoNote, d.text);
+      const list = scoreList(lineNoNote);
+      let entrants = findEntrants(lineNoNote), marks = list ? list.join(", ") : findMarks(lineNoNote), recall = /\brecall(ed)?\b/.test(lineNoNote);
       // Card layouts put the place on the next line or two.
       for (let j = i + 1; j <= i + 2 && j < lines.length; j++) {
         const n = clean(lines[j]); if (findDance(n)) break;
         if (!p || !p.sure) { const np = findPlace(n.replace(/\b\d{1,3}\s*(dancers|competitors|entrants|entries|danced)\b/, ""), ""); if (np && (np.sure || !p)) p = np; }
         if (!entrants) entrants = findEntrants(n);
-        if (!marks) marks = findMarks(n);
+        if (!marks && !list) marks = findMarks(n);
         if (!level) level = levelOf(n);
         recall = recall || /\brecall(ed)?\b/.test(n);
         if (!judges && !judgeAbove && judgeAt[j]) judges = judgeAt[j];
@@ -312,8 +395,10 @@
       if (judgeAbove) judges = judges || current;
       // Championship lines name the level; the dance is the championship itself.
       if (!level && (d.id === "prelim" || d.id === "open")) level = levelOf(d.text);
+      // One mark per judge, in the order the judges are listed.
+      if (list && judges && judges.length === list.length) judges = judges.map((jj, n) => ({ name: jj.name, marks: String(list[n]) }));
       found.push({
-        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall, judges: judges || [], rounds: [],
+        dance: d.id, level, place: p ? p.place : "", entrants, marks, recall, judges: judges || [], rounds: [], note,
         check: !p || !p.sure || d.guess || !level,
         line: lines[i]
       });
@@ -323,13 +408,15 @@
     if (later) found.forEach((x) => { if (!x.judges.length) x.judges = later; });
     // Each comment goes with the result just above it; comments above every result go with all of them.
     const starts = found.map((x) => lines.indexOf(x.line));
-    found.forEach((x) => { x.notes = ""; });
+    found.forEach((x) => { x.notes = x.note || ""; delete x.note; });
+    tidyFeisNames(found);
     comments.forEach((c) => {
       let k = -1; starts.forEach((st, n) => { if (st >= 0 && st < c.at) k = n; });
       const add = (x) => { x.notes = x.notes ? x.notes + " " + c.text : c.text; };
       if (k >= 0) add(found[k]); else found.forEach(add);
     });
-    return { results: found, date: findDate(text), feis: findFeis(lines), text: lines.join("\n") };
+    const rowFeis = (found.find((x) => x.feis) || {}).feis;
+    return { results: found, date: findDate(text), feis: rowFeis || findFeis(lines), text: lines.join("\n") };
   }
 
   root.PID_READER = { readText, parse };
