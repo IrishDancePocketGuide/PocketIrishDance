@@ -195,7 +195,7 @@
           <label class="field"><span>Your email</span><input type="email" name="email" autocomplete="email" value="${esc(F.email)}" required></label>
           <button class="btn block">Email me a code</button>
         </form>`}
-        <p class="small muted center"><a href="#/privacy">How we look after your information</a></p>`, null, false);
+        <p class="small muted center"><a href="#/privacy">Privacy policy</a> · <a href="#/terms">Terms of use</a></p>`, null, false);
     }
 
     function setup() {
@@ -205,7 +205,7 @@
           <label class="field"><span>Name your friends will see</span><input name="name" maxlength="40" placeholder="For example: Aoife's mum, or Sarah K" required></label>
           <p class="small muted" style="margin-top:-4px">Please don't use your dancer's full name.</p>
           <label class="toggle"><input type="checkbox" name="adult" required> I'm a parent or guardian, aged 18 or over</label>
-          <label class="toggle"><input type="checkbox" name="privacy" required> I've read <a href="#/privacy">how my information is used</a></label>
+          <label class="toggle"><input type="checkbox" name="privacy" required> I agree to the <a href="#/terms">terms of use</a> and have read the <a href="#/privacy">privacy policy</a></label>
           <button class="btn block">Continue</button>
         </form>
         <button class="btn plain block" data-f="signout">Sign out</button>`, null, false);
@@ -332,27 +332,12 @@
         <div class="card"><p class="small muted" style="margin:0">Signed in as ${esc(F.user.email || "")}</p></div>
         <div class="card stack">
           <button class="btn ghost block" data-f="download">Download my data</button>
-          <a class="btn ghost block" href="#/privacy">How we look after your information</a>
+          <a class="btn ghost block" href="#/privacy">Privacy policy</a>
           <button class="btn ghost block" data-f="signout">Sign out</button>
         </div>
         <h2 style="margin-top:22px">Delete account</h2>
         <div class="card"><p class="small" style="margin-top:0">This deletes your account, everything you shared and your cheers, straight away. Results saved on this phone are not affected.</p>
         <button class="btn danger block" data-f="delete">Delete my account</button></div>`);
-    }
-
-    function privacy() {
-      return { title: "Privacy", tab: "", back: true, html: `
-        <p class="draft">Draft, to be checked before launch</p>
-        <h2>How we look after your information</h2>
-        <div class="card stack small">
-          <p style="margin-top:0"><strong>On your phone only.</strong> Your dancers, results, photos, marks and notes are saved on your phone. They are never sent to us.</p>
-          <p><strong>If you use Friends.</strong> We keep your email address (to sign you in), the name you choose to show friends, the groups you join, the wins you choose to share, and the cheers you send. A shared win holds only what you saw in the preview: a first name or nickname, the dance, level, placing, feis and date.</p>
-          <p><strong>Who can see it.</strong> Only people in the same group. Groups are private and can only be joined with an invite code. We don't sell or share your information, and there are no adverts.</p>
-          <p><strong>Adults only.</strong> Accounts are for parents and guardians aged 18 or over. Children should not create accounts.</p>
-          <p><strong>Your choices.</strong> You can un-share a win, leave a group, download your data, or delete your account at any time in Friends › Your account. Deleting removes everything you put online straight away.</p>
-          <p><strong>Where it's kept.</strong> Friends data is stored securely with our provider, Supabase, in a data centre in the United States. For families in the UK, Ireland and Europe, Supabase's data protection agreement covers moving it there.</p>
-          <p style="margin-bottom:0"><strong>Questions.</strong> Email the Pocket Irish Dance team at <a href="mailto:pocketirishdance@gmail.com">pocketirishdance@gmail.com</a>.</p>
-        </div>` };
     }
 
     // ---------- routes ----------
@@ -378,7 +363,6 @@
       return gate("Join a group") || joinForm(parts[1]);
     };
     ext.share = (parts) => { if (!F.user) ls.set(AFTER_KEY, location.hash); return gate("Share a win") || share(parts[1]); };
-    ext.privacy = privacy;
     A.canShare = ready;
 
     // After sign-in and setup, go where the parent was heading (an invite link or a share).

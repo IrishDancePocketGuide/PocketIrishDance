@@ -13,6 +13,7 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | `reader.js` | Reads a results screenshot or photo and suggests results to save. |
 | `vendor/ocr/` | The open-source text reader (Tesseract.js 7.0.0, Apache 2.0) and its English data, kept with the app so photos are read on the phone and never uploaded. |
 | `friends.js` | Friends: private invite-only groups, shared wins and cheers (online, via Supabase). |
+| `legal.js` | The privacy policy and terms of use (shown at `#/privacy` and `#/terms`). Change the company name and governing-law state at the top once the LLC is formed. |
 | `config.js` | The Supabase project address and public key for Friends. Empty means Friends shows "coming soon". |
 | `supabase/schema.sql` | The Friends database and its privacy rules. Run once in the Supabase SQL Editor. |
 | `vendor/supabase/` | The Supabase browser library (supabase-js 2.118.0, MIT). |
@@ -30,6 +31,12 @@ Friends is the only online part, and only for parents who sign up. A parent shar
 1. Run `supabase/schema.sql` in the Supabase SQL Editor.
 2. In Authentication > Emails, edit the Magic Link template so it shows the code: `Your Pocket Irish Dance code is {{ .Token }}`. (Codes work inside the installed app; links would open the browser instead.)
 3. Put the Project URL and publishable key in `config.js`.
+
+## Web address
+
+The app lives at https://pocketirishdance.com (GitHub Pages custom domain, set in the repository's Settings > Pages). Namecheap DNS holds four A records for `@` (185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153) and a CNAME `www` → `irishdancepocketguide.github.io`, alongside the Resend email records. The old github.io address redirects there. Results are saved per web address, so anyone moving from the old address restores a backup file.
+
+All paths in the app are relative, so it works at either address. Supabase's Site URL and Redirect URLs must include the current address for sign-in emails.
 
 ## Status
 
