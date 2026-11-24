@@ -263,7 +263,7 @@
     return n <= 100 ? String(n) : "";
   }
   function fwTop(raw) {
-    const m = raw.match(/^[^a-z]*([a-z][a-z' .&-]*?\s*[-–]?\s*(20\d\d))\s*[-|]?\s*(did\s*not\s*place|dnp|\d{1,3})\s+(\d{2,4}(?:[.,]\d{1,2})?)\s+(.+)$/i);
+    const m = raw.match(/^[^a-z]*([a-z][a-z' .&-]*?\s*[-–]?\s*(20\d\d))[\s|\[\]:;'"`*.-]*(did\s*not\s*place|dnp|\d{1,3})[\s|\[\]:;'"`*-]+(\d{2,4}(?:[.,]\d{1,2})?)[\s|\[\]:;'"`*-]+([a-z].+)$/i);
     if (!m) return null;
     const judge = m[5].replace(QUALS, " ").split(",")[0].replace(/[^\p{L}' .-]/gu, " ").replace(/\s+/g, " ").trim();
     return {
@@ -278,7 +278,8 @@
     let m = after.match(/(?:^|\s)(\d{1,2})\s*\((\d{1,2})\)/) || after.match(/(?:^|\s)(\d)\(?(\d)\)/);
     const entrants = m ? +m[1] : "";
     const rest = m ? after.slice(after.indexOf(m[0]) + m[0].length) : after;
-    const c = rest.match(/^[\s\d.,;]*([A-Za-z\u00c0-\u024f].*)$/);
+    // Comments are the words after the last number on the row.
+    const c = rest.match(/^[^A-Za-z\u00c0-\u024f]*([A-Za-z\u00c0-\u024f][^\d]*)$/) || rest.match(/\d[^A-Za-z\u00c0-\u024f\d]*([A-Za-z\u00c0-\u024f][^\d]*)$/);
     let note = c ? c[1].replace(/[\s|:;,.]+$/, "").trim() : "";
     if (note.length < 3 || !/[a-z]{3}/i.test(note)) note = "";
     if (note && note === note.toUpperCase()) note = note.toLowerCase().replace(/(^|[.;!?]\s*)([a-z])/g, (a, b, ch) => b + ch.toUpperCase());

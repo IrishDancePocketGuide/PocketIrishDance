@@ -1,5 +1,5 @@
 // Keeps the app working offline. Bump VERSION whenever any file changes.
-const VERSION = "pid-v25";
+const VERSION = "pid-v26";
 const FILES = [
   "./", "index.html", "styles.css", "app.js", "data.js", "reader.js", "celebrate.js", "manifest.webmanifest",
   "icons/favicon-32.png", "icons/wordmark.png", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"
@@ -20,7 +20,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: always ask the server if the file changed, instead of using the browser's 10-minute copy.
+    fetch(e.request, { cache: "no-cache" })
       .then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); return res; })
       .catch(() => caches.match(e.request).then((r) => r || caches.match("index.html")))
   );
