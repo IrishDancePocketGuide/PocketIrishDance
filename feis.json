@@ -1,0 +1,530 @@
+{
+ "checked": "2026-11-24T13:49:46.857Z",
+ "sources": [
+  {
+   "id": "wida",
+   "org": "wida",
+   "name": "WIDA competitions calendar",
+   "url": "https://www.irish.dance/competitions-list",
+   "count": 40,
+   "lastGood": "2026-11-24T13:49:46.857Z",
+   "problem": ""
+  },
+  {
+   "id": "comhdhail",
+   "org": "comhdhail",
+   "name": "An Comhdháil feis calendar",
+   "url": "https://web.irishdancingorg.com/index.php/feis",
+   "count": 6,
+   "lastGood": "2026-11-24T13:49:46.857Z",
+   "problem": ""
+  },
+  {
+   "id": "idtana",
+   "org": "clrg",
+   "name": "IDTANA Find a Feis (North America)",
+   "url": "https://idtana.org/feiseanna/",
+   "count": 7,
+   "lastGood": "2026-11-24T13:49:46.857Z",
+   "problem": ""
+  }
+ ],
+ "events": [
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "Craobhacha Laighean",
+   "start": "2026-11-26",
+   "end": "2026-11-29",
+   "place": "Leinster",
+   "kind": "Provincial",
+   "organiser": "Catherine Connolly",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "Christmas Feis",
+   "start": "2026-11-28",
+   "end": "2026-11-29",
+   "place": "Belfast Regional",
+   "kind": "Confined",
+   "organiser": "Jessica Bailie",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "Michelle Carlin Memorial Feis",
+   "start": "2026-11-28",
+   "end": "2026-11-29",
+   "place": "Belfast",
+   "kind": "Confined",
+   "organiser": "Carrie McKenna",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "Brian Boru Feis",
+   "start": "2026-11-29",
+   "end": "2026-11-29",
+   "place": "Cork",
+   "kind": "Open",
+   "organiser": "Claire Harrington",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "Edinburgh Christmas feis",
+   "start": "2026-12-05",
+   "end": "2026-12-05",
+   "place": "Edinburgh, Scotland",
+   "url": "https://www.irish.dance/competitions-list/2026/12/5/edinburgh-christmas-feis"
+  },
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "Londubh Feis",
+   "start": "2026-12-05",
+   "end": "2026-12-06",
+   "place": "Southern England Region",
+   "kind": "Open",
+   "organiser": "Lorraine Gillespie & Joanne Coward",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "comhdhail",
+   "org": "comhdhail",
+   "name": "South Derry South West Antrim Branch Feis",
+   "start": "2026-12-06",
+   "end": "2026-12-06",
+   "place": "South Derry South West Antrim",
+   "kind": "Confined",
+   "organiser": "Séamus McNicholl",
+   "url": "https://web.irishdancingorg.com/index.php/feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "Russian Open Moscow Feis",
+   "start": "2026-12-12",
+   "end": "2026-12-12",
+   "place": "Moscow, Russia",
+   "url": "https://www.irish.dance/competitions-list/2026/12/12/russian-open-moscow-feis"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "Portland New Year’s Feis",
+   "start": "2027-01-16",
+   "end": "2027-01-16",
+   "place": "Sherton Portland Airport Hotel, Oregon",
+   "region": "Western US",
+   "url": "https://idtana.org/events/portland-new-years-feis-3/"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "Northwest Winterfeis",
+   "start": "2027-01-17",
+   "end": "2027-01-17",
+   "place": "Sheraton Portland Airport Hotel, Oregon",
+   "region": "Western US",
+   "url": "https://idtana.org/events/northwest-winterfeis-3/"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "Avalon Winterfeis",
+   "start": "2027-01-18",
+   "end": "2027-01-18",
+   "place": "The Avalon Ballroom, Colorado",
+   "region": "Western US",
+   "url": "https://idtana.org/events/avalon-winterfeis/"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Ruhr Feis",
+   "start": "2027-01-30",
+   "end": "2027-01-30",
+   "place": "Dusseldorf, Germany",
+   "url": "https://www.irish.dance/competitions-list/2027/1/30/wida-ruhr-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Roscommon Open Feis",
+   "start": "2027-01-31",
+   "end": "2027-01-31",
+   "place": "Lecarrow, Roscommon",
+   "url": "https://www.irish.dance/competitions-list/2027/1/31/wida-roscommon-open-feis"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "North Coast Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Hotel Cleveland, Ohio",
+   "region": "Mid America",
+   "url": "https://idtana.org/events/north-coast-feis-3/"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Feis Grá",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Edinburgh, Scotland",
+   "url": "https://www.irish.dance/competitions-list/2027/2/6/wida-feis-gr"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Moscow Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Moscow, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/2/6/wida-moscow-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Mullingar Westmeath Open Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Mullingar, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/2/6/wida-mullingar-westmeath-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Tomsk Crystal Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Tomsk, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/2/6/wida-tomsk-crystal-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Wiltshire Open Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Swindon, Wiltshire",
+   "url": "https://www.irish.dance/competitions-list/2027/2/6/wida-wiltshire-open-feis"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "New Mexico State Championships & Feis on the Rio Grande",
+   "start": "2027-02-13",
+   "end": "2027-02-14",
+   "place": "Sid Cutter Pilot's Pavilion at Balloon Fiesta Park, New Mexico",
+   "region": "Western US",
+   "url": "https://idtana.org/events/new-mexico-state-championships-feis-on-the-rio-grande/"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Tuscany Open Feis",
+   "start": "2027-02-13",
+   "end": "2027-02-13",
+   "place": "Florence, Italy",
+   "url": "https://www.irish.dance/competitions-list/2027/2/13/wida-tuscany-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA St Valentine’s Open Feis",
+   "start": "2027-02-14",
+   "end": "2027-02-14",
+   "place": "Minsk, Belarus",
+   "url": "https://www.irish.dance/competitions-list/2027/2/14/wida-st-valentines-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Northern Provinces Open Feis",
+   "start": "2027-02-20",
+   "end": "2027-02-20",
+   "place": "Letterkenny, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/2/20/wida-northern-provinces-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Baden-Wurttemburg Open Feis",
+   "start": "2027-02-27",
+   "end": "2027-02-27",
+   "place": "Sindelfingen, Germany",
+   "url": "https://www.irish.dance/competitions-list/2027/2/27/wida-baden-wurttemburg-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Jig by the James Open Feis",
+   "start": "2027-03-06",
+   "end": "2027-03-06",
+   "place": "Richmond, VA, USA",
+   "url": "https://www.irish.dance/competitions-list/2027/3/6/wida-jig-by-the-james-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Spring Melody Open Feis",
+   "start": "2027-03-06",
+   "end": "2027-03-06",
+   "place": "St Petersburg, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/3/6/wida-spring-melody-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Stratford Open Feis",
+   "start": "2027-03-06",
+   "end": "2027-03-06",
+   "place": "Evesham, England",
+   "url": "https://www.irish.dance/competitions-list/2027/3/6/wida-stratford-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Falkirk Open Feis",
+   "start": "2027-03-13",
+   "end": "2027-03-13",
+   "place": "Falkirk, Scotland",
+   "url": "https://www.irish.dance/competitions-list/2027/3/13/wida-falkirk-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Omsk Open Feis",
+   "start": "2027-03-13",
+   "end": "2027-03-13",
+   "place": "Omsk, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/3/13/wida-omsk-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Midlands Open Feis",
+   "start": "2027-03-20",
+   "end": "2027-03-20",
+   "place": "Carlow, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/3/20/wida-midlands-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Melbourne Open Feis",
+   "start": "2027-03-21",
+   "end": "2027-03-21",
+   "place": "Melbourne, Australia",
+   "url": "https://www.irish.dance/competitions-list/2027/3/20/wida-melbourne-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA World & International Championship and International Feis",
+   "start": "2027-03-31",
+   "end": "2027-04-03",
+   "place": "ICC, Birmingham, UK.",
+   "url": "https://www.irish.dance/competitions-list/2027/3/31/wida-world-amp-international-championship-and-international-feis"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "Alaska State Feis",
+   "start": "2027-04-17",
+   "end": "2027-04-17",
+   "place": "North Star Elementary School, Alaska",
+   "region": "Western US",
+   "url": "https://idtana.org/events/alaska-state-feis/"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Féile Thrá Lí",
+   "start": "2027-04-17",
+   "end": "2027-04-17",
+   "place": "Tralee, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/4/17/wida-feili-trali"
+  },
+  {
+   "source": "idtana",
+   "org": "clrg",
+   "name": "Atlantic Canadian Irish Dance Championships",
+   "start": "2027-04-24",
+   "end": "2027-04-25",
+   "place": "Halifax, Nova Scotia, Canada",
+   "region": "Eastern Canada",
+   "url": "https://idtana.org/events/atlantic-canadian-irish-dance-championships-2/"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Living Skies on the Prairie Feis",
+   "start": "2027-04-24",
+   "end": "2027-04-24",
+   "place": "Regina, SK, USA",
+   "url": "https://www.irish.dance/competitions-list/2027/4/24/wida-living-skies-on-the-prairie-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Isle of Bute Open Feis",
+   "start": "2027-05-01",
+   "end": "2027-05-01",
+   "place": "Rothesay, Scotland",
+   "url": "https://www.irish.dance/competitions-list/2027/5/1/wida-isle-of-bute-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA North Dublin Open Feis",
+   "start": "2027-05-08",
+   "end": "2027-05-08",
+   "place": "Dublin, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/5/8/wida-north-dublin-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Bavarian Spring Feis",
+   "start": "2027-05-15",
+   "end": "2027-05-15",
+   "place": "Bad Abbach, Germany",
+   "url": "https://www.irish.dance/competitions-list/2027/5/15/wida-bavarian-spring-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Sweets of May Open Feis",
+   "start": "2027-05-15",
+   "end": "2027-05-15",
+   "place": "Ramenskoe, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/5/15/wida-sweets-of-may-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Belfast Open Feis",
+   "start": "2027-05-22",
+   "end": "2027-05-22",
+   "place": "Belfast, Northern Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/5/22/wida-belfast-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Novosibirsk Open Feis",
+   "start": "2027-05-22",
+   "end": "2027-05-22",
+   "place": "Novosibirsk, Russia",
+   "url": "https://www.irish.dance/competitions-list/2027/5/22/wida-novosibirsk-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Unicorn Open Feis (digital)",
+   "start": "2027-05-23",
+   "end": "2027-05-23",
+   "place": "",
+   "url": "https://www.irish.dance/competitions-list/2027/5/23/wida-unicorn-open-feis-digital"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Minsk Open Feis",
+   "start": "2027-05-29",
+   "end": "2027-05-29",
+   "place": "Minsk, Belarus",
+   "url": "https://www.irish.dance/competitions-list/2027/5/29/wida-minsk-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Glasgow Open Feis",
+   "start": "2027-06-05",
+   "end": "2027-06-05",
+   "place": "Glasgow, Scotland",
+   "url": "https://www.irish.dance/competitions-list/2027/6/5/wida-glasgow-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Venlo Open Feis",
+   "start": "2027-06-05",
+   "end": "2027-06-05",
+   "place": "De Vilgaard, Netherlands",
+   "url": "https://www.irish.dance/competitions-list/2027/6/5/wida-venlo-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA East Coast Open Feis",
+   "start": "2027-06-13",
+   "end": "2027-06-13",
+   "place": "Ashbourne, Ireland",
+   "url": "https://www.irish.dance/competitions-list/2027/6/13/wida-east-coast-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA London Open Feis",
+   "start": "2027-06-19",
+   "end": "2027-06-19",
+   "place": "Enfield, England",
+   "url": "https://www.irish.dance/competitions-list/2027/6/19/wida-london-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Tir Chonaill Open Feis",
+   "start": "2027-06-19",
+   "end": "2027-06-19",
+   "place": "",
+   "url": "https://www.irish.dance/competitions-list/2027/6/19/wida-tir-chonaill-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA European Championships",
+   "start": "2027-06-26",
+   "end": "2027-06-27",
+   "place": "Venue: Folyondár Vasas Sport és Táncközpont, 1037 Budapest, Folyondár Street 15.",
+   "url": "https://www.irish.dance/competitions-list/2026/6/26/wida-european-championships"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Sevastopol Open Feis",
+   "start": "2027-06-27",
+   "end": "2027-06-27",
+   "place": "Sevastopol, Crimea",
+   "url": "https://www.irish.dance/competitions-list/2027/6/27/wida-sevastopol-open-feis"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA Great Britain Championships",
+   "start": "2028-06-24",
+   "end": "2028-06-25",
+   "place": "venue tbc",
+   "url": "https://www.irish.dance/competitions-list/2028/6/24/wida-great-britain-championships"
+  },
+  {
+   "source": "wida",
+   "org": "wida",
+   "name": "WIDA All Ireland Championships",
+   "start": "2029-06-23",
+   "end": "2029-06-24",
+   "place": "venue tbc",
+   "url": "https://www.irish.dance/competitions-list/2029/6/23/wida-all-ireland-championships"
+  }
+ ]
+}
