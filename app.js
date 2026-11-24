@@ -216,11 +216,15 @@
   };
 
   // ----- find a school -----
+  // Every map search in the app uses this. The quotes make Google Maps look for the exact words
+  // "Irish dance", not any dance studio. Google can still mix in nearby places, so the screen
+  // tells parents to check the school's name.
+  const IRISH_Q = '"Irish dance" school';
   const SCHOOL_ORGS = [
-    { id: "any", name: "No preference", hint: "Just show me schools near me", q: "Irish dance school" },
-    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: "Irish dance school TCRG" },
-    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", q: "Irish dance school An Comhdháil", locator: "https://web.irishdancingorg.com/index.php/school-locator" },
-    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: "Irish dance school WIDA", locator: "https://www.irish.dance/teachers" }
+    { id: "any", name: "No preference", hint: "Just show me schools near me", q: IRISH_Q },
+    { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name", q: IRISH_Q },
+    { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", q: IRISH_Q, locator: "https://web.irishdancingorg.com/index.php/school-locator" },
+    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", q: IRISH_Q, locator: "https://www.irish.dance/teachers" }
   ];
   screens.schools = function () {
     const st = screens.schools.st || { org: curOrg(), place: "" };
@@ -253,7 +257,7 @@
         <label class="field" style="margin-top:0"><span>Your town, city or postcode</span><input name="place" value="${esc(st.place)}" placeholder="e.g. Naperville, IL or M1 1AA" autocomplete="postal-code" maxlength="80"></label>
         <button class="btn block">Search the map</button>
         <button type="button" class="btn ghost block" id="nearMe" style="margin-top:8px">📍 Use my location</button>
-        <p class="small muted" style="margin:8px 0 0">This opens Google Maps with a search for Irish dance schools. Your location goes only to Google Maps, not to this app.</p>
+        <p class="small muted" style="margin:8px 0 0">This opens Google Maps searching only for “Irish dance” schools. Google sometimes adds other places nearby, so look for “Irish dance” or “Irish dancing” in the school's name. Your location goes only to Google Maps, not to this app.</p>
       </form>
       <div class="card small">
         <h3>Before you sign up, ask the school:</h3>
@@ -269,9 +273,10 @@
       ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`,
       after() {
         const open = (where) => window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(o.q + " " + where), "_blank", "noopener");
+        // "near me" makes Google guess; with no place typed, use the phone's location instead.
         document.getElementById("schoolForm").addEventListener("submit", (e) => {
           e.preventDefault(); st.place = e.target.place.value.trim();
-          open(st.place ? "near " + st.place : "near me");
+          if (st.place) open("near " + st.place); else document.getElementById("nearMe").click();
         });
         document.getElementById("nearMe").addEventListener("click", () => {
           if (!navigator.geolocation) { open("near me"); return; }
