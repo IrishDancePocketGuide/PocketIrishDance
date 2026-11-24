@@ -20,26 +20,15 @@ window.PID_DATA = {
       rulesName: "CLRG Official Rulebook (V6, September 2026)"
     },
     {
-      id: "nafc",
-      name: "North American Feis Commission",
-      fullName: "North American Feis Commission",
-      active: true,
-      partOf: "CLRG",
-      where: "United States, Canada and Mexico.",
-      summary: "Not a separate organization from CLRG. It writes the feis rules for CLRG competitions in North America, including the level names and how dancers move up.",
-      teachers: "Same as CLRG",
-      majors: "Sets the rules for local feiseanna"
-    },
-    {
       id: "idtana",
       name: "IDTANA",
       fullName: "Irish Dance Teachers' Association of North America",
       active: true,
       partOf: "CLRG",
       where: "United States, Canada and Mexico.",
-      summary: "The association of CLRG teachers in North America. Its regions run the regional Oireachtas championships each year.",
+      summary: "The association of CLRG teachers in North America. It looks after the feis rules there, including the level names and how dancers move up, and its regions run the regional Oireachtas championships each year.",
       teachers: "Members are CLRG-qualified teachers",
-      majors: "Regional Oireachtas events in North America"
+      majors: "Regional Oireachtas events and the feis rules in North America"
     },
     {
       id: "comhdhail",
@@ -280,7 +269,6 @@ window.PID_DATA = {
     { g: "people", term: "Adjudicator", means: "A judge", why: "In grades one judge places each dance. Championships use a panel: usually 3, 5 at major championships, and 6 at the All-Irelands with 5 counting" },
     { g: "people", orgs: ["clrg"], term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
     { g: "people", orgs: ["clrg"], term: "IDTANA", means: "Irish Dance Teachers' Association of North America, the body for CLRG teachers in North America", why: "Its regions run the North American Oireachtas events" },
-    { g: "people", orgs: ["clrg"], term: "North American Feis Commission", means: "Sets feis rules for CLRG competitions in North America", why: "Its rules define levels and moving up in the US, Canada and Mexico" },
     { g: "people", orgs: ["clrg"], term: "Grade exam", alt: "Grád", say: "grawd", means: "Optional CLRG exams in dance skills and knowledge", why: "Some schools encourage them; separate from competitions" },
     { g: "events", orgs: ["clrg"], term: "Bun Grád / Tús Grád", say: "bun grawd / toos grawd", means: "The CLRG rulebook's names for the first two grades (Beginner and Advanced Beginner)", why: "Special costume, make-up and filming rules apply to these grades", check: true },
     { g: "events", orgs: ["clrg"], term: "Restyling", means: "A 3-month wait before a dancer who changes school can compete again", why: "Plan around it if you're thinking of changing schools" },
@@ -300,19 +288,20 @@ window.PID_DATA = {
   ],
 
   // Rules library. CLRG entries summarise the CLRG Official Rulebook V6 (Sept 2026).
-  // CLRG's rulebook doesn't set grades or moving up: in North America that's the
-  // North American Feis Commission, whose rulebook isn't added yet (draft: true).
+  // CLRG's rulebook doesn't set grades or moving up: in North America those feis rules
+  // now come from IDTANA (the North American Feis Commission is no longer active).
+  // Its feis rules aren't added yet (draft: true).
   rules: [
-    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b1"], regions: ["United States", "Canada", "Mexico"], org: "IDTANA",
       q: "How does my dancer move up from Beginner 1?",
       a: "By placing 1st, 2nd or 3rd in a dance. They move up in that dance only, so a dancer can be Beginner 2 in reel and still Beginner 1 in light jig." },
-    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["b2"], regions: ["United States", "Canada", "Mexico"], org: "IDTANA",
       q: "How does my dancer move up from Beginner 2?",
       a: "By placing 1st, 2nd or 3rd in a dance. Again, this is one dance at a time." },
-    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["novice"], regions: ["United States", "Canada", "Mexico"], org: "IDTANA",
       q: "How does my dancer move up from Novice?",
       a: "By placing 1st or 2nd in a dance, one dance at a time." },
-    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "North American Feis Commission",
+    { orgId: "clrg", topic: "Moving up", draft: true, levels: ["pw"], regions: ["United States", "Canada", "Mexico"], org: "IDTANA",
       q: "How does my dancer move up from Open Prizewinner?",
       a: "By winning 1st place in a dance. Once a dancer has moved up in enough dances, they can start dancing Preliminary Championship." },
     { orgId: "clrg", topic: "Entering competitions", sec: "1.1", levels: [], regions: [], org: "CLRG",

@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "45"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "46"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -490,7 +490,7 @@
         <p class="small muted" style="margin:8px 0 0">Once a dancer moves up, they can't move back down.</p></article>` : ""}
       <div class="ladder">${ladder()}</div>
       ${(D.organizations.find((x) => x.id === o) || {}).rulesLink ? `<p class="small muted"><a href="${esc(D.organizations.find((x) => x.id === o).rulesLink)}" target="_blank" rel="noopener">Official ${esc(orgName(o))} rules ↗</a></p>` : ""}` : `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
-      <p class="muted" style="margin-top:0">CLRG in North America (North American Feis Commission level names). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
+      <p class="muted" style="margin-top:0">CLRG in North America (the level names used at North American feiseanna). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
       <article class="card">
         <h3>What are “grades”?</h3>
         <p style="margin:6px 0 0">“Grades” (or <strong>grade competitions</strong>) is the name for all the levels below championship: Beginner 1, Beginner 2, Novice and Open Prizewinner. In grades, each dance is a separate competition with one judge, and your dancer moves up one dance at a time.</p>
@@ -550,7 +550,7 @@
       title: "Rules", tab: "rules",
       html: `<h2>Rules library</h2>
       <p class="muted" style="margin-top:0">The rules that matter to parents, in plain language, with a link to the official rulebook.</p>
-      ${(D.organizations.find((x) => x.id === curOrg()) || {}).rulesLink ? "" : `<div class="note"><strong>Coming soon:</strong> ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "these are draft examples showing how the library will work. The full CLRG and North American Feis Commission rules will be added from the current rulebooks."}</div>`}
+      ${(D.organizations.find((x) => x.id === curOrg()) || {}).rulesLink ? "" : `<div class="note"><strong>Coming soon:</strong> ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "these are draft examples showing how the library will work. The full CLRG and North American (IDTANA) feis rules will be added from the current rulebooks."}</div>`}
       ${curOrg() && curOrg() !== "clrg" ? (orgLevels().length ? `<label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>` : "") : `<div class="two">
         <label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Region</span><select data-rf="region"><option value="">Everywhere</option>${D.regions.map((r) => `<option ${f.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
