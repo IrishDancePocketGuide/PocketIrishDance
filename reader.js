@@ -391,8 +391,82 @@
       recall: false, judges, rounds: [], notes: notes.slice(0, 1200), check: !level, line: lines.find((x) => /your\s*rank/i.test(x)) || "" };
   }
 
+  // ---------- iFeis results page ----------
+  // The competition at the top ("499 Adults Traditional Set" / "4th Place"), then a table of
+  // Judge | Dress Check | Comments (one row per judge), then a SUMMARY table:
+  //   Place  Competitor               Total
+  //   1      304 - Alexis Moyer       80.0
+  //   4      146 - Amyanne Checca     70.0   <- the parent's own dancer is highlighted
+  const IFEIS_ROW = /^\W*(\d{1,3})\s+(\d{1,4})\s*[-–—~]\s*(\p{L}[\p{L}'’ .-]*?)\s+(\d{1,3}(?:[.,]\d{1,3})?)\s*$/u;
+  function isIfeis(text) {
+    return /dress\s*check/i.test(text) || /\bifeis\b/i.test(text) || (/place\s+competitor\s+total/i.test(text) && /\bsummary\b/i.test(text));
+  }
+  // "JJ Hester even out beats": the name is the capitalised words at the start, the comment is the rest.
+  function splitJudgeRow(row, known) {
+    const t = row.replace(/^[^\p{L}]+/u, "").replace(/\s+[✓✔✗xX]\s+/, " ").replace(/\s+/g, " ").trim();
+    const low = t.toLowerCase();
+    const saved = (known || []).filter((k) => low.startsWith(k.toLowerCase() + " ") || low === k.toLowerCase()).sort((a, b) => b.length - a.length)[0];
+    if (saved) return { name: saved, comment: t.slice(saved.length).trim() };
+    const words = t.split(" ");
+    let n = 0;
+    while (n < words.length && n < 4 && /^\p{Lu}[\p{L}'’.-]*$/u.test(words[n]) && !/^(Dress|Check|Comments?|Yes|No)$/.test(words[n])) n++;
+    // Every word capitalised ("Mary Byrne Even Out Beats"): take the first two as the name.
+    if (n === words.length && n > 2) n = 2;
+    if (n === 4 && words.length > 4) n = 2;
+    if (n < 2) return null;
+    return { name: words.slice(0, n).join(" "), comment: words.slice(n).join(" ").replace(/^[\s|:;,.-]+/, "").trim() };
+  }
+  function ifeisPage(lines, text, ctx, levelOf) {
+    if (!isIfeis(text)) return null;
+    const known = (ctx && ctx.judges) || [];
+    // Judges and their comments: the rows under the "Judge ... Comments" heading.
+    const judges = []; const notes = [];
+    const jh = lines.findIndex((x) => /\bjudge\b.*\bcomments?\b/i.test(x) || /\bdress\s*check\b/i.test(x));
+    if (jh >= 0) {
+      for (let i = jh + 1; i < lines.length && i <= jh + 8; i++) {
+        if (/^\W*(results?|summary|place\b)/i.test(lines[i]) || IFEIS_ROW.test(lines[i])) break;
+        const j = splitJudgeRow(lines[i], known);
+        if (!j) { if (judges.length && notes.length && /^\p{Ll}/u.test(lines[i])) notes[notes.length - 1].c += " " + lines[i]; continue; }
+        judges.push({ name: j.name, marks: "" });
+        notes.push({ n: j.name, c: j.comment });
+      }
+    }
+    // The summary table.
+    const rows = [];
+    lines.forEach((x) => { const m = x.match(IFEIS_ROW); if (m) rows.push({ place: +m[1], num: m[2], name: m[3].trim(), total: m[4].replace(",", "."), line: x }); });
+    // Which row is this dancer? Their name in the app, then the "4th Place" heading at the top.
+    const names = ((ctx && ctx.names) || []).map((n) => n.toLowerCase().trim()).filter((n) => n.length > 1);
+    let mine = rows.find((r) => names.some((n) => (" " + r.name.toLowerCase() + " ").includes(" " + n + " ") || r.name.toLowerCase().startsWith(n)));
+    let sure = !!mine;
+    const hp = text.match(/\b(\d{1,3})(?:st|nd|rd|th)\s*place\b/i);
+    if (!mine && hp) { mine = rows.find((r) => r.place === +hp[1]); sure = !!mine; }
+    if (!mine && rows.length === 1) mine = rows[0];
+    // The competition name sits above the judge table.
+    const top = lines.slice(0, jh >= 0 ? jh : 6);
+    let d = null, lvl = "", compLine = "";
+    // Only a heading line counts (it starts with the competition number or names a level), so a
+    // message banner over the screenshot ("trying to set up the account") isn't taken for a dance.
+    for (const x of top) {
+      const c = clean(x); const lv = levelOf(c);
+      if (!/^\W*\d{2,4}\b/.test(c) && !lv) continue;
+      const dd = findDance(c); if (dd && !d) { d = dd; compLine = x; } if (!lvl) lvl = lv;
+    }
+    if (!lvl && d) lvl = levelOf(d.text);
+    if (!judges.length && !rows.length) return null;
+    const comment = notes.filter((x) => x.c).map((x) => (judges.length > 1 ? x.n + ": " : "") + x.c).join("\n");
+    return {
+      dance: d ? d.id : "", level: lvl, place: mine ? mine.place : (hp ? +hp[1] : ""), entrants: "",
+      marks: mine ? String(Number(mine.total)) : "", recall: false, judges, rounds: [], notes: comment.slice(0, 1200),
+      check: !d || !lvl || !sure || (d && d.guess), line: mine ? mine.line : (compLine || lines[jh + 1] || ""), ifeis: true,
+      // When the app can't tell which row is this dancer, the parent picks from the summary.
+      choices: sure ? [] : rows.map((r) => ({ place: r.place, name: r.name, total: String(Number(r.total)) }))
+    };
+  }
+
   function parse(text, ctx) {
     const raw = String(text || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const ife = ifeisPage(raw, String(text || ""), ctx, levelMatcher((ctx && ctx.levels) || []));
+    if (ife) return { results: [ife], date: findDate(String(text)), feis: findFeis(raw), text: raw.join("\n") };
     const sheet = champSheet(raw, String(text || ""), levelMatcher((ctx && ctx.levels) || []));
     if (sheet) return { results: [sheet], date: findDate(String(text)), feis: findFeis(raw), text: raw.join("\n") };
     // A label on its own line ("Adjudicator") with the name on the next line.

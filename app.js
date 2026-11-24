@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "47"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "50"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -974,7 +974,7 @@
       html: `<form id="resForm">
         <div class="card">
           <h3>Photo of the results (optional)</h3>
-          <p class="small muted" style="margin:0 0 8px">Take a screenshot of the results website (QuickFeis, FeisWorx…) or a photo of the results sheet.${r.id ? "" : " The app reads it and fills everything in for you."} It stays on this phone and isn't sent anywhere.</p>
+          <p class="small muted" style="margin:0 0 8px">Take a screenshot of the results website (iFeis, QuickFeis, FeisWorx…) or a photo of the results sheet.${r.id ? "" : " The app reads it and fills everything in for you, judge and comments included. On iFeis, include the competition name at the top in the screenshot."} It stays on this phone and isn't sent anywhere.</p>
           <label class="btn ghost block" style="cursor:pointer">📷 ${r.photoId ? "Replace photo" : "Add photo"}<input type="file" accept="image/*" name="photo" hidden></label>
           <img id="photoPrev" class="photo-preview" ${r.photoId ? `data-photo="${esc(r.photoId)}"` : "hidden"} alt="Results photo">
           ${r.id ? "" : `<div id="readBox" hidden><button type="button" class="btn ghost block" id="readBtn">🔎 Try reading the photo again</button></div>
@@ -1056,7 +1056,7 @@
           box.hidden = true; prog.hidden = false; document.getElementById("manual").hidden = true;
           try {
             const text = await window.PID_READER.readText(origFile, (msg, pct) => { msgEl.textContent = msg + (pct ? " " + Math.round(pct * 100) + "%" : ""); });
-            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges() });
+            const out = window.PID_READER.parse(text, { levels: orgLevels(), judges: knownJudges(), names: S.dancers.map((d) => d.name) });
             // If the sheet names exactly one of the children, pick that child.
             if (f.who) {
               const low = " " + text.toLowerCase().replace(/[^a-z\u00c0-\u024f]+/g, " ") + " ";
@@ -1102,6 +1102,7 @@
                 <label class="field"><span>Dance</span><select data-k="dance"><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${x.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
                 <label class="field"><span>Level</span><select data-k="level"><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${x.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
               </div>
+              ${x.choices && x.choices.length > 1 ? `<label class="field"><span>Which one is ${esc(who().name)}?</span><select data-k="choice"><option value="">Choose from the results…</option>${x.choices.map((c, n) => `<option value="${n}">${esc(c.place + ". " + c.name + " (" + c.total + ")")}</option>`).join("")}</select></label>` : ""}
               <div class="two">
                 <label class="field"><span>${isChamp(x) ? "Overall place" : "Place"}</span><input type="number" inputmode="numeric" min="1" max="200" data-k="place" value="${esc(x.place)}" placeholder="Not placed"></label>
                 <label class="field"><span>Dancers in it</span><input type="number" inputmode="numeric" min="1" max="500" data-k="entrants" value="${esc(x.entrants)}" placeholder="optional"></label>
@@ -1120,6 +1121,10 @@
             <button type="button" class="btn block" id="saveFound">Save ${rows.length === 1 ? "this result" : "all " + rows.length + " results"}</button>
             <button type="button" class="btn ghost block" id="showManual" style="margin-top:6px">Add a result by hand instead</button>`;
           document.getElementById("showManual").addEventListener("click", () => { manual.hidden = false; manual.scrollIntoView({ behavior: "smooth" }); });
+          el.querySelectorAll('[data-k="choice"]').forEach((sel) => sel.addEventListener("change", () => {
+            const row = sel.closest(".found-row"); const c = rows[Number(row.dataset.row)].choices[Number(sel.value)]; if (!c) return;
+            row.querySelector('[data-k="place"]').value = c.place; row.querySelector('[data-k="marks"]').value = c.total;
+          }));
           el.querySelectorAll('[data-k="pick"]').forEach((c) => c.addEventListener("change", () => {
             const n = el.querySelectorAll('[data-k="pick"]:checked').length;
             document.getElementById("saveFound").textContent = n === 1 ? "Save this result" : n ? "Save " + n + " results" : "Nothing ticked";
