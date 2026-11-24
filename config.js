@@ -4,5 +4,8 @@
 // While these are empty, the Friends tab shows "coming soon".
 window.PID_CONFIG = {
   supabaseUrl: "https://eqpqvptaopegsttpfade.supabase.co",
+  // The live website. The iPhone app uses it for invite links and fresh feis listings.
+  // Change to "https://pocketirishdance.com/" once the domain move is done.
+  publicUrl: "https://irishdancepocketguide.github.io/PocketIrishDance/",
   supabaseKey: "sb_publishable_ksEd6ieOR9KlTBLD22xtNg_Pgaxx-rh"
 };

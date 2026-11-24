@@ -1,0 +1,40 @@
+# Checks that the iPhone app still builds, on Apple's tools in the cloud (no Mac needed).
+# Runs by itself when the iPhone app or the web app changes. Nothing is signed or sent to Apple.
+name: iPhone app - check it builds
+
+on:
+  pull_request:
+    paths: ["ios-app/**", "*.js", "*.html", "*.css", ".github/workflows/ios-*.yml"]
+  push:
+    branches: [main]
+    paths: ["ios-app/**", ".github/workflows/ios-*.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Using $X"; sudo xcode-select -s "$X/Contents/Developer"; xcodebuild -version
+      - name: Put the web app inside the iPhone app
+        run: npm ci && npm run sync
+      - name: Build for the iPhone simulator
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -40
+          test "${PIPESTATUS[0]}" = 0
