@@ -76,6 +76,9 @@
     // Short forms some results sites use
     ["lightjig", /\b(lj|lt\.?\s*jig)\b/], ["slipjig", /\b(sj)\b/], ["treblejig", /\b(tj|trbl\.?\s*jig)\b/],
     ["hornpipe", /\b(hp|hrnpipe)\b/], ["singlejig", /\b(sgl\.?\s*jig)\b/], ["tradset", /\b(ts|tset)\b/],
+    // FeisWorx competition codes: 511TJ, 511HP, 511RL2...
+    ["treblejig", /\b\d{2,4}tj\d?\b/], ["hornpipe", /\b\d{2,4}hp\d?\b/], ["reel", /\b\d{2,4}rl\d?\b/],
+    ["slipjig", /\b\d{2,4}sj\d?\b/], ["lightjig", /\b\d{2,4}lj\d?\b/], ["tradset", /\b\d{2,4}ts\d?\b/],
     ["lightjig", /\bjig\b/]
   ];
 
@@ -103,6 +106,9 @@
       .replace(/(\d)\s+(st|nd|rd|th)\b/g, "$1$2")        // "1 st" -> "1st"
       .replace(/\b[il](st)\b/g, "1$1")                    // "lst" -> "1st"
       .replace(/\bp[nr]?[iln]?ze\s*winner/g, "prizewinner")  // "Pnzewinner", "Przewinner"
+      .replace(/\bt[rn]?[e3c][bh8][l1i!|][e3c]\b/g, "treble")   // "Trebie", "Treb1e", "Trehle"
+      .replace(/\b(treble|slip|light|single|hop|heavy)\s*j[il1!|]?[gq9]\b/g, "$1 jig") // "Jg", "J1g", "Jlg"
+      .replace(/\bsl[il1!|]p\b/g, "slip")
       .replace(/\s+/g, " ").trim();
   }
 
