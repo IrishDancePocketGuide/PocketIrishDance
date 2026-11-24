@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "34"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "35"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -230,14 +230,14 @@
         `<p class="small muted" style="margin:0 4px 6px">Showing ${esc(orgName(p.org))} · ${esc(p.region)}${lv ? " · " + esc(lv.name) : ""} · <a href="#/settings">change</a></p>`}
 
       <div class="grid">
+        <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
+        <a class="tile wide" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
         <a class="tile" href="#/rules"><span class="ico">📘</span><strong>Rules</strong><span>What's allowed at your level, in plain words</span></a>
         <a class="tile" href="#/words"><span class="ico">🗣️</span><strong>Words</strong><span>${D.glossary.filter(inOrg).length} terms with how to say them</span></a>
         <a class="tile" href="#/levels"><span class="ico">🪜</span><strong>Levels</strong><span>Beginner to Open Championship</span></a>
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>Feis bag, feis day, championships</span></a>
-        <a class="tile" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
-        <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
-        <a class="tile wide" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Search for Irish dance schools near you</span></a>
+        <a class="tile" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Irish dance school lists</span></a>
       </div>
 
       ${standalone ? "" : `<div class="card install show" style="flex-direction:column;gap:6px">
