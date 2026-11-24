@@ -741,4 +741,106 @@ window.PID_DATA = {
       ]
     }
   ]
+  ,
+  // Judges' comment themes and practice tips. Words are matched in lower case.
+  // Tips are general practice ideas, not medical advice: the screen tells parents to check with the teacher.
+  commentThemes: [
+    { id: "turnout", name: "Turnout", icon: "🦶",
+      words: ["turnout", "turn out", "turned out", "turn-out", "t/o", "feet turned", "turn your feet", "rotation"],
+      why: "Judges want feet and knees turned out from the hips, not twisted from the knees.",
+      tips: [
+        "Clamshells: lie on one side, knees bent, and open the top knee like a book. 2 sets of 10 each side.",
+        "Turnout check in front of a mirror: stand in first position and look at the knees. They should point the same way as the toes.",
+        "Practice threes and sevens slowly, watching that the heels lead forward and the toes stay out."
+      ] },
+    { id: "toes", name: "Pointed toes", icon: "🩰",
+      words: ["point", "pointed", "toes", "toe", "feet not pointed", "sickle", "sickled"],
+      why: "A strong point makes every kick and lift look finished.",
+      tips: [
+        "Point and flex: sitting with legs out straight, point and flex both feet slowly. 2 sets of 15.",
+        "Towel scrunches: scrunch a towel toward you with the toes to build foot strength.",
+        "Film a kick at slow speed and check the foot is pointed at the top of every kick."
+      ] },
+    { id: "ontoes", name: "Stay up on toes", icon: "⬆️",
+      words: ["on toes", "on your toes", "up on toes", "balls of", "heels down", "dropping heels", "drop heels", "heels touching", "on ball", "flat"],
+      why: "In soft shoe, dancers should stay high on the balls of the feet, with heels off the floor.",
+      tips: [
+        "Calf raises: rise up and down slowly on both feet, then one foot. 2 sets of 15.",
+        "Hold a balance up on the toes for 20 seconds, then 30, holding the counter for help at first.",
+        "Mark through the reel or light jig slowly, only on the balls of the feet."
+      ] },
+    { id: "cross", name: "Crossing", icon: "❌",
+      words: ["cross", "crossed", "crossing", "cross your feet", "uncrossed", "not crossed"],
+      why: "Feet should cross tightly at the ankles and knees, so there is no daylight between the legs.",
+      tips: [
+        "Stand in a tight fifth position with legs crossed and hold for 30 seconds, squeezing the inner thighs together.",
+        "Hold a sheet of paper between the knees during slow practice of a step, so it doesn't drop.",
+        "Check crossing in the mirror on every landing, not just the starting position."
+      ] },
+    { id: "height", name: "Height and lift", icon: "🦘",
+      words: ["height", "elevation", "lift", "higher", "jump", "leaps", "leap", "get up", "more air", "kick higher"],
+      why: "Judges look for height on leaps and strong, high kicks.",
+      tips: [
+        "Skipping rope: 3 short rounds of 1 minute, staying on the toes.",
+        "Gentle hamstring stretch after practice (never before warming up): sit, legs straight, reach toward the toes and hold 20 seconds.",
+        "Practice leaps over a low, soft object to aim for height, not distance."
+      ] },
+    { id: "timing", name: "Timing", icon: "🎵",
+      words: ["timing", "rhythm", "beat", "rush", "rushing", "rushed", "behind the music", "ahead of the music", "off time"],
+      why: "Steps need to land exactly with the music, without rushing or falling behind.",
+      tips: [
+        "Clap the rhythm of each step along with the music before dancing it.",
+        "Practice with a metronome or practice music at a slower speed, then build up.",
+        "Count out loud while marking the steps, so the counts match the beats."
+      ] },
+    { id: "posture", name: "Posture and arms", icon: "🧍",
+      words: ["posture", "arms", "arm", "shoulders", "shoulder", "hands", "fists", "back straight", "stand tall", "lean", "leaning", "head up", "chin", "upper body", "carriage", "hunch"],
+      why: "Irish dance needs a still, tall upper body with arms close to the sides.",
+      tips: [
+        "Wall check: stand with heels, back and head touching a wall for 30 seconds to feel tall posture.",
+        "Plank: 3 holds of 20 to 30 seconds to build the core that keeps the upper body still.",
+        "Dance one step holding a light scarf in each hand, pressed to the sides, to stop arms swinging."
+      ] },
+    { id: "knees", name: "Straight knees", icon: "🦵",
+      words: ["knee", "knees", "bent", "straight legs", "straighten", "legs straight", "soft knees"],
+      why: "Legs should be straight on kicks and landings unless the step asks for a bend.",
+      tips: [
+        "Straight leg raises: lie on your back and lift one straight leg slowly. 2 sets of 10 each side.",
+        "Practice kicks slowly at the barre or a counter, checking the knee locks straight each time.",
+        "Film a step side-on and look for bent knees on landings."
+      ] },
+    { id: "sound", name: "Clean sounds (hard shoe)", icon: "🔊",
+      words: ["sound", "sounds", "clarity", "beats", "trebles", "treble", "clicks", "click", "louder", "quiet", "muffled", "rhythm in feet", "drums"],
+      why: "In hard shoe, every beat should be heard clearly and evenly.",
+      tips: [
+        "Practice trebles slowly on a hard floor, listening for each separate sound.",
+        "Record the hard shoe step on a phone and listen back without watching.",
+        "Do drills of 8 trebles on each foot, staying even before going faster."
+      ] },
+    { id: "travel", name: "Travel and stage use", icon: "🧭",
+      words: ["travel", "travelling", "traveling", "use the stage", "cover the stage", "cramped", "move more"],
+      why: "Judges like to see the dancer use the whole stage with confident travel.",
+      tips: [
+        "Mark out the stage size at home with tape and practice covering it.",
+        "Pick a spot to travel to before each step starts.",
+        "Ask the teacher which steps should travel more, and practice those sections."
+      ] },
+    { id: "stamina", name: "Stamina", icon: "💪",
+      words: ["stamina", "tired", "tiring", "faded", "fade", "energy", "ran out", "finish strong", "second step"],
+      why: "The last step should look as strong as the first.",
+      tips: [
+        "Dance the full step twice through with no break, once or twice a week.",
+        "Short bursts of skipping or running, with rests, build stamina safely.",
+        "Rest days, sleep, water and a snack before dancing all matter too."
+      ] },
+    { id: "presentation", name: "Presentation and confidence", icon: "🌟",
+      words: ["presentation", "confidence", "confident", "smile", "performance", "perform", "stage presence", "nervous", "expression", "sell it", "bow"],
+      why: "A confident start, finish and bow help judges enjoy the whole dance.",
+      tips: [
+        "Practice the bow and walk on and off as part of every run-through.",
+        "Dance for family as an 'audience' at home to get used to being watched.",
+        "Pick one thing to focus on before each dance, rather than everything at once."
+      ] }
+  ]
+
 };
