@@ -193,6 +193,20 @@
           <h2>Boredom busters</h2>
           <p>Quick games for the long waits between dances. They work without signal, too.</p>
         </section>
+        ${GW ? `<a class="card game-card" href="#/games/gaelic">
+          <span class="ico" aria-hidden="true">☘️</span>
+          <span class="game-body"><strong>Learning Irish</strong>
+            <span class="small muted">Word flashcards: see a word in Irish (Gaeilge) and pick what it means</span>
+            <span class="small game-status">${esc(GW.status())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+        ${SY ? `<a class="card game-card" href="#/games/symbols">
+          <span class="ico" aria-hidden="true">🍀</span>
+          <span class="game-body"><strong>Irish symbols</strong>
+            <span class="small muted">Name the harp, Claddagh, trinity knot and more</span>
+            <span class="small game-status">${esc(SY.status())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
         ${TQ ? `<a class="card game-card" href="#/games/trivia">
           <span class="ico" aria-hidden="true">❓</span>
           <span class="game-body"><strong>Daily feis trivia</strong>
@@ -226,20 +240,6 @@
           <span class="game-body"><strong>Name that dance</strong>
             <span class="small muted">Hear a tune and guess: reel, jig, slip jig or hornpipe?</span>
             <span class="small game-status">${esc(ND.status())}</span></span>
-          <span class="btn sm">Play</span>
-        </a>` : ""}
-        ${GW ? `<a class="card game-card" href="#/games/gaelic">
-          <span class="ico" aria-hidden="true">☘️</span>
-          <span class="game-body"><strong>Learning Irish</strong>
-            <span class="small muted">Word flashcards: see a word in Irish (Gaeilge) and pick what it means</span>
-            <span class="small game-status">${esc(GW.status())}</span></span>
-          <span class="btn sm">Play</span>
-        </a>` : ""}
-        ${SY ? `<a class="card game-card" href="#/games/symbols">
-          <span class="ico" aria-hidden="true">🍀</span>
-          <span class="game-body"><strong>Irish symbols</strong>
-            <span class="small muted">Name the harp, Claddagh, trinity knot and more</span>
-            <span class="small game-status">${esc(SY.status())}</span></span>
           <span class="btn sm">Play</span>
         </a>` : ""}
         ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
