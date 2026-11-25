@@ -11,10 +11,12 @@
     { id: "comhdhail", name: "An Comhdháil" },
     { id: "wida", name: "WIDA" },
     { id: "idtana", name: "IDTANA" },
+    { id: "crn", name: "CRN" },
+    { id: "crdm", name: "CRDM" },
     { id: "other", name: "Other or not sure" }
   ];
   const orgName = (id) => (ORGS.find((o) => o.id === id) || {}).name || "";
-  const COUNTRIES = ["United States", "Canada", "Mexico", "Ireland", "Northern Ireland", "England", "Scotland", "Wales", "Australia", "New Zealand", "Other"];
+  const COUNTRIES = ["United States", "Canada", "Mexico", "Ireland", "Northern Ireland", "England", "Scotland", "Wales", "Isle of Man", "Australia", "New Zealand", "Other"];
 
   window.PID_SCHOOL = function (A) {
     const { ext, esc, toast, rerender, fmtDate, ordinal } = A;
@@ -151,7 +153,7 @@
       const org = (S().profile || {}).org || "";
       return `<form class="card" data-sform="addschool" data-mode="${mode}">
         <h3>Add your school</h3>
-        <p class="small muted" style="margin-top:0">Irish dance schools only. Please use the school's full name, as it appears on its website.</p>
+        <p class="small muted" style="margin-top:0">Irish dance schools only. Please use the school's full name, as it appears on its website or feis entries.</p>
         <label class="field"><span>School name</span><input name="name" required minlength="3" maxlength="80" placeholder="For example: Trinity Irish Dance Academy"></label>
         <label class="field"><span>Organization</span><select name="org" required>${ORGS.map((o) => `<option value="${o.id}" ${o.id === org ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Town or city</span><input name="town" required minlength="2" maxlength="60"></label>
@@ -391,7 +393,6 @@
           }
           case "addschool": {
             const name = f.name.value.trim();
-            if (!/irish/i.test(name)) throw new Error('Only Irish dance schools can be added. The name should include "Irish".');
             const { data, error } = await sb.rpc("add_school", { school_name: name, school_org: f.org.value, school_town: f.town.value.trim(), school_country: f.country.value, school_website: f.website.value.trim() });
             if (error) throw error;
             T.adding = false; T.found = null;

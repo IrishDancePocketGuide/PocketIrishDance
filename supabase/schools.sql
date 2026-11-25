@@ -26,10 +26,9 @@ create table public.app_admins (
 
 create table public.schools (
   id         uuid primary key default gen_random_uuid(),
-  -- Parents may only add names with "Irish" in them (see add_school). Schools from an
-  -- organization's official list are all Irish dance schools, whatever their name.
+  -- Many Irish dance schools don't have "Irish" in their name, so any name is allowed.
   name       text not null check (char_length(btrim(name)) between 3 and 80),
-  org        text not null check (org in ('clrg', 'comhdhail', 'wida', 'idtana', 'other')),
+  org        text not null check (org in ('clrg', 'comhdhail', 'wida', 'idtana', 'crn', 'crdm', 'other')),
   town       text not null check (char_length(btrim(town)) between 2 and 60),
   country    text not null check (char_length(btrim(country)) between 2 and 40),
   website    text check (char_length(website) <= 200),
@@ -180,16 +179,13 @@ language sql stable security definer set search_path = '' as $$
   where auth.uid() is not null and s.id = sid;
 $$;
 
--- Add a school that isn't listed yet. It must be an Irish dance school.
+-- Add a school that isn't listed yet (Irish dance schools only, which the app asks parents to respect).
 create function public.add_school(school_name text, school_org text, school_town text, school_country text, school_website text)
 returns public.schools
 language plpgsql security definer set search_path = '' as $$
 declare s public.schools;
 begin
   perform public.require_profile();
-  if btrim(school_name) !~* 'irish' then
-    raise exception 'Only Irish dance schools can be added. The name should include "Irish".';
-  end if;
   select * into s from public.schools
     where lower(btrim(name)) = lower(btrim(school_name)) and lower(btrim(town)) = lower(btrim(school_town));
   if s.id is not null then return s; end if;
