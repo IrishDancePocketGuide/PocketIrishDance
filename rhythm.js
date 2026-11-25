@@ -50,7 +50,7 @@
     let game = null; // the round being played
 
     function stars(pct) { return pct >= 90 ? 3 : pct >= 70 ? 2 : pct >= 40 ? 1 : 0; }
-    const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
+    const starText = (n) => n ? `${"☘️".repeat(n)} (${n} of 3)` : "(0 of 3 ☘️)"; // scored in shamrocks, not stars
 
     function screen() {
       R = ls.load();

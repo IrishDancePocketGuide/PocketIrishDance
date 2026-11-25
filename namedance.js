@@ -117,7 +117,7 @@
           title: "Name that dance", tab: "home", back: true,
           html: `
           <section class="card tq-done">
-            <div class="tq-big">${sc >= 9 ? "🏆" : sc >= 6 ? "🌟" : "🎶"}</div>
+            <div class="tq-big">${sc >= 9 ? "☘️☘️☘️" : sc >= 6 ? "☘️☘️" : "☘️"}</div>
             <h3>${sc} of ${ROUNDS} right</h3>
             <p class="muted">${sc === ROUNDS ? "Perfect ears! You know your dances." : sc >= 6 ? "Great listening!" : "Tricky, isn't it? Try listening for threes (jigs) or fours (reels)."}</p>
             <p class="small">Your best: ${Math.max(N.best, sc)} of ${ROUNDS}</p>

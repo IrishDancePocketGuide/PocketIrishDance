@@ -115,7 +115,7 @@
       if (done) {
         const r = d.right;
         body = `<section class="card tq-done">
-            <div class="tq-big">${r === PER_DAY ? "🏆" : r >= 3 ? "🌟" : "☘️"}</div>
+            <div class="tq-big">${r === PER_DAY ? "☘️☘️☘️" : r >= 3 ? "☘️☘️" : "☘️"}</div>
             <h3>${r} of ${PER_DAY} right</h3>
             <p class="muted">${r === PER_DAY ? "A perfect score! You really know your feis." : r >= 3 ? "Great job! Come back tomorrow for 5 more." : "Every day you'll learn something new. Come back tomorrow!"}</p>
             <p class="small"><strong>🔥 ${streak || 1} day${(streak || 1) === 1 ? "" : "s"} in a row</strong>${T.streak.best > (streak || 1) ? ` · best ${T.streak.best}` : ""}</p>
