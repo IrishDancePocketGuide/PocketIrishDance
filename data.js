@@ -103,7 +103,9 @@ window.PID_DATA = {
     { id: "tradset", name: "Traditional set", shoe: "hard" },
     { id: "set", name: "Own choice set", shoe: "hard" },
     { id: "prelim", name: "Preliminary Championship", shoe: "champ" },
-    { id: "open", name: "Open Championship", shoe: "champ" }
+    { id: "open", name: "Open Championship", shoe: "champ" },
+    { id: "adultchamp", name: "Adult Championship", shoe: "champ", orgs: ["clrg"] },
+    { id: "advadultchamp", name: "Advanced Adult Championship", shoe: "champ", orgs: ["clrg"] }
   ],
 
   // CLRG in North America. Confirmed by Shannon on Nov 23: Beginner 1 / Beginner 2 names,
@@ -150,6 +152,25 @@ window.PID_DATA = {
       moveUp: "The top level",
       perDance: false,
       parents: "The highest costs and the most travel"
+    },
+    // Adult championships (CLRG in North America). From the IDTANA adults page (idtana.org/adults)
+    // and the 2026 IDTANA Southern Region Oireachtas syllabus, read Nov 25 2026. Regions differ, so marked check.
+    // adult: true keeps them off the youth ladder's "next level" (Open does not lead to Adult).
+    {
+      org: "clrg", id: "adc", order: 7, adult: true, name: "Adult Championship",
+      alt: "for dancers 18 and over; also called Adult Champ",
+      danced: "One competition, usually three rounds: hard shoe, soft shoe, and a traditional set. Like other championships, a panel of judges decides one overall place. Who can enter: dancers who started Irish dance at 18 or older, or came back after 5 or more years away, and haven't danced at a high youth level recently (in the Southern Region, no top 3 in Preliminary Championship in the last 10 years and no Open Championship in the last 15).",
+      moveUp: "Usually your teacher decides when to move up to Advanced Adult Championship. Rules differ by region",
+      perDance: false, check: true,
+      parents: "Adults only dance adult competitions. Adult Champ is not a step towards youth Open Championship"
+    },
+    {
+      org: "clrg", id: "aadc", order: 8, adult: true, name: "Advanced Adult Championship",
+      alt: "also called Advanced Adult Champ; some feiseanna split it into Advanced Adult Prelim and Advanced Adult Open",
+      danced: "One competition, usually three rounds: hard shoe, soft shoe, and a set dance (own choice set). Judged by a panel, with one overall place. For adults who placed top 3 in Preliminary Championship, or danced Open Championship, as a youth dancer (in the Southern Region, within the last 10 and 15 years).",
+      moveUp: "The top adult level. Once an adult dances Advanced Adult, they can't go back to youth competitions",
+      perDance: false, check: true,
+      parents: "Recalls work like other championships: at the Southern Region Oireachtas, only recalled dancers dance the set round"
     },
     // WIDA, from the official competition rules (irish.dance/competition-rules), read Nov 23 2026.
     {

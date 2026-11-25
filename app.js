@@ -13,6 +13,8 @@
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const levelById = (id) => D.levels.find((l) => l.id === id);
   const danceById = (id) => D.dances.find((d) => d.id === id);
+  // Some dances (the adult championships) belong to one organization's ladder only.
+  const danceForOrg = (d) => !d.orgs || d.orgs.includes(curOrg() || "clrg");
   const ordinal = (n) => { n = Number(n); const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
   const fmtDate = (iso) => { if (!iso) return ""; const d = new Date(iso + "T12:00:00"); return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); };
   const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
@@ -26,7 +28,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "65"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "66"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -98,7 +100,7 @@
     if (!js.length) return "";
     const ns = [1, 2, 3].filter((n) => js.some((j) => j.rounds.some((x) => x.n === n)));
     const cell = (j, n) => { const x = j.rounds.find((y) => y.n === n); return x ? `${x.rank ? ordinal(x.rank) : "?"}<div class="small muted">${esc(x.score || "")}</div>` : "–"; };
-    return `<div class="grid-wrap"><table class="panel-grid"><thead><tr><th>Judge</th>${ns.map((n) => `<th>${esc(ROUND_NAMES[n])}</th>`).join("")}<th>Judge's rank</th></tr></thead><tbody>
+    return `<div class="grid-wrap"><table class="panel-grid"><thead><tr><th>Judge</th>${ns.map((n) => `<th>${esc(roundLabel(n, r))}</th>`).join("")}<th>Judge's rank</th></tr></thead><tbody>
       ${js.map((j) => `<tr><th scope="row"><a href="#/judge/${esc(r.dancerId || "")}/${encodeURIComponent(j.name)}">${esc(j.name)}</a></th>${ns.map((n) => `<td>${cell(j, n)}</td>`).join("")}<td><strong>${j.rank ? ordinal(j.rank) : "?"}</strong>${j.marks ? `<div class="small muted">${esc(j.marks)}</div>` : ""}</td></tr>`).join("")}
       </tbody></table></div><p class="small muted" style="margin:6px 0 0">Each judge ranks every round. Their rank in the last column is where that judge put your dancer overall. The overall place comes from all the judges' points added up.</p>`;
   }
@@ -107,10 +109,12 @@
   // Grades: every dance stands alone and one judge decides the place.
   // Championships (prelim, open): one competition of 2 or 3 rounds. Each round's placing comes from the
   // one judge picked for that round; the overall place comes from the whole panel's scores added up.
-  const CHAMP_LEVELS = ["pc", "oc", "w_pc", "w_oc", "ac_ch"];
-  const isChamp = (r) => r.dance === "prelim" || r.dance === "open" || CHAMP_LEVELS.includes(r.level);
+  const CHAMP_LEVELS = ["pc", "oc", "w_pc", "w_oc", "ac_ch", "adc", "aadc"];
+  const CHAMP_DANCES = ["prelim", "open", "adultchamp", "advadultchamp"];
+  const isChampDance = (id) => CHAMP_DANCES.includes(id);
+  const isChamp = (r) => isChampDance(r.dance) || CHAMP_LEVELS.includes(r.level);
   const roundsOf = (r) => (r.rounds || []).filter((x) => x && (x.judge || x.place)).sort((a, b) => a.n - b.n);
-  const roundsText = (r) => roundsOf(r).filter((x) => x.place).map((x) => `${ROUND_NAMES[x.n] || "R" + x.n} ${ordinal(x.place)}`).join(", ");
+  const roundsText = (r) => roundsOf(r).filter((x) => x.place).map((x) => `${roundLabel(x.n, r) || "R" + x.n} ${ordinal(x.place)}`).join(", ");
   // What each judge decided. Grades: the place. Championships: only that judge's round placing,
   // never the overall place, because the overall comes from the whole panel.
   function judgePlacings(r) {
@@ -127,18 +131,21 @@
     return out;
   }
   // Prelim (PC): 2 rounds, soft shoe then hard shoe. Open (OC): adds a 3rd, the set round (own choice set).
+  // Adult Championship: 3 rounds, the 3rd is a traditional set. Advanced Adult: 3rd is a set dance (own choice).
   const ROUND_NAMES = { 1: "Soft shoe", 2: "Hard shoe", 3: "Set (own choice)" };
   const PC_LEVELS = ["pc", "w_pc"];
-  const OC_LEVELS = ["oc", "w_oc", "ac_ch"];
+  const OC_LEVELS = ["oc", "w_oc", "ac_ch", "adc", "aadc"];
+  const isAdultChamp = (r) => !!r && (r.level === "adc" || (r.dance === "adultchamp" && r.level !== "aadc"));
+  const roundLabel = (n, r) => n === 3 && isAdultChamp(r) ? "Traditional set" : (ROUND_NAMES[n] || "");
   const roundCount = (r) => OC_LEVELS.includes(r.level) ? 3 : (PC_LEVELS.includes(r.level) || r.dance === "prelim") ? 2 : 3;
-  const roundName = (n) => `Round ${n} · ${ROUND_NAMES[n] || ""}`;
-  const roundInputs = (rounds, prefix, count) => [1, 2, 3].map((n) => {
+  const roundName = (n, r) => `Round ${n} · ${roundLabel(n, r)}`;
+  const roundInputs = (rounds, prefix, count, r) => [1, 2, 3].map((n) => {
     const x = (rounds || []).find((y) => y.n === n) || {};
-    return `<div class="two" data-round="${n}" ${n > (count || 3) ? "hidden" : ""}><label class="field"><span>${roundName(n)} judge</span><input ${prefix}="r${n}judge" list="judgeList" value="${esc(x.judge || "")}" placeholder="Name" maxlength="60"></label>
-      <label class="field"><span>${ROUND_NAMES[n]} place</span><input ${prefix}="r${n}place" type="number" inputmode="numeric" min="1" max="200" value="${esc(x.place || "")}" placeholder="optional"></label></div>`;
+    return `<div class="two" data-round="${n}" ${n > (count || 3) ? "hidden" : ""}><label class="field"><span data-rlabel="${n}">${roundName(n, r)} judge</span><input ${prefix}="r${n}judge" list="judgeList" value="${esc(x.judge || "")}" placeholder="Name" maxlength="60"></label>
+      <label class="field"><span data-rplace="${n}">${roundLabel(n, r)} place</span><input ${prefix}="r${n}place" type="number" inputmode="numeric" min="1" max="200" value="${esc(x.place || "")}" placeholder="optional"></label></div>`;
   }).join("");
   const readRounds = (get, count) => [1, 2, 3].slice(0, count || 3).map((n) => ({ n, judge: String(get("r" + n + "judge") || "").trim().slice(0, 60), place: get("r" + n + "place") ? Number(get("r" + n + "place")) : "" })).filter((x) => x.judge || x.place);
-  const ROUNDS_HELP = "Prelim (PC) has 2 rounds: soft shoe and hard shoe. Open (OC) adds a 3rd, the set round. For each round one judge is picked at random from the panel, and that judge's placings count for everyone in that round. The overall score adds up every judge's scores, so the overall place can be very different from the round places.";
+  const ROUNDS_HELP = "Prelim (PC) has 2 rounds: soft shoe and hard shoe. Open (OC) adds a 3rd, the set round. Adult Championship's 3rd round is a traditional set; Advanced Adult's is a set dance. For each round one judge is picked at random from the panel, and that judge's placings count for everyone in that round. The overall score adds up every judge's scores, so the overall place can be very different from the round places.";
 
   // Fireworks for 1st places
   function cheer(dn, recs) {
@@ -514,6 +521,7 @@
         <h3>What are “grades”?</h3>
         <p style="margin:6px 0 0">“Grades” (or <strong>grade competitions</strong>) is the name for all the levels below championship: Beginner 1, Beginner 2, Novice and Open Prizewinner. In grades, each dance is a separate competition with one judge, and your dancer moves up one dance at a time.</p>
         <p style="margin:8px 0 0">Once a dancer has moved up through the grades, they go into <strong>championships</strong> (Preliminary, then Open). There, they dance several rounds in one competition, judged by a panel, and get one overall result.</p>
+        <p style="margin:8px 0 0">Adults (18 and over) have their own championships: <strong>Adult Championship</strong> and <strong>Advanced Adult Championship</strong>. They're at the bottom of this list.</p>
         <p class="small muted" style="margin:8px 0 0">Don't confuse grades with <strong>grade exams</strong> (Grád, said “grawd”). Those are optional CLRG skills exams, separate from competitions.</p>
       </article>
       <div class="note">Great Britain, Ireland and Australia use different names for the lower levels. Their ladders are coming next.</div>
@@ -620,7 +628,7 @@
 
   // ----- score tracker -----
   function dancerLevel(dn, danceId) { return (dn.levels && dn.levels[danceId]) || ""; }
-  function nextLevel(id) { const l = levelById(id); return l && D.levels.find((x) => x.org === l.org && x.order === l.order + 1); }
+  function nextLevel(id) { const l = levelById(id); return l && D.levels.find((x) => x.org === l.org && x.order === l.order + 1 && !!x.adult === !!l.adult); }
 
   function moveUpSuggestions(dn) {
     const out = []; const seen = {};
@@ -736,7 +744,7 @@
     else body = dancesWithResults.map((d) => {
       const drs = rs.filter((r) => r.dance === d.id);
       const best = Math.min(...drs.map((r) => Number(r.place) || 99));
-      return `<article class="card"><div class="row between"><h3>${esc(d.name)}</h3><span class="chip">${esc((levelById(dancerLevel(dn, d.id === "prelim" || d.id === "open" ? "champ" : d.id)) || {}).name || "")}</span></div>
+      return `<article class="card"><div class="row between"><h3>${esc(d.name)}</h3><span class="chip">${esc((levelById(dancerLevel(dn, isChampDance(d.id) ? "champ" : d.id)) || {}).name || "")}</span></div>
         <p class="small muted" style="margin:2px 0 0">${drs.length} result${drs.length === 1 ? "" : "s"}${best < 99 ? " · best " + ordinal(best) : ""}</p>
         ${chartFor(drs) || '<p class="small muted">Add one more result to see a chart.</p>'}</article>`;
     }).join("");
@@ -779,7 +787,7 @@
   }
   function placingLabel(p) {
     const dn = (danceById(p.r.dance) || {}).name || "";
-    if (p.kind === "round") return `${p.place ? ordinal(p.place) : "?"} · ${dn} ${(ROUND_NAMES[p.round] || "round " + p.round).toLowerCase()}`;
+    if (p.kind === "round") return `${p.place ? ordinal(p.place) : "?"} · ${dn} ${(roundLabel(p.round, p.r) || "round " + p.round).toLowerCase()}`;
     if (p.kind === "panel") return p.place ? `${ordinal(p.place)} · ${dn} (judge's rank)` : `Panel · ${dn}`;
     return `${p.place ? ordinal(p.place) : "NP"} · ${dn}`;
   }
@@ -907,7 +915,7 @@
     const rows = ps.map((p) => {
       const d = danceById(p.r.dance);
       const sub = p.kind === "round" ? `${roundName(p.round)}: this judge's placing. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"} from the whole panel.`
-        : p.kind === "panel" ? (p.place ? `This judge ranked them ${ordinal(p.place)}${(p.rounds || []).length ? " (" + p.rounds.map((x) => `${(ROUND_NAMES[x.n] || "").toLowerCase()} ${x.rank ? ordinal(x.rank) : "?"}`).join(", ") + ")" : ""}. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"} from the whole panel.` : `On the panel. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"}.`)
+        : p.kind === "panel" ? (p.place ? `This judge ranked them ${ordinal(p.place)}${(p.rounds || []).length ? " (" + p.rounds.map((x) => `${roundLabel(x.n, p.r).toLowerCase()} ${x.rank ? ordinal(x.rank) : "?"}`).join(", ") + ")" : ""}. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"} from the whole panel.` : `On the panel. Overall ${p.r.place ? ordinal(p.r.place) : "not placed"}.`)
         : esc((levelById(p.r.level) || {}).name || "");
       return `<a class="card result" href="#/result/${p.r.id}" style="text-decoration:none;color:inherit">${placeBadge(p.place)}
         <div class="meta"><strong>${esc(d ? d.name : p.r.dance)}</strong><span class="small muted">${esc(p.r.feis || "Feis")} · ${esc(fmtDate(p.r.date))}</span>
@@ -1011,7 +1019,7 @@
         <div id="manual">
         <div class="card">
           <div class="two">
-            <label class="field"><span>Dance</span><select name="dance" required><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${r.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
+            <label class="field"><span>Dance</span><select name="dance" required><option value="">Choose…</option>${D.dances.filter((d) => danceForOrg(d) || r.dance === d.id).map((d) => `<option value="${d.id}" ${r.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
             <label class="field"><span>Level</span><select name="level" required><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${r.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
           </div>
           <div class="two">
@@ -1022,7 +1030,7 @@
           <div id="champBox" ${isChamp(r) ? "" : "hidden"}>
             <h3 style="margin:14px 0 2px">Rounds</h3>
             <p class="small muted" style="margin:0 0 6px">${ROUNDS_HELP}</p>
-            ${roundInputs(r.rounds, "name", roundCount(r))}
+            ${roundInputs(r.rounds, "name", roundCount(r), r)}
             <h3 style="margin:14px 0 2px">Judging panel</h3>
             <p class="small muted" style="margin:0 0 6px">Usually 3 judges, 5 at major championships, and 6 at the All-Irelands with 5 counting. Round judges are added for you. Add each judge's score if the results show it.</p>
           </div>
@@ -1049,13 +1057,19 @@
           document.getElementById("marksLbl").textContent = c ? "Overall score (all judges added up)" : "Score, if shown";
           // PC has 2 rounds, OC has 3 (the set round).
           const third = f.querySelector('[data-round="3"]');
-          if (third) third.hidden = roundCount({ dance: f.dance.value, level: f.level.value }) < 3;
+          const cur = { dance: f.dance.value, level: f.level.value };
+          if (third) third.hidden = roundCount(cur) < 3;
+          const l3 = f.querySelector('[data-rlabel="3"]'), p3 = f.querySelector('[data-rplace="3"]');
+          if (l3) l3.textContent = roundName(3, cur) + " judge";
+          if (p3) p3.textContent = roundLabel(3, cur) + " place";
         };
         f.level.addEventListener("change", setChamp);
         f.dance.addEventListener("change", () => {
           setChamp();
           const d = danceById(f.dance.value); if (!d) return;
-          const lv = dancerLevel(who(), d.shoe === "champ" ? "champ" : d.id);
+          // Adult championships have their own level; the others follow the dancer's level.
+          const adultLv = { adultchamp: "adc", advadultchamp: "aadc" }[d.id];
+          const lv = adultLv && levelById(adultLv) ? adultLv : dancerLevel(who(), d.shoe === "champ" ? "champ" : d.id);
           if (lv) f.level.value = lv;
           setChamp();
         });
@@ -1102,7 +1116,7 @@
           const lvCount = {}; out.results.forEach((x) => { if (x.level) lvCount[x.level] = (lvCount[x.level] || 0) + 1; });
           const guessLevel = Object.keys(lvCount).sort((a, b) => lvCount[b] - lvCount[a])[0] || "";
           const rows = out.results.map((x) => {
-            if (!x.level) x.level = dancerLevel(who(), x.dance === "prelim" || x.dance === "open" ? "champ" : x.dance) || guessLevel;
+            if (!x.level) x.level = dancerLevel(who(), isChampDance(x.dance) ? "champ" : x.dance) || guessLevel;
             return x;
           });
           // A photo of a results history (FeisWorx "Personal Results") can cover several feiseanna.
@@ -1119,7 +1133,7 @@
             ${rows.map((x, i) => `<div class="card found-row" data-row="${i}">
               <label class="toggle" style="margin-top:0"><input type="checkbox" data-k="pick" checked> <strong>Keep this result</strong>${x.check ? ' <span class="chip gold">Check this</span>' : ""}</label>
               <div class="two">
-                <label class="field"><span>Dance</span><select data-k="dance"><option value="">Choose…</option>${D.dances.map((d) => `<option value="${d.id}" ${x.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
+                <label class="field"><span>Dance</span><select data-k="dance"><option value="">Choose…</option>${D.dances.filter((d) => danceForOrg(d) || x.dance === d.id).map((d) => `<option value="${d.id}" ${x.dance === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
                 <label class="field"><span>Level</span><select data-k="level"><option value="">Choose…</option>${orgLevels().map((l) => `<option value="${l.id}" ${x.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
               </div>
               ${x.choices && x.choices.length > 1 ? `<label class="field"><span>Which one is ${esc(who().name)}?</span><select data-k="choice"><option value="">Choose from the results…</option>${x.choices.map((c, n) => `<option value="${n}">${esc(c.place + ". " + c.name + " (" + c.total + ")")}</option>`).join("")}</select></label>` : ""}
@@ -1135,7 +1149,7 @@
                 <label class="field"><span>Date</span><input type="date" data-k="date" value="${esc(f.date.value || today())}"></label></div>` : ""}
               <label class="field"><span>Comments and notes</span><textarea data-k="notes" rows="3" maxlength="1200" placeholder="Judge's comments, anything to remember">${esc(x.notes || "")}</textarea></label>
               ${isChamp(x) ? `<label class="toggle"><input type="checkbox" data-k="recall" ${x.recall ? "checked" : ""}> Recalled</label>
-                ${hasGrid(x) ? panelGrid(Object.assign({ dancerId: who().id }, x)) : `<p class="small muted" style="margin:8px 0 4px">${ROUNDS_HELP}</p>${roundInputs(x.rounds, "data-k", roundCount(x))}`}` : ""}
+                ${hasGrid(x) ? panelGrid(Object.assign({ dancerId: who().id }, x)) : `<p class="small muted" style="margin:8px 0 4px">${ROUNDS_HELP}</p>${roundInputs(x.rounds, "data-k", roundCount(x), x)}`}` : ""}
               <p class="small muted" style="margin:4px 0 0">Read from: “${esc(x.line)}”</p>
             </div>`).join("")}
             <button type="button" class="btn block" id="saveFound">Save ${rows.length === 1 ? "this result" : "all " + rows.length + " results"}</button>
