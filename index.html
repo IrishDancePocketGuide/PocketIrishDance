@@ -9,7 +9,7 @@
     (function () {
       var h = location.hash, q = location.search;
       var installed = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
-      if (installed || /^#\//.test(h) || /access_token|error_description/.test(h) || /[?&](code|token_hash)=/.test(q)) location.replace("app.html" + q + h);
+      if (installed || /^#\//.test(h) || /access_token|error_description/.test(h) || /[?&](code|token_hash)=/.test(q)) { window.PID_GOING_TO_APP = true; location.replace("app.html" + q + h); }
       addEventListener("hashchange", function () { if (/^#\//.test(location.hash)) location.replace("app.html" + location.hash); });
     })();
   </script>
@@ -459,6 +459,7 @@
     </div>
   </footer>
 
+  <script src="count.js"></script>
   <script>
     (function () {
       document.getElementById("yr").textContent = new Date().getFullYear();
@@ -491,7 +492,7 @@
         prompt.prompt();
         prompt.userChoice.then(function () { prompt = null; document.getElementById("installReady").hidden = true; });
       });
-      window.addEventListener("appinstalled", function () { document.getElementById("installReady").hidden = true; });
+      window.addEventListener("appinstalled", function () { document.getElementById("installReady").hidden = true; if (window.PID_COUNT) PID_COUNT.installed(); });
 
       // Tap to hear a word, using the phone's own voice (the same as in the app).
       document.querySelectorAll("[data-say]").forEach(function (b) {
@@ -511,6 +512,9 @@
         }, { rootMargin: "0px 0px -8% 0px" });
         items.forEach(function (el) { io.observe(el); });
       } else items.forEach(function (el) { el.classList.add("in"); });
+
+      // Private visitor count (see count.js). Not when this page is just passing someone on to the app.
+      if (window.PID_COUNT && !window.PID_GOING_TO_APP) PID_COUNT.website();
 
       if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
     })();

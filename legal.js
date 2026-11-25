@@ -9,7 +9,7 @@ window.PID_LEGAL = (function () {
     operator: "Pocket Irish Dance",
     lawState: "",
     email: "pocketirishdance@gmail.com",
-    updated: "2026-11-24"
+    updated: "2026-11-25"
   };
 
   const mail = `<a href="mailto:${L.email}">${L.email}</a>`;
@@ -19,7 +19,7 @@ window.PID_LEGAL = (function () {
   L.privacy = () => `
     <p class="muted" style="margin-top:0">Last updated ${when}</p>
     <div class="card stack small">
-      <p style="margin-top:0"><strong>The short version.</strong> Your dancers, results, photos and notes stay on your phone. We never see them. If you choose to use Friends, we keep your email address and the wins you choose to share, so your friends can see them. We don't sell anything about you, there are no adverts, and there is no tracking.</p>
+      <p style="margin-top:0"><strong>The short version.</strong> Your dancers, results, photos and notes stay on your phone. We never see them. If you choose to use Friends, we keep your email address and the wins you choose to share, so your friends can see them. We don't sell anything about you, there are no adverts, and nothing follows you around the web. We only count visits, with no cookies and nothing that identifies you.</p>
       <p style="margin-bottom:0">This policy explains what ${L.operator} ("we", "us") does with information in the Pocket Irish Dance app and at pocketirishdance.com.</p>
     </div>
 
@@ -47,12 +47,23 @@ window.PID_LEGAL = (function () {
       <p><strong>Who can see it.</strong> Only people in the same private group. Groups can only be joined with an invite code. Nothing you share is public.</p>
       <p style="margin-bottom:0"><strong>Your choices.</strong> You can un-share a win, leave a group, download your data or delete your account at any time in Friends › Your account. Deleting your account removes everything you put online straight away.</p>`)}
 
+    ${sec("Counting visits", `
+      <p style="margin-top:0">To know whether the app is helping anyone, we count how often the website is visited and the app is opened, whether it was opened from a home screen, and which sections and games are used. We use <strong>GoatCounter</strong>, a privacy-friendly counter, for this.</p>
+      <ul>
+        <li>No cookies, and nothing is saved on your phone for it.</li>
+        <li>No ID for you or your device, and no advertising or cross-site tracking.</li>
+        <li>Only the name of what happened is sent, like "Game: Feis day bingo". Never your dancers, results, judges, notes, searches or anything you type.</li>
+        <li>GoatCounter also sees the browser and device type, screen size, country (worked out from your IP address, which it does not keep) and, for the website, the name of the site that linked you here. We only ever see totals.</li>
+      </ul>
+      <p style="margin-bottom:0">Nothing is counted if your browser is set to "Do Not Track" or Global Privacy Control, or while you're offline.</p>`)}
+
     ${sec("Companies that help us run the app", `
       <p style="margin-top:0">We use a small number of service providers. They may only use information to provide their service to us.</p>
       <ul>
         <li><strong>Supabase</strong> stores Friends accounts, groups, shared wins and cheers, in a data centre in the United States.</li>
         <li><strong>Resend</strong> sends the sign-in code emails, so it receives your email address.</li>
         <li><strong>GitHub Pages</strong> delivers the app's pages to your phone.</li>
+        <li><strong>GoatCounter</strong> counts visits, as described above.</li>
       </ul>
       <p style="margin-bottom:0">Like any website, these providers may briefly record technical details such as your IP address and device type, to keep their services secure and working. We don't use these details to track you.</p>`)}
 
@@ -60,7 +71,7 @@ window.PID_LEGAL = (function () {
       <ul style="margin:0">
         <li>We don't sell or rent your information, or "share" it for advertising.</li>
         <li>We don't show adverts.</li>
-        <li>We don't use analytics, tracking cookies or tracking pixels.</li>
+        <li>We don't use cookies, advertising trackers or tracking that follows you to other websites.</li>
         <li>We don't use your information to train AI.</li>
       </ul>`)}
 
