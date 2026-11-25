@@ -510,3 +510,18 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .cm-bar { margin-top: 10px; min-height: 48px; }
 :root { --cm-ulster: #f9cfc6; --cm-connacht: #c4e6e3; --cm-leinster: #f8e2b4; --cm-munster: #dbe8c8; }
 @media (prefers-color-scheme: dark) { :root { --cm-ulster: #5a2e25; --cm-connacht: #1d4a47; --cm-leinster: #574619; --cm-munster: #36472a; } }
+
+/* Games: the standout tile at the top of the home menu (fixed colors so it looks the same in dark mode) */
+.games-tile {
+  position: relative; overflow: hidden; gap: 6px; padding: 16px 16px 14px;
+  background: linear-gradient(135deg, #0a6466 0%, #16908f 100%);
+  border: 2px solid #f3836e; color: #fff; box-shadow: 0 6px 18px rgba(243,131,110,.35);
+}
+.games-tile strong { font-size: 20px; color: #fff; }
+.games-tile span { color: #e6f4f3; }
+.games-tile .games-art { font-size: 26px; letter-spacing: 4px; line-height: 1; color: inherit; }
+.games-tile .games-play {
+  align-self: flex-start; margin-top: 4px; padding: 7px 14px; border-radius: 999px;
+  background: #f3836e; color: #fff; font-weight: 700; font-size: 14px;
+}
+.games-tile:active { transform: scale(.98); }

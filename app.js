@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "63"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "64"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -252,6 +252,12 @@
         `<p class="small muted" style="margin:0 4px 6px">Showing ${esc(orgName(p.org))} · ${esc(p.region)}${lv ? " · " + esc(lv.name) : ""} · <a href="#/settings">change</a></p>`}
 
       <div class="grid">
+        <a class="tile wide games-tile" href="#/games">
+          <span class="games-art" aria-hidden="true">🧩🎵☘️🎲</span>
+          <strong>Games</strong>
+          <span>Boredom busters for feis day: daily trivia, word search, bingo, rhythm tap and Name that dance</span>
+          <span class="games-play">Play now ›</span>
+        </a>
         <a class="tile wide" href="#/feis"><span class="ico">📅</span><strong>Feis calendar</strong><span>Upcoming feiseanna by organization</span></a>
         <a class="tile wide" href="#/scores"><span class="ico">🏆</span><strong>Score tracker</strong><span>Keep every result in one place</span></a>
         <a class="tile wide workon-tile" href="#/workon"><span class="ico">⭐</span><strong>What to work on</strong><span>Judges' most common comments, tips to practise, and a journal</span></a>
@@ -261,7 +267,6 @@
         <a class="tile" href="#/orgs"><span class="ico">🌍</span><strong>Organizations</strong><span>CLRG, An Comhdháil, WIDA and more</span></a>
         <a class="tile" href="#/guide"><span class="ico">✅</span><strong>Parent checklists</strong><span>Feis bag, feis day, championships</span></a>
         <a class="tile" href="#/schools"><span class="ico">📍</span><strong>Find a dance school</strong><span>Irish dance school lists</span></a>
-        <a class="tile wide" href="#/games"><span class="ico">🧩</span><strong>Games</strong><span>Boredom busters for feis day, like daily trivia, word search, bingo, rhythm tap and Name that dance</span></a>
       </div>
 
       ${standalone ? "" : `<div class="card install show" style="flex-direction:column;gap:6px">
