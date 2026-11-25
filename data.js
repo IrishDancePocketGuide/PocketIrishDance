@@ -214,7 +214,9 @@ window.PID_DATA = {
       danced: "Two rounds, and a recall to dance a Modern Set if the judges choose. The path to Oireachtas, Internationals and Worlds.",
       moveUp: "The top level. Winning one moves all of a dancer's solo dances up to Open",
       perDance: false,
-      parents: "Qualifying for Worlds starts at your National Oireachtas the year before"
+      parents: "Qualifying for Worlds starts at your National Oireachtas the year before",
+      // From irish.dance/syllabi and irish.dance/competition-rules, read Nov 25 2026.
+      older: "WIDA has no separate adult championship, but its age groups go up to Senior, and there is an Over 45 Open Championship (from 2027: hornpipe, reel, Jockey to the Fair and a modern jig set). Dancers over 25 dance 8 fewer bars in each dance."
     },
     // An Comhdháil, from its public rulebook (web.irishdancingorg.com/index.php/policies/rulebook), read Nov 23 2026.
     {
