@@ -377,6 +377,42 @@
         ${approved.length ? approved.map(card).join("") : `<p class="muted">None yet.</p>`}`);
     };
 
+    // ---------- the app team: one request from the email link (no sign-in needed) ----------
+    const RV = {};
+    ext.review = (parts) => {
+      const tok = parts[1] || "";
+      if (!sb) return page("Teacher request", `<div class="empty">Couldn't connect. Check your connection and try again.</div>`);
+      if (RV.tok !== tok) {
+        RV.tok = tok; RV.data = undefined; RV.err = null; RV.done = null;
+        sb.rpc("review_claim", { t: tok }).then(({ data, error }) => {
+          if (RV.tok !== tok) return;
+          if (error) RV.err = error.message || "This link isn't valid"; else RV.data = (data || [])[0] || null;
+          rerender();
+        }, () => { RV.err = "Couldn't connect. Check your connection and try again."; rerender(); });
+      }
+      if (RV.done) return page("Teacher request", `<div class="card"><h2 style="margin-top:0">${RV.done === "approved" ? "Approved ✓" : "Declined"}</h2>
+        <p class="small muted" style="margin-bottom:0">${RV.done === "approved" ? "Families at this school can now choose to share results with this teacher." : "The teacher won't be able to see anything."} This link won't work again.</p></div>`);
+      if (RV.err) return page("Teacher request", `<div class="empty">${esc(RV.err)}</div>`);
+      if (RV.data === undefined) return loading("Teacher request");
+      const c = RV.data;
+      if (!c) return page("Teacher request", `<div class="empty">This link has expired or was already used. You can still check requests on the <a href="#/admin">Teacher requests</a> page.</div>`);
+      if (c.status !== "pending") return page("Teacher request", `<div class="empty">This request was already ${esc(c.status)}.</div>`);
+      return page("Teacher request", `<div class="card">
+        <p style="margin-top:0"><strong>${esc(c.teacher_name)}</strong> wants to be the teacher for <strong>${esc(c.school_name)}</strong>.</p>
+        <dl class="facts small">
+          <dt>School</dt><dd>${esc(c.school_name)}<div class="muted">${esc([c.school_town, c.school_country].filter(Boolean).join(" · "))}</div>${c.school_website ? `<a href="${esc(c.school_website)}" target="_blank" rel="noopener">Open the school website ↗</a>` : ""}${c.school_source ? `<div class="muted">From: ${esc(c.school_source)}</div>` : ""}</dd>
+          ${c.listed_teachers ? `<dt>Listed teachers</dt><dd>${esc(c.listed_teachers)}</dd>` : ""}
+          ${c.school_email ? `<dt>School's email</dt><dd>${esc(c.school_email)}</dd>` : ""}
+          <dt>Qualification</dt><dd>${esc(c.credential || "Not given")}</dd>
+          <dt>How to check</dt><dd>${esc(c.proof || "Not given")}</dd>
+          <dt>Their email</dt><dd>${esc(c.email || "?")}</dd>
+        </dl>
+        ${c.other_teacher ? `<div class="banner" style="margin:8px 0">⚠️ ${esc(c.other_teacher)} is already the approved teacher for this school.</div>` : ""}
+        <div class="row" style="gap:8px;margin-top:8px"><button class="btn" style="flex:1" data-s="review" data-ok="1">Approve</button><button class="btn ghost" style="flex:1" data-s="review">Decline</button></div>
+        <p class="small muted" style="margin-bottom:0">Approving lets them see what families choose to share. If in doubt, don't approve yet.</p>
+      </div>`);
+    };
+
     // ---------- forms ----------
     document.addEventListener("submit", async (e) => {
       const f = e.target.closest("[data-sform]"); if (!f || !sb) return;
@@ -483,6 +519,14 @@
             t.disabled = true;
             const { error } = await sb.rpc("admin_decide_claim", { c: t.dataset.id, approve: ok }); if (error) throw error;
             T.claims = null; T.schools = {}; toast(ok ? "Approved" : "Declined"); rerender(); break;
+          }
+          case "review": {
+            const ok = !!t.dataset.ok, c = RV.data;
+            if (!c || !confirm(ok ? `Approve ${c.teacher_name} for ${c.school_name}?` : `Decline ${c.teacher_name}'s request?`)) return;
+            t.disabled = true;
+            const { data, error } = await sb.rpc("review_decide", { t: RV.tok, approve: ok });
+            if (error) { t.disabled = false; RV.err = error.message; rerender(); return; }
+            RV.done = data; T.claims = null; T.schools = {}; rerender(); break;
           }
           case "remove-teacher": {
             if (!confirm(`Remove ${t.dataset.name} as the teacher? Everything families shared with them is deleted.`)) return;
