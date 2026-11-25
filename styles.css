@@ -483,3 +483,28 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .sy-row { display: flex; justify-content: center; gap: 10px; }
 .sy-mini { width: 48px; height: 48px; flex: none; color: var(--ink); }
 .sy-review { display: flex; gap: 12px; align-items: flex-start; }
+
+/* Irish counties map game */
+.cm-q { text-align: center; font-size: 19px; margin: 2px 0 8px; }
+.cm-wrap { display: flex; justify-content: center; }
+.cm-map { width: 100%; max-width: 460px; height: auto; max-height: max(340px, calc(100svh - 300px)); display: block; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.cm-map.small { max-width: 190px; margin: 0 auto 6px; }
+.cm-map path { stroke-linejoin: round; fill-rule: evenodd; }
+.cm-c { fill: var(--green-soft); stroke: var(--card); stroke-width: 1.4; }
+.cm-c[data-cm] { cursor: pointer; }
+.cm-c.prov.p-ulster { fill: var(--cm-ulster); }
+.cm-c.prov.p-connacht { fill: var(--cm-connacht); }
+.cm-c.prov.p-leinster { fill: var(--cm-leinster); }
+.cm-c.prov.p-munster { fill: var(--cm-munster); }
+.cm-c.sel { fill: var(--gold); stroke: var(--ink); stroke-width: 2; }
+.cm-c.right { fill: var(--green-2); stroke: var(--ink); stroke-width: 2; }
+.cm-c.wrong { fill: var(--warn-bg); stroke: var(--warn); stroke-width: 2; }
+.cm-c.prov.target { fill: var(--green-2); }
+.cm-p { fill: transparent; stroke: var(--ink); stroke-width: 2; cursor: pointer; }
+.cm-p.sel { fill: var(--gold); fill-opacity: .55; stroke-width: 3; }
+.cm-p.right { fill: var(--green-2); fill-opacity: .35; stroke-width: 3; }
+.cm-p.wrong { fill: var(--warn); fill-opacity: .3; stroke: var(--warn); stroke-width: 3; }
+.cm-lab { font: 600 24px system-ui, sans-serif; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: var(--card); stroke-width: 5px; pointer-events: none; }
+.cm-bar { margin-top: 10px; min-height: 48px; }
+:root { --cm-ulster: #f9cfc6; --cm-connacht: #c4e6e3; --cm-leinster: #f8e2b4; --cm-munster: #dbe8c8; }
+@media (prefers-color-scheme: dark) { :root { --cm-ulster: #5a2e25; --cm-connacht: #1d4a47; --cm-leinster: #574619; --cm-munster: #36472a; } }
