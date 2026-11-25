@@ -1,6 +1,6 @@
 /* Rhythm tap: tap along to the beat of an Irish dance tune.
-   The music is made on the phone (Web Audio): short original tunes and a drum on each beat,
-   so it works offline and uses no recordings. Best scores stay on this phone. */
+   The music is played on the phone (Web Audio) from real accordion and piano notes kept with the app,
+   so it works offline. The tunes are short originals in the traditional style. Best scores stay on this phone. */
 (function () {
   "use strict";
 
@@ -18,7 +18,6 @@
     { id: "feis", name: "Feis speed", f: 1 },
     { id: "fast", name: "Extra fast", f: 1.2 }
   ];
-  const TAPS = 32; // about how many beats to tap in a round (after one bar of count-in)
   const PERFECT = 0.07, GOOD = 0.14, WINDOW = 0.25; // seconds
   const KEY = "pid.rhythm";
 
@@ -27,21 +26,159 @@
     save(R) { try { localStorage.setItem(KEY, JSON.stringify(R)); } catch (e) { /* still playable */ } }
   };
 
-  // Notes of D major over two octaves, for the made-up tunes.
-  const SCALE = [293.66, 329.63, 369.99, 392.0, 440.0, 493.88, 554.37, 587.33, 659.25, 739.99, 783.99, 880.0];
-  function tune(dance) {
-    // A simple original tune: wanders up and down the scale, same every time for a dance.
-    let seed = 0; for (const c of dance.id) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
-    const r = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-    const per = dance.pulses * dance.sub * 2; // a two-bar phrase
-    const notes = []; let at = 4;
-    for (let i = 0; i < per; i++) {
-      if (i % dance.sub === 0 && r() < 0.5) at = [0, 2, 4, 7][Math.floor(r() * 4)]; // land on D, F#, A or high D on the beat
-      else at = Math.max(0, Math.min(SCALE.length - 1, at + [-2, -1, 1, 1, 2][Math.floor(r() * 5)]));
-      notes.push(at);
+  // The tunes: short original tunes written for the app in the style of traditional Irish dance music,
+  // in a simple ABC-like notation. One unit = one eighth note. Capital letters = the octave from
+  // middle C, small letters = the octave above; a number makes the note longer; (3 = three notes in the
+  // time of two (a "roll"); z = a rest. Chords are one per beat, played by the piano the way feis
+  // musicians "vamp": a bass note on the beat and a chord in between.
+  const TUNES = {
+    reel: { key: "D", notes: "FA(3AAA dAFA|BEED EFGE|FA(3AAA dAFA|Bcde fdd2|FA(3AAA dAFA|BEED EFGE|FA(3AAA dAFA|Bcde fdd2|f2af dfaf|e2ce Acec|d2fd Adfd|Bcde fdd2|f2af dfaf|e2ce Acec|d2fd Adfd|Bcde fdd2",
+      chords: "D D|Em A|D D|G D|D D|Em A|D D|G D|D D|A A|D D|G D|D D|A A|D D|G D" },
+    lightjig: { key: "G", notes: "GBd gdB|cec ABc|BGB dgb|afd def|GBd gdB|cec ABc|BdB AFA|G3 G2z|dgg fga|bge dBG|ceg Bdg|afd def|g2d e2c|BdB cAF|GBd cAF|G3 G2z",
+      chords: "G G|C D|G G|D D|G G|C D|G D|G G|G D|Em G|C G|D D|G C|G D|G D|G G" },
+    slipjig: { key: "D", notes: "A2F A2F d2F|B2G B2G d2B|A2F A2F d2f|e2c A2B c2e|A2F A2F d2F|B2G B2G d2B|f2d e2c d2B|A2F E2F D3|d2f a2f d2f|g2e b2g e2g|e2c a2e c2e|f2a e2c d3",
+      chords: "D D D|G G G|D D D|A A A|D D D|G G G|D A G|D A D|D D D|Em Em Em|A A A|D A D" },
+    hornpipe: { key: "D", notes: "AFDF Adfd|gece Aceg|fdAd fagf|ecAc e2g2|AFDF Adfd|GBdB cege|fdAF GBec|d2f2 d2z2|fedf afdf|gfeg bgeg|agfe dcBA|Bcde f2e2|fedf afdf|gfeg bgeg|afdf ecAc|d2f2 d2z2",
+      chords: "D D|A A|D D|A A|D D|G A|D A|D D|D D|Em G|D A|G A|D D|Em G|D A|D D" },
+    treble: { key: "D", notes: "A2F A2d|f2e d2B|A2F ABc|e2c A2c|A2F A2d|f2e d2B|A2B c2e|d3 d2z|f2d f2a|g2e g2b|a2f d2f|e2c A2c|f2d f2a|g2b a2g|f2d e2c|d3 d2z",
+      chords: "D D|D G|D A|A A|D D|D G|A A|D D|D D|Em G|D D|A A|D D|G A|D A|D D" }
+  };
+  const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const SHARPS = { D: ["F", "C"], G: ["F"] };
+  // Turns a tune into notes: { at, len } in eighth-note units, and midi pitch.
+  function parse(tn) {
+    const out = []; let pos = 0, trip = 0;
+    const sharp = SHARPS[tn.key] || [];
+    const re = /\(3|([A-Ga-gz])(\d*)/g; let m;
+    for (const bar of tn.notes.split("|")) {
+      re.lastIndex = 0;
+      while ((m = re.exec(bar))) {
+        if (m[0] === "(3") { trip = 3; continue; }
+        let len = m[2] ? +m[2] : 1;
+        if (trip) { len = len * 2 / 3; trip--; }
+        if (m[1] !== "z") {
+          const up = m[1] === m[1].toLowerCase(), L = m[1].toUpperCase();
+          out.push({ at: pos, len, midi: 60 + (up ? 12 : 0) + PC[L] + (sharp.includes(L) ? 1 : 0) });
+        }
+        pos += len;
+      }
     }
-    notes[per - 1] = 0; notes[per - 2] = 2; // end the phrase home on D
-    return notes;
+    return { key: tn.key, notes: out, chords: tn.chords.split("|").map((b) => b.trim().split(/\s+/)), bars: tn.notes.split("|").length };
+  }
+  const chordPcs = (c) => { const r = PC[c[0]] + (c[1] === "#" ? 1 : 0), minor = /m$/.test(c); return [r, r + (minor ? 3 : 4), r + 7].map((x) => x % 12); };
+  const inRange = (pc, lo) => lo + ((pc - lo) % 12 + 12) % 12; // the one pitch with this note name from lo up to lo+11
+
+  // Real instrument notes (accordion and piano, recorded from the FluidR3 GM sound set, CC BY 3.0),
+  // laid out one note every SLOT seconds (made by scripts/build-music.py). Kept with the app so it works offline.
+  const SLOT = 1.25, LEAD = 0.05, ACC_LO = 62, ACC_HI = 86, PNO_LO = 38, PNO_HI = 69, WOOD = 32;
+  const SOUND = { acc: null, pno: null, loading: null };
+  function loadSounds() {
+    if (SOUND.acc) return Promise.resolve(true);
+    if (SOUND.loading) return SOUND.loading;
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OAC || !window.fetch) return Promise.resolve(false);
+    const decode = (buf) => new Promise((res, rej) => { const c = new OAC(1, 1, 44100); const p = c.decodeAudioData(buf, res, rej); if (p && p.catch) p.catch(rej); });
+    // Where the first note really starts (some phones add a little silence at the front of an mp3).
+    const shift = (b) => { const x = b.getChannelData(0); let i = 0; while (i < x.length && Math.abs(x[i]) < 0.01) i++; return i / b.sampleRate - LEAD; };
+    SOUND.loading = Promise.all(["audio/accordion.mp3", "audio/piano.mp3"].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u); return r.arrayBuffer(); }).then(decode)))
+      .then(([a, p]) => { a.shift = shift(a); p.shift = shift(p); SOUND.acc = a; SOUND.pno = p; return true; })
+      .catch(() => { SOUND.loading = null; return false; });
+    return SOUND.loading;
+  }
+
+  // A little room sound, so it isn't bone dry like a computer.
+  function room(ctx) {
+    const len = Math.floor(ctx.sampleRate * 1.6), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    let s = 7;
+    for (let ch = 0; ch < 2; ch++) { const x = ir.getChannelData(ch); for (let i = 0; i < len; i++) { s = (s * 16807) % 2147483647; x[i] = (s / 1073741823 - 1) * Math.pow(1 - i / len, 3) * Math.exp(-i / (ctx.sampleRate * 0.35)); } }
+    const c = ctx.createConvolver(); c.buffer = ir; return c;
+  }
+
+  // Instruments: real samples when they've loaded, or simple made-up tones if they couldn't load.
+  function instruments(ctx, out) {
+    if (SOUND.acc) {
+      const play = (buf, slot, t, dur, vel, rate, rel) => {
+        const src = ctx.createBufferSource(), g = ctx.createGain();
+        src.buffer = buf; src.playbackRate.value = rate;
+        g.gain.setValueAtTime(vel, t); g.gain.setValueAtTime(vel, t + dur); g.gain.linearRampToValueAtTime(0.0001, t + dur + rel);
+        src.connect(g); g.connect(out);
+        src.start(t, Math.max(0, slot * SLOT + LEAD + buf.shift), Math.min(SLOT - 0.1, (dur + rel) * rate + 0.02));
+        src.stop(t + dur + rel + 0.05);
+      };
+      const pick = (midi, lo, hi) => { while (midi < lo) midi += 12; while (midi > hi) midi -= 12; return midi - lo; };
+      return {
+        // Two accordion reeds tuned a touch apart, the "wet" sound of an Irish button box.
+        melody(t, midi, dur, vel) { const s = pick(midi, ACC_LO, ACC_HI); play(SOUND.acc, s, t, dur, vel * 0.42, 1.0045, 0.05); play(SOUND.acc, s, t, dur, vel * 0.42, 0.9955, 0.05); },
+        piano(t, midi, dur, vel) { play(SOUND.pno, pick(midi, PNO_LO, PNO_HI), t, dur, vel * 0.55, 1, 0.12); },
+        click(t, strong) { play(SOUND.pno, WOOD, t, 0.12, strong ? 0.6 : 0.4, strong ? 1.25 : 1, 0.05); }
+      };
+    }
+    const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    const osc = (type, t, f, dur, vel) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vel, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + Math.max(0.08, dur));
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
+    };
+    return {
+      melody(t, midi, dur, vel) { osc("triangle", t, hz(midi), dur, 0.22 * vel); },
+      piano(t, midi, dur, vel) { osc("sine", t, hz(midi), Math.min(dur, 0.2), 0.3 * vel); },
+      click(t, strong) { osc("square", t, strong ? 1600 : 1100, 0.05, 0.15); }
+    };
+  }
+
+  // Plays a dance's tune with piano from time `start1`. Returns the time of each beat to tap on.
+  function playTune(ctx, out, d, beat, start1) {
+    const tn = parse(TUNES[d.id] || TUNES.reel), inst = instruments(ctx, out);
+    const sub = d.sub;
+    // Where an eighth note lands inside a beat: hornpipes swing long-short, reels lilt a little, jigs lean on the first note.
+    const lilt = d.sub === 4 ? (d.swing || 0.08) : 0;
+    const warp = (p) => {
+      const b = Math.floor(p / sub + 1e-9); let x = p / sub - b;
+      if (sub === 4) { const h = x * 2, pair = Math.floor(h + 1e-9), y = h - pair, k = 0.5 + lilt / 2; x = (pair + (y < 0.5 ? y / 0.5 * k : k + (y - 0.5) / 0.5 * (1 - k))) / 2; }
+      else { const y = x * 3, i = Math.floor(y + 1e-9), knots = [0, 0.36, 0.69, 1]; x = knots[i] + (y - i) * (knots[Math.min(3, i + 1)] - knots[i]); }
+      return start1 + (b + x) * beat;
+    };
+    let seed = 11; const wob = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 - 0.5; };
+    const scale = [0, 2, 4, 5, 7, 9, 11].map((x) => (x + PC[tn.key]) % 12);
+    let prev = null;
+    tn.notes.forEach((n) => {
+      const t = warp(n.at), end = warp(n.at + n.len);
+      const onBeat = Math.abs(n.at / sub - Math.round(n.at / sub)) < 1e-6;
+      const vel = (onBeat ? 1 : Math.abs(n.len - 1) > 0.1 ? 0.8 : 0.72) + wob() * 0.08;
+      let at = t;
+      if (prev && prev.midi === n.midi && n.len >= 1) {
+        // A "cut": a flick of the note above, the way Irish players split a repeated note.
+        let g = n.midi + 1; while (g < n.midi + 3 && !scale.includes(g % 12)) g++;
+        inst.melody(t, g, 0.03, vel * 0.7); at = t + 0.03;
+      }
+      inst.melody(at, n.midi, Math.max(0.05, (end - at) * 0.9), vel);
+      prev = n;
+    });
+    const beats = [];
+    tn.chords.forEach((bar, bi) => {
+      for (let p = 0; p < d.pulses; p++) {
+        const c = bar[p] || bar[bar.length - 1], bt = start1 + (bi * d.pulses + p) * beat;
+        beats.push(bt);
+        const pcs = chordPcs(c), sameAsLast = p > 0 && (bar[p - 1] === c);
+        inst.piano(bt, inRange(sameAsLast ? pcs[2] : pcs[0], 38), beat * 0.45, p === 0 ? 1 : 0.85);
+        const chordAt = sub === 4 ? warp((bi * d.pulses + p) * sub + 2) : bt + beat * (2 / 3);
+        pcs.forEach((pc) => inst.piano(chordAt, inRange(pc, 55), beat * 0.25, 0.42));
+      }
+    });
+    const end = beats[beats.length - 1] + beat, home = TUNES[d.id] ? TUNES[d.id].key : "D";
+    inst.melody(end, inRange(PC[home], 67), beat * 1.6, 0.9);
+    chordPcs(home).forEach((pc) => inst.piano(end, inRange(pc, 55), beat * 1.6, 0.5));
+    inst.piano(end, inRange(PC[home], 38), beat * 1.8, 1);
+    return { beats, end, click: inst.click };
+  }
+
+  // The sound chain: instruments -> a little room -> a gentle limiter -> speaker.
+  function mixer(ctx) {
+    const master = ctx.createGain(); master.gain.value = 0.9;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+    const dry = ctx.createGain(), wet = ctx.createGain(), rv = room(ctx); wet.gain.value = 0.22;
+    dry.connect(comp); dry.connect(rv); rv.connect(wet); wet.connect(comp); comp.connect(master); master.connect(ctx.destination);
+    return dry;
   }
 
   window.PID_RHYTHM = function (A) {
@@ -72,7 +209,8 @@
           </button>
           <div class="row between small rt-score"><span id="rtScore"></span><span id="rtCombo"></span></div>
         </div>
-        <p class="small muted" style="text-align:center">🔊 Turn your sound up. On iPhone, check the silent switch is off.</p>`,
+        <p class="small muted" style="text-align:center">🔊 Turn your sound up. On iPhone, check the silent switch is off.</p>
+        <p class="small muted" style="text-align:center;font-size:11px;opacity:.8">Accordion and piano sounds from the FluidR3 GM sound set by Frank Wen (CC BY 3.0). Tunes written for Pocket Irish Dance.</p>`,
         after: wire
       };
     }
@@ -81,7 +219,7 @@
       const pad = document.getElementById("rtPad");
       const tap = (e) => {
         e.preventDefault();
-        if (!game || game.done) start(); else hit();
+        if (!game || game.done) start(); else if (!game.loading) hit();
       };
       pad.addEventListener("pointerdown", tap);
       pad.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") tap(e); });
@@ -93,55 +231,25 @@
       stop();
       const d = DANCES.find((x) => x.id === R.dance) || DANCES[0];
       const sp = SPEEDS.find((x) => x.id === R.speed) || SPEEDS[0];
-      const ctx = new AC();
+      const ctx = new AC(); // made right on the tap, so phones allow sound
       if (ctx.state === "suspended") ctx.resume();
+      const g = game = { ctx, done: false, loading: true, d, sp };
+      if (!SOUND.acc) show("Getting the music ready…", "");
+      loadSounds().then(() => { if (game === g && !g.done) go(g); });
+    }
+
+    function go(g) {
+      const { ctx, d, sp } = g;
       const beat = 60 / (d.bpm * sp.f);
       const t0 = ctx.currentTime + 0.35;
-      const notes = tune(d);
-      const master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
-
-      const drum = (t, strong) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = "sine"; o.frequency.setValueAtTime(strong ? 150 : 110, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
-        g.gain.setValueAtTime(strong ? 0.9 : 0.6, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-        o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.16);
-      };
-      const tick = (t, strong) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = "square"; o.frequency.value = strong ? 1600 : 1100;
-        g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.06);
-      };
-      const note = (t, f, len) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = "triangle"; o.frequency.value = f;
-        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + Math.max(0.08, len * 0.95));
-        o.connect(g); g.connect(master); o.start(t); o.stop(t + len);
-      };
-
-      // Count-in bar: ticks only.
-      for (let p = 0; p < d.pulses; p++) tick(t0 + p * beat, p === 0);
+      const out = mixer(ctx);
       const start1 = t0 + d.pulses * beat;
-      const beats = [];
-      const BARS = Math.ceil(TAPS / d.pulses);
-      for (let bar = 0; bar < BARS; bar++) {
-        for (let p = 0; p < d.pulses; p++) {
-          const bt = start1 + (bar * d.pulses + p) * beat;
-          beats.push(bt); drum(bt, p === 0);
-          for (let s = 0; s < d.sub; s++) {
-            // swing: in pairs, the first note is longer than the second
-            let off = s / d.sub, len = 1 / d.sub;
-            if (d.swing && d.sub === 4) { const pair = Math.floor(s / 2), first = s % 2 === 0; off = pair * 0.5 + (first ? 0 : 0.5 * (0.5 + d.swing / 2)); len = 0.5 * (first ? 0.5 + d.swing / 2 : 0.5 - d.swing / 2); }
-            const idx = ((bar % 2) * d.pulses + p) * d.sub + s;
-            note(bt + off * beat, SCALE[notes[idx % notes.length]], len * beat);
-          }
-        }
-      }
-      const end = beats[beats.length - 1] + beat;
-      note(end, SCALE[0] / 2, beat * 1.5); drum(end, true);
+      const { beats, end, click } = playTune(ctx, out, d, beat, start1);
+      // Count-in bar: woodblock taps only.
+      for (let p = 0; p < d.pulses; p++) click(t0 + p * beat, p === 0);
 
       const lat = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
-      game = { ctx, beats, beat, d, sp, hits: new Array(beats.length).fill(null), score: 0, combo: 0, maxCombo: 0, done: false, lat, end, start1, t0 };
+      Object.assign(g, { beats, beat, hits: new Array(beats.length).fill(null), score: 0, combo: 0, maxCombo: 0, lat, end, start1, t0, loading: false });
       document.getElementById("rtPadText").textContent = "Tap!";
       document.getElementById("rtPad").classList.add("live");
       document.getElementById("rtDots").innerHTML = beats.map(() => "<i></i>").join("");
@@ -206,7 +314,7 @@
       const prev = R.best[key];
       const newBest = !prev || game.score > prev.score;
       if (newBest) { R.best[key] = { score: game.score, stars: st, pct }; ls.save(R); }
-      try { game.ctx.close(); } catch (e) { /* ignore */ }
+      const ctx = game.ctx; setTimeout(() => { try { ctx.close(); } catch (e) { /* ignore */ } }, 2500); // let the last chord ring
       const pad = document.getElementById("rtPad");
       if (pad) { pad.classList.remove("live"); pad.style.setProperty("--pulse", 0); }
       const pt = document.getElementById("rtPadText"); if (pt) pt.textContent = "Play again";
@@ -225,6 +333,7 @@
     });
     window.addEventListener("hashchange", stop);
     window.PID_RHYTHM.current = () => game; // for tests
+    loadSounds(); // get the music ready while they read the screen
 
     return {
       screen,
@@ -238,4 +347,6 @@
     };
   };
   window.PID_RHYTHM.DANCES = DANCES;
+  // For tests and demo recordings: play a dance's tune into any audio context.
+  window.PID_RHYTHM.demo = (ctx, id, f) => loadSounds().then((ok) => { const d = DANCES.find((x) => x.id === id); const beat = 60 / (d.bpm * (f || 1)); const r = playTune(ctx, mixer(ctx), d, beat, 0.3 + d.pulses * beat); for (let p = 0; p < d.pulses; p++) r.click(0.3 + p * beat, p === 0); return Object.assign(r, { real: ok }); });
 })();

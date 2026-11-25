@@ -13,6 +13,7 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | `site/` | Screenshots and fonts (Fraunces and Nunito, SIL Open Font License) used on the website. |
 | `data.js` | All the content: glossary, levels, organizations, rules, checklists. Edit this to change wording. |
 | `app.js` | The screens and the score tracker. |
+| `rhythm.js`, `audio/` | Rhythm tap. The music is played from real accordion and piano notes in `audio/` (from the FluidR3 GM SoundFont by Frank Wen, CC BY 3.0, via github.com/gleitz/midi-js-soundfonts; rebuilt with `scripts/build-music.py`). The tunes are originals written for the app. |
 | `reader.js` | Reads a results screenshot or photo and suggests results to save. |
 | `vendor/ocr/` | The open-source text reader (Tesseract.js 7.0.0, Apache 2.0) and its English data, kept with the app so photos are read on the phone and never uploaded. |
 | `friends.js` | Friends: private invite-only groups, shared wins and cheers (online, via Supabase). |
