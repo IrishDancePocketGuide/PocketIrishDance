@@ -64,6 +64,9 @@
   const DANCES = [
     ["set", /\b(own\s*choice(\s*set)?|non[\s-]*trad(itional)?\.?\s*set|open\s*set|contemporary\s*set)\b/],
     ["tradset", /\b(trad(itional)?\.?\s*set|st\.?\s*patrick'?s\s*day|blackbird|job\s*of\s*journeywork|garden\s*of\s*daisies|king\s*of\s*the\s*fairies|jockey\s*to\s*the\s*fair|three\s*sea\s*captains)\b/],
+    // Adult championships, before prelim/open: "Advanced Adult Prelim Champ" is an adult competition.
+    ["advadultchamp", /\b(adv(anced)?\.?\s*adults?\s*(champ(ionship)?s?|prelim(inary)?|open)|\d{2,4}aa[po]?c)\b/],
+    ["adultchamp", /\b(adults?\s*champ(ionship)?s?|\d{2,4}ac)\b/],
     ["prelim", /\b(prelim(inary)?\.?\s*champ(ionship)?s?|prelim)\b/],
     ["open", /\b(open\s*champ(ionship)?s?)\b/],
     ["treblejig", /\b(treble\s*jig|t\.?\s*jig|heavy\s*jig)\b/],
@@ -82,6 +85,8 @@
     ["lightjig", /\bjig\b/]
   ];
 
+  const CHAMPS = ["prelim", "open", "adultchamp", "advadultchamp"];
+
   // Extra spellings seen on results sites, by level id. Each level's own name is added too.
   const LEVEL_WORDS = {
     b1: ["beginner 1", "beginner i", "beginner one", "first feis", "bun grad", "beginner", "beg 1", "beg"],
@@ -90,6 +95,10 @@
     pw: ["open prizewinner", "prizewinner", "prize winner", "prizewinners", "pw"],
     pc: ["preliminary championship", "prelim championship", "prelim champ", "prelim", "pc"],
     oc: ["open championship", "open champ", "oc"],
+    adc: ["adult championship", "adult championships", "adults championship", "adult champ", "adult champs"],
+    aadc: ["advanced adult championship", "advanced adult champ", "adv adult champ", "adv. adult champ", "advanced adult", "adv adult",
+      "advanced adult preliminary championship", "advanced adult prelim champ", "advanced adult prelim", "advanced adult preliminary",
+      "advanced adult open championship", "advanced adult open champ", "advanced adult open"],
     w_b: ["beginner", "beg"], w_p: ["primary"], w_i: ["intermediate", "inter"], w_o: ["open"],
     w_pc: ["preliminary championship", "prelim champ", "prelim"], w_oc: ["open championship", "open champ"],
     ac_a: ["beginners a", "beginner a", "beg a"], ac_b: ["beginners b", "beginner b", "beg b"], ac_c: ["beginners c", "beginner c", "beg c"],
@@ -366,8 +375,10 @@
     const head = text.match(/your\s*rank\s*is\s*(\d{1,3})\s*of\s*(\d{1,3})/i);
     if (!head) return null;
     const pts = text.match(/total\s*points\s*:?\s*(\d{1,4}(?:[.,]\d{1,3})?)/i);
-    const hl = clean(lines.find((x) => /champ|prelim|\b[po]c\b/i.test(x)) || "");
-    const isPrelim = /prelim|\bpc\b|\d{2,4}pc\b/.test(hl);
+    const hl = clean(lines.find((x) => /champ|prelim|\b[po]c\b|\d{2,4}aa?[po]?c\b/i.test(x)) || "");
+    const isAdv = /adv(anced)?\.?\s*adult|\d{2,4}aa[po]?c\b/.test(hl);
+    const isAdult = !isAdv && /\badults?\b|\d{2,4}ac\b/.test(hl);
+    const isPrelim = !isAdv && !isAdult && /prelim|\bpc\b|\d{2,4}pc\b/.test(hl);
     const judges = []; let cur = null;
     for (const raw of lines) {
       const m = raw.match(SHEET_ROUND);
@@ -386,8 +397,8 @@
     judges.forEach((j) => j.rounds.sort((a, b) => a.n - b.n));
     const names = { 1: "Soft shoe", 2: "Hard shoe", 3: "Set" };
     const notes = judges.map((j) => j.name + ": " + j.rounds.filter((r) => r.comment).map((r) => `${names[r.n]}: ${r.comment}`).join("; ")).join("\n");
-    const level = levelOf(hl) || levelOf(isPrelim ? "preliminary championship" : "open championship");
-    return { dance: isPrelim ? "prelim" : "open", level, place: +head[1], entrants: +head[2], marks: pts ? num(pts[1]) : "",
+    const level = levelOf(hl) || levelOf(isAdv ? "advanced adult championship" : isAdult ? "adult championship" : isPrelim ? "preliminary championship" : "open championship");
+    return { dance: isAdv ? "advadultchamp" : isAdult ? "adultchamp" : isPrelim ? "prelim" : "open", level, place: +head[1], entrants: +head[2], marks: pts ? num(pts[1]) : "",
       recall: false, judges, rounds: [], notes: notes.slice(0, 1200), check: !level, line: lines.find((x) => /your\s*rank/i.test(x)) || "" };
   }
 
@@ -502,7 +513,7 @@
       const d = findDance(l);
       if (!d) { if (judgeAt[i]) current = judgeAt[i]; continue; }
       let judges = judgeAt[i];
-      if (d.id === "prelim" || d.id === "open") {
+      if (CHAMPS.includes(d.id)) {
         // Read the whole championship block: rounds, overall, panel.
         const ch = { dance: d.id, level: levelOf(l) || levelOf(d.text), place: "", entrants: findEntrants(l), marks: findMarks(l), recall: /\brecall(ed)?\b/.test(l), judges: judges || [], rounds: [], line: lines[i] };
         let sure = false, j = i;
@@ -562,7 +573,7 @@
       }
       if (judgeAbove) judges = judges || current;
       // Championship lines name the level; the dance is the championship itself.
-      if (!level && (d.id === "prelim" || d.id === "open")) level = levelOf(d.text);
+      if (!level && (CHAMPS.includes(d.id))) level = levelOf(d.text);
       // One mark per judge, in the order the judges are listed.
       if (list && judges && judges.length === list.length) judges = judges.map((jj, n) => ({ name: jj.name, marks: String(list[n]) }));
       found.push({
