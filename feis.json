@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-25T01:31:58.343Z",
+ "checked": "2026-11-25T19:08:26.017Z",
  "sources": [
   {
    "id": "wida",
@@ -7,7 +7,7 @@
    "name": "WIDA competitions calendar",
    "url": "https://www.irish.dance/competitions-list",
    "count": 40,
-   "lastGood": "2026-11-25T01:31:58.343Z",
+   "lastGood": "2026-11-25T19:08:26.017Z",
    "problem": ""
   },
   {
@@ -16,7 +16,7 @@
    "name": "An Comhdháil feis calendar",
    "url": "https://web.irishdancingorg.com/index.php/feis",
    "count": 6,
-   "lastGood": "2026-11-25T01:31:58.343Z",
+   "lastGood": "2026-11-25T19:08:26.017Z",
    "problem": ""
   },
   {
@@ -25,7 +25,7 @@
    "name": "IDTANA Find a Feis (North America)",
    "url": "https://idtana.org/feiseanna/",
    "count": 7,
-   "lastGood": "2026-11-25T01:31:58.343Z",
+   "lastGood": "2026-11-25T19:08:26.017Z",
    "problem": ""
   },
   {
@@ -34,7 +34,7 @@
    "name": "CRN feiseanna on Feis Host",
    "url": "https://crn.feishost.com/",
    "count": 6,
-   "lastGood": "2026-11-25T18:34:25.708Z",
+   "lastGood": "2026-11-25T19:08:26.017Z",
    "problem": ""
   },
   {
@@ -43,7 +43,16 @@
    "name": "CRDM competition dates",
    "url": "https://www.crdm.ie/competition-dates/",
    "count": 23,
-   "lastGood": "2026-11-25T18:34:25.708Z",
+   "lastGood": "2026-11-25T19:08:26.017Z",
+   "problem": ""
+  },
+  {
+   "id": "found",
+   "org": "all",
+   "name": "Found on regional and school websites (checked by hand)",
+   "url": "",
+   "count": 23,
+   "lastGood": "2026-11-25T19:08:26.017Z",
    "problem": ""
   }
  ],
@@ -113,6 +122,17 @@
    "url": "https://www.irish.dance/competitions-list/2026/12/5/edinburgh-christmas-feis"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Feile na Nollaig",
+   "start": "2026-12-05",
+   "end": "2026-12-05",
+   "place": "Western US",
+   "url": "https://www.westernusregion.com/feiseanna",
+   "foundOn": "the Western US region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "crdm",
    "org": "crdm",
    "name": "Feile Nollaig",
@@ -122,6 +142,17 @@
    "kind": "",
    "organiser": "Gillian Daly",
    "url": "https://www.crdm.ie/competition-dates/"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Feile Nollaig",
+   "start": "2026-12-05",
+   "end": "2026-12-05",
+   "place": "Eastern Canada",
+   "url": "https://www.suefayhealy.com/feilenollaig",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "comhdhail",
@@ -157,6 +188,17 @@
    "url": "https://www.crdm.ie/competition-dates/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Christmas Feis",
+   "start": "2026-12-06",
+   "end": "2026-12-06",
+   "place": "Western US",
+   "url": "https://www.westernusregion.com/feiseanna",
+   "foundOn": "the Western US region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "crn",
    "org": "crn",
    "name": "Dublin Christmas Féile 2026",
@@ -164,6 +206,18 @@
    "end": "2026-12-06",
    "region": "Ireland",
    "url": "https://crn.feishost.com/"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Realt na Nollag Feis (Christmas Star Feis)",
+   "start": "2026-12-06",
+   "end": "2026-12-06",
+   "place": "Whitman Hanson Regional High School, Hanson, MA",
+   "host": "Haley School and Heavey Quinn School",
+   "url": "http://www.heaveyquinn.com",
+   "foundOn": "the New England region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "comhdhail",
@@ -265,6 +319,17 @@
    "url": "https://crn.feishost.com/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Western Canadian Open (Home of the Alberta Belt)",
+   "start": "2027-01-30",
+   "end": "2027-01-31",
+   "place": "Viking Rentals Centre, Okotoks, AB, Canada",
+   "url": "https://www.wcidta.ca/feis-dates",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA Ruhr Feis",
@@ -302,6 +367,18 @@
    "kind": "",
    "organiser": "Royal Tara Dance Academy",
    "url": "https://www.crdm.ie/competition-dates/"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Salish Sea Feis",
+   "start": "2027-02-06",
+   "end": "2027-02-06",
+   "place": "Mary Winspear Centre, Sidney, BC, Canada",
+   "host": "O'Brien School of Irish Dance and OSIDPA",
+   "url": "https://obrienirishdance.com",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "wida",
@@ -379,6 +456,18 @@
    "url": "https://idtana.org/events/new-mexico-state-championships-feis-on-the-rio-grande/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Van Eire Feis",
+   "start": "2027-02-13",
+   "end": "2027-02-14",
+   "place": "Richmond, BC, Canada",
+   "host": "Van Eire Traditional Dance Association",
+   "url": "https://www.wcidta.ca/feis-dates",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA Tuscany Open Feis",
@@ -428,6 +517,17 @@
    "url": "https://www.crdm.ie/competition-dates/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Maple City Winter Feis",
+   "start": "2027-02-27",
+   "end": "2027-02-27",
+   "place": "Eastern Canada",
+   "url": "https://feis.link",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA Baden-Wurttemburg Open Feis",
@@ -435,6 +535,17 @@
    "end": "2027-02-27",
    "place": "Sindelfingen, Germany",
    "url": "https://www.irish.dance/competitions-list/2027/2/27/wida-baden-wurttemburg-open-feis"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Cornell Winter Championships & Grades Feis",
+   "start": "2027-02-28",
+   "end": "2027-02-28",
+   "place": "Eastern Canada",
+   "url": "https://feis.link",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "crdm",
@@ -446,6 +557,30 @@
    "kind": "Championship",
    "organiser": "Fiona Mullen",
    "url": "https://www.crdm.ie/competition-dates/"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Diamond Championships & Grades Feis",
+   "start": "2027-03-06",
+   "end": "2027-03-07",
+   "place": "Eastern Canada",
+   "host": "Costello Irish Dance",
+   "url": "https://www.costelloirishdance.com/diamond-championships",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Feis Solas Nua",
+   "start": "2027-03-06",
+   "end": "2027-03-07",
+   "place": "Edmonton Convention Centre, Edmonton, AB, Canada",
+   "host": "RINCE Parents Association and Knock O'Hogan School of Irish Dance",
+   "url": "https://www.wcidta.ca/feis-dates",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "wida",
@@ -604,6 +739,18 @@
    "url": "https://idtana.org/events/atlantic-canadian-irish-dance-championships-2/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Mattierin Spring Feis in the West",
+   "start": "2027-04-24",
+   "end": "2027-04-25",
+   "place": "Westin Hotel Downtown, Edmonton, AB, Canada",
+   "host": "Mattierin School of Irish Dance and Emerald Isle Dancers Association",
+   "url": "https://www.mattierin.ca/feisinthewest",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA Living Skies on the Prairie Feis",
@@ -702,6 +849,18 @@
    "url": "https://www.crdm.ie/competition-dates/"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "West Coast Championships & Penk O'Donnell Spring Feis",
+   "start": "2027-05-22",
+   "end": "2027-05-23",
+   "place": "Port Moody Secondary School, Port Moody, BC, Canada",
+   "host": "Eire Pacific and Penk O'Donnell School of Irish Dance",
+   "url": "https://www.penkodonnell.ca/feiseanna",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA Belfast Open Feis",
@@ -767,6 +926,18 @@
    "url": "https://www.irish.dance/competitions-list/2027/6/5/wida-venlo-open-feis"
   },
   {
+   "source": "found",
+   "org": "clrg",
+   "name": "Feis on the Flatlands",
+   "start": "2027-06-12",
+   "end": "2027-06-13",
+   "place": "Saskatoon Inn & Conference Centre, Saskatoon, SK, Canada",
+   "host": "River City Irish Dance",
+   "url": "https://www.rivercityirishdance.com/feis",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
    "source": "wida",
    "org": "wida",
    "name": "WIDA East Coast Open Feis",
@@ -774,6 +945,18 @@
    "end": "2027-06-13",
    "place": "Ashbourne, Ireland",
    "url": "https://www.irish.dance/competitions-list/2027/6/13/wida-east-coast-open-feis"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Sea to Sky Open",
+   "start": "2027-06-19",
+   "end": "2027-06-19",
+   "place": "Sheraton Vancouver Guildford Hotel, Surrey, BC, Canada",
+   "host": "Irish Dancers of Steel Society",
+   "url": "https://www.steelschoolofirishdance.com/",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "wida",
@@ -792,6 +975,30 @@
    "end": "2027-06-19",
    "place": "",
    "url": "https://www.irish.dance/competitions-list/2027/6/19/wida-tir-chonaill-open-feis"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Mad Hatter Championships",
+   "start": "2027-06-20",
+   "end": "2027-06-20",
+   "place": "Sheraton Vancouver Guildford Hotel, Surrey, BC, Canada",
+   "host": "Irish Dancers of Steel Society",
+   "url": "https://www.steelschoolofirishdance.com/",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Wild West Irish Dancing Championships",
+   "start": "2027-06-25",
+   "end": "2027-06-27",
+   "place": "Mount Royal University, Calgary, AB, Canada",
+   "host": "TDL Irish Dance Society and Blakey O'Brien School of Irish Dance",
+   "url": "https://www.blakeyobrien.com/feis",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "wida",
@@ -832,6 +1039,74 @@
    "kind": "Championship",
    "organiser": "Aimee Leigh Dance Academy",
    "url": "https://www.crdm.ie/competition-dates/"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Maple City Summer Feis",
+   "start": "2027-08-28",
+   "end": "2027-08-28",
+   "place": "Eastern Canada",
+   "url": "https://feis.link",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Cornell Summer Championships & Grades Feis",
+   "start": "2027-08-29",
+   "end": "2027-08-29",
+   "place": "Eastern Canada",
+   "url": "https://feis.link",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Fiddlehead Feis",
+   "start": "2027-09-04",
+   "end": "2027-09-05",
+   "place": "Eastern Canada",
+   "url": "https://www.idtac-er.com/regional-feiseanna",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Phantom Feis (Eastern Canada's Halloween Feis)",
+   "start": "2027-10-08",
+   "end": "2027-10-09",
+   "place": "Eastern Canada",
+   "host": "Costello Irish Dance",
+   "url": "https://www.costelloirishdance.com/phantom-feis",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "Feili an Chladaigh",
+   "start": "2027-10-23",
+   "end": "2027-10-24",
+   "place": "The Pipe Shop at the Shipyards, North Vancouver, BC, Canada",
+   "host": "O'Connor School of Irish Dance and Rince Na Gael Celtic Heritage Society BC",
+   "url": "https://www.wcidta.ca/feis-dates/feili-chadaigh",
+   "foundOn": "the Western Canada region calendar",
+   "checked": "2026-11-24"
+  },
+  {
+   "source": "found",
+   "org": "clrg",
+   "name": "ECRO Mini Feis",
+   "start": "2027-11-27",
+   "end": "2027-11-28",
+   "place": "Montreal, QC, Canada",
+   "url": "https://www.idtac-er.com/regional-feiseanna",
+   "foundOn": "the Eastern Canada region calendar",
+   "checked": "2026-11-24"
   },
   {
    "source": "wida",
