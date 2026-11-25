@@ -17,7 +17,15 @@
     { ga: "ádh mór", say: "aw MORE", means: "Good luck", note: "A perfect thing to say to a friend before they dance!" },
     { ga: "fáilte", say: "FAWL-chuh", means: "Welcome", note: "Céad míle fáilte means a hundred thousand welcomes." },
     { ga: "sláinte", say: "SLAWN-chuh", means: "Health", note: "People say it like cheers when they raise a glass." },
-    { ga: "Éire", say: "AIR-uh", means: "Ireland", note: "Where Irish dance comes from." }
+    { ga: "Éire", say: "AIR-uh", means: "Ireland", note: "Where Irish dance comes from." },
+    { ga: "bróga", say: "BRO-guh", means: "Shoes", note: "Bróga rince are dance shoes, hard or soft." },
+    { ga: "gúna", say: "GOO-nuh", means: "Dress", note: "A solo dress is a big part of a dancer's look." },
+    { ga: "amhrán", say: "OW-rawn", means: "Song", note: "Sean-nós amhráin are old-style Irish songs." },
+    { ga: "múinteoir", say: "MOON-chore", means: "Teacher", note: "Your dance teacher is your múinteoir rince." },
+    { ga: "máthair", say: "MAW-her", means: "Mother", note: "Every feis needs a busy máthair or two!" },
+    { ga: "athair", say: "AH-her", means: "Father", note: "Often found carrying the wig bag." },
+    { ga: "slán", say: "slawn", means: "Goodbye", note: "It comes from the word for safe, so it means go safely." },
+    { ga: "dia duit", say: "DEE-uh gwitch", means: "Hello", note: "It means God be with you. The reply is dia is muire duit." }
   ];
   const KEY = "pid.gaelic";
 
@@ -30,12 +38,12 @@
 
   window.PID_GAELIC = function (A) {
     const { esc } = A;
-    const TOTAL = WORDS.length;
+    const TOTAL = Math.min(10, WORDS.length); // questions per game, picked at random
     let N = ls.load();
     let game = null; // { order: [wordIdx], opts: [[wordIdx x4]], round, score, answered, picks }
 
     function newGame() {
-      const order = shuffle(WORDS.map((_, i) => i));
+      const order = shuffle(WORDS.map((_, i) => i)).slice(0, TOTAL);
       const opts = order.map((w) => shuffle([w, ...shuffle(WORDS.map((_, i) => i).filter((i) => i !== w)).slice(0, 3)]));
       game = { order, opts, round: 0, score: 0, answered: false, picks: [] };
     }
@@ -49,7 +57,7 @@
           <section class="card nd-intro">
             <div class="tq-big" aria-hidden="true">☘️</div>
             <h3>How many Irish words do you know?</h3>
-            <p class="muted">You'll see ${TOTAL} words in Irish (Gaeilge, said GAYL-gyuh). Pick what each one means. Tap the speaker to hear how it sounds.</p>
+            <p class="muted">You'll see ${TOTAL} words, picked at random from ${WORDS.length}, in Irish (Gaeilge, said GAYL-gyuh). Pick what each one means. Tap the speaker to hear how it sounds.</p>
             <button type="button" class="btn block" data-gw-start>Start</button>
             ${N.best ? `<p class="small muted" style="margin:10px 0 0">Your best: ${N.best} of ${TOTAL}</p>` : ""}
           </section>`
@@ -67,8 +75,8 @@
             <p class="small">Your best: ${Math.max(N.best, sc)} of ${TOTAL}</p>
             <button type="button" class="btn block" data-gw-start>Play again</button>
           </section>
-          <h3 class="tq-review-h">All the words</h3>
-          ${WORDS.map((w) => `<div class="card tq-review"><strong>${esc(w.ga)}</strong> <span class="muted">· ${esc(w.means)}</span>
+          <h3 class="tq-review-h">This game's words</h3>
+          ${game.order.map((i) => WORDS[i]).map((w) => `<div class="card tq-review"><strong>${esc(w.ga)}</strong> <span class="muted">· ${esc(w.means)}</span>
             <div class="small"><button type="button" class="say" data-say="${esc(w.say)}" aria-label="Hear it: ${esc(w.say)}">${speaker}${esc(w.say)}</button></div></div>`).join("")}`
         };
       }
@@ -127,7 +135,7 @@
 
     return {
       screen,
-      status() { N = ls.load(); return N.best ? `Best: ${N.best} of ${TOTAL}` : `${TOTAL} words to learn`; }
+      status() { N = ls.load(); return N.best ? `Best: ${N.best} of ${TOTAL}` : `${WORDS.length} words to learn`; }
     };
   };
 })();
