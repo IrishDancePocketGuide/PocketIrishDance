@@ -26,11 +26,12 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "61"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "62"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } }
+  const saveHooks = []; // school.js keeps the copy shared with a teacher up to date
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast("Couldn't save on this phone"); } saveHooks.forEach((f) => { try { f(); } catch (e) { console.warn(e); } }); }
 
   // Photos are bigger, so they go in IndexedDB.
   const photos = (function () {
@@ -736,6 +737,7 @@
         ${D.dances.filter((d) => dancerLevel(dn, d.id)).map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="chip">${esc(levelById(dancerLevel(dn, d.id)).name)}</span></div>`).join("") || '<p class="small muted">No levels set yet.</p>'}
         ${dancerLevel(dn, "champ") ? `<div class="dance-row"><span class="name">Championship</span><span class="chip">${esc(levelById(dancerLevel(dn, "champ")).name)}</span></div>` : ""}
       </div>
+      ${ext.schoolCard ? ext.schoolCard(dn) : ""}
       ${tabs !== "comments" ? (() => { const top = commentTrends(rs).list.slice(0, 3).map((m) => m.t.icon + " " + m.t.name);
         return `<button type="button" class="workon-cta" data-dview="comments"><span class="ico" aria-hidden="true">⭐</span><span><strong>What ${esc(dn.name)} needs to work on</strong><span>${top.length ? esc(top.join(" · ")) : "Judges' comments, practice tips and a journal"}</span></span><span aria-hidden="true">›</span></button>`; })() : ""}
       ${true ? `<div class="pill-tabs"><button data-dview="recent" class="${tabs === "recent" ? "on" : ""}">Latest results</button><button data-dview="dance" class="${tabs === "dance" ? "on" : ""}">By dance</button><button data-dview="judge" class="${tabs === "judge" ? "on" : ""}">By judge</button><button data-dview="comments" class="workon-pill ${tabs === "comments" ? "on" : ""}">⭐ To work on</button></div>` : ""}
@@ -1255,6 +1257,12 @@
         <p class="small muted" style="margin:0">Backups include results and checklist ticks, not photos.</p>
       </div>
 
+      <h2 style="margin-top:22px">Dancers' schools and teachers</h2>
+      <div class="card stack">
+        <p class="small muted" style="margin:0">Pick each dancer's school on their Scores page. If the teacher has joined the app, you can choose to share that dancer's results with them.</p>
+        <a class="btn ghost block" href="#/teach">🎓 I'm a dance teacher</a>
+      </div>
+
       <h2 id="help" style="margin-top:22px">Help and feedback</h2>
       <p class="muted" style="margin-top:0">Each button opens an email to us from your own email app, with your app details filled in so we can help faster.</p>
       <div class="card stack">
@@ -1383,6 +1391,7 @@
       const gone = S.results.filter((x) => x.dancerId === id && x.photoId).map((x) => x.photoId);
       S.results = S.results.filter((x) => x.dancerId !== id); S.dancers = S.dancers.filter((d) => d.id !== id); S.journal = (S.journal || []).filter((x) => x.dancerId !== id);
       gone.forEach((pid) => releasePhoto(pid));
+      if (friendsApi.onDancerDeleted) friendsApi.onDancerDeleted(id);
       save(); toast("Deleted"); location.hash = "#/scores";
     }
   });
@@ -1444,8 +1453,30 @@
 
   // ---------- friends (friends.js adds its screens here) ----------
   const ext = {};
-  const friendsApi = { ext, rerender, toast, esc, fmtDate, ordinal, danceById, levelById, save, S: () => S, canShare: false };
+  // What a teacher sees for one dancer, if the family agreed to share: a copy of each result,
+  // without photos or the parent's own notes. Judges are listed with only what that judge decided.
+  function shareRows(dancerId) {
+    const cut = (v, n) => { v = v == null ? "" : String(v).trim(); return v ? v.slice(0, n) : null; };
+    const num = (v) => { const x = parseInt(v, 10); return x > 0 && x < 1000 ? x : null; };
+    return S.results.filter((r) => r.dancerId === dancerId).map((r) => {
+      const d = danceById(r.dance), l = levelById(r.level);
+      const comments = [];
+      judgesOf(r).forEach((j) => (j.rounds || []).forEach((x) => { if (x.comment) comments.push({ judge: cut(j.name, 60), round: x.n, text: cut(x.comment, 400) }); }));
+      return {
+        result_key: String(r.id).slice(0, 40),
+        feis_date: /^\d{4}-\d{2}-\d{2}$/.test(r.date || "") ? r.date : null,
+        feis: cut(r.feis, 80), dance: cut(d ? d.name : r.dance, 60), level: cut(l ? l.name : "", 40),
+        champ: isChamp(r), place: num(r.place), entrants: num(r.entrants), marks: cut(r.marks, 20), recall: !!r.recall,
+        judges: judgePlacings(r).slice(0, 12).map((p) => ({ name: cut(p.name, 60), place: p.place || null, marks: cut(p.marks, 20), kind: p.kind, round: p.round || null })),
+        comments: comments.slice(0, 30)
+      };
+    });
+  }
+
+  const friendsApi = { ext, rerender, toast, esc, fmtDate, ordinal, danceById, levelById, save, S: () => S, canShare: false,
+    shareRows, onSave: (f) => saveHooks.push(f), contactEmail: CONTACT_EMAIL };
   if (window.PID_FRIENDS) window.PID_FRIENDS(friendsApi);
+  if (window.PID_SCHOOL) window.PID_SCHOOL(friendsApi); // school.js: schools, teachers and sharing scores
   if (window.PID_GAMES) window.PID_GAMES(friendsApi); // games.js adds the Games screens
 
   route();

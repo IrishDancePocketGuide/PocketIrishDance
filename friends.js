@@ -40,7 +40,7 @@
     }
 
     const F = { user: null, profile: undefined, groups: [], members: [], wins: [], loadedAt: 0, loading: null, step: "email", email: "", openMsg: "" };
-    const onFriendsPage = () => /^#\/(friends|group|join|share)\b/.test(location.hash);
+    const onFriendsPage = () => /^#\/(friends|group|join|share|school|teach|admin)\b/.test(location.hash);
     const myId = () => F.user && F.user.id;
     const groupById = (id) => F.groups.find((g) => g.id === id);
     const isOrganiser = (gid) => F.members.some((m) => m.group_id === gid && m.user_id === myId() && m.role === "organiser");
@@ -109,7 +109,7 @@
           if (isAuthErr(err) && await signedOutQuietly()) { F.loading = null; await backToSignIn(); return; }
           F.err = "Couldn't reach Friends. Check your connection and try again."; if (F.profile === undefined) F.profile = null;
         })
-        .finally(() => { F.loading = null; badge(); if (onFriendsPage()) rerender(); });
+        .finally(() => { F.loading = null; badge(); if (onFriendsPage()) rerender(); if (F.profile && A.onAccountReady) A.onAccountReady(); });
       return F.loading;
     }
 
@@ -195,17 +195,17 @@
         <div class="card"><p style="margin:0">Only the wins you choose to share will go online, and only to friends you invite. Everything else stays on your phone.</p></div>`, null, false);
     }
 
-    function signIn() {
+    function signIn(intro) {
       const codeStep = F.step === "code";
-      return page("Friends", `
-        <div class="hero"><h2>Cheer each other on</h2><p>Share your dancer's wins with a private group of dance-parent friends.</p></div>
+      return page(intro ? intro.title : "Friends", `
+        ${intro ? intro.html : `<div class="hero"><h2>Cheer each other on</h2><p>Share your dancer's wins with a private group of dance-parent friends.</p></div>
         <div class="card">
           <ul class="small" style="margin:0;padding-left:18px;line-height:1.6">
             <li>For parents and guardians only.</li>
             <li>Groups are private and invite-only.</li>
             <li>You choose each win to share. Everything else stays on your phone.</li>
           </ul>
-        </div>
+        </div>`}
         ${codeStep ? `
         <form class="card" data-fform="code">
           <h3>Check your email</h3>
@@ -223,13 +223,13 @@
         <p class="small muted center"><a href="#/privacy">Privacy policy</a> · <a href="#/terms">Terms of use</a></p>`, null, false);
     }
 
-    function setup() {
-      return page("Friends", `
+    function setup(intro) {
+      return page(intro ? intro.title : "Friends", `
         <h2>Set up your account</h2>
         <form class="card" data-fform="setup">
-          <label class="field"><span>Name your friends will see</span><input name="name" maxlength="40" placeholder="For example: Aoife's mum, or Sarah K" required></label>
-          <p class="small muted" style="margin-top:-4px">Please don't use your dancer's full name.</p>
-          <label class="toggle"><input type="checkbox" name="adult" required> I'm a parent or guardian, aged 18 or over</label>
+          <label class="field"><span>Your name in the app</span><input name="name" maxlength="40" placeholder="For example: Aoife's mum, or Sarah K" required></label>
+          <p class="small muted" style="margin-top:-4px">Friends in your groups see this. Please don't use your dancer's full name.</p>
+          <label class="toggle"><input type="checkbox" name="adult" required> I'm aged 18 or over, and a parent, guardian or dance teacher</label>
           <label class="toggle"><input type="checkbox" name="privacy" required> I agree to the <a href="#/terms">terms of use</a> and have read the <a href="#/privacy">privacy policy</a></label>
           <button class="btn block">Continue</button>
         </form>
@@ -361,16 +361,17 @@
           <button class="btn ghost block" data-f="signout">Sign out</button>
         </div>
         <h2 style="margin-top:22px">Delete account</h2>
-        <div class="card"><p class="small" style="margin-top:0">This deletes your account, everything you shared and your cheers, straight away. Results saved on this phone are not affected.</p>
+        <div class="card"><p class="small" style="margin-top:0">This deletes your account, everything you shared (including scores shared with a teacher) and your cheers, straight away. Results saved on this phone are not affected.</p>
         <button class="btn danger block" data-f="delete">Delete my account</button></div>`);
     }
 
     // ---------- routes ----------
-    function gate(title) {
+    // intro (optional): { title, html } to show on the sign-in page instead of the Friends welcome.
+    function gate(title, intro) {
       if (!ready) return comingSoon();
-      if (!F.user) return signIn();
+      if (!F.user) return signIn(intro);
       if (F.profile === undefined) { refresh(); return loadingPage(title); }
-      if (F.profile === null) return F.err ? page("Friends", errorNote(), null, false) : setup();
+      if (F.profile === null) return F.err ? page(title || "Friends", errorNote(), null, false) : setup(intro);
       refresh();
       return null;
     }
@@ -389,6 +390,13 @@
     };
     ext.share = (parts) => { if (!F.user) ls.set(AFTER_KEY, location.hash); return gate("Share a win") || share(parts[1]); };
     A.canShare = ready;
+    // For school.js (sharing scores with a teacher), which uses the same account.
+    A.acct = {
+      sb, ready, page, loadingPage, fail,
+      user: () => F.user, profile: () => F.profile,
+      // Ask to sign in, then come back to where the parent was.
+      need(title, intro) { if (!F.user) ls.set(AFTER_KEY, location.hash); return gate(title, intro); }
+    };
 
     // After sign-in and setup, go where the parent was heading (an invite link or a share).
     function afterSetup() {
@@ -515,6 +523,11 @@
               wins_shared: F.wins.filter((x) => x.user_id === me).map(({ profiles, cheers, ...x }) => x),
               cheers_sent: F.wins.flatMap((x) => x.cheers.filter((c) => c.user_id === me).map((c) => ({ kind: c.kind, created_at: c.created_at, on_win: x.id })))
             };
+            // Scores shared with a teacher, and teacher requests (school.js). Missing tables are skipped.
+            const sh = await sb.from("score_shares").select("dancer_name, agreed_at, synced_at, schools(name, town), shared_results(*)").eq("user_id", me);
+            if (!sh.error) data.shared_with_teacher = sh.data.map((x) => ({ dancer_name: x.dancer_name, school: x.schools, agreed_at: x.agreed_at, last_updated: x.synced_at, results: (x.shared_results || []).map(({ share_id, ...r }) => r) }));
+            const cl = await sb.from("school_claims").select("teacher_name, credential, proof, status, created_at, schools(name, town)").eq("user_id", me);
+            if (!cl.error) data.teacher_requests = cl.data;
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
             a.download = "pocket-irish-dance-friends-data.json"; document.body.appendChild(a); a.click(); a.remove(); break;
           }
