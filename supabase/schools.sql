@@ -26,7 +26,9 @@ create table public.app_admins (
 
 create table public.schools (
   id         uuid primary key default gen_random_uuid(),
-  name       text not null check (char_length(btrim(name)) between 3 and 80 and name ~* 'irish'),
+  -- Parents may only add names with "Irish" in them (see add_school). Schools from an
+  -- organization's official list are all Irish dance schools, whatever their name.
+  name       text not null check (char_length(btrim(name)) between 3 and 80),
   org        text not null check (org in ('clrg', 'comhdhail', 'wida', 'idtana', 'other')),
   town       text not null check (char_length(btrim(town)) between 2 and 60),
   country    text not null check (char_length(btrim(country)) between 2 and 40),
@@ -35,6 +37,8 @@ create table public.schools (
   source     text check (char_length(source) <= 80),
   -- Teacher names the school's own website lists. Only a help for the app team when checking a claim.
   listed_teachers text check (char_length(listed_teachers) <= 300),
+  -- The school's public email from that list. Only the app team sees it, to check a teacher.
+  contact_email   text check (char_length(contact_email) <= 120),
   added_by   uuid references public.profiles (id) on delete set null,
   created_at timestamptz not null default now()
 );
@@ -145,7 +149,9 @@ create policy "family or teacher reads" on public.shared_results for select to a
 -- All changes go through the functions below.
 revoke all on public.app_admins, public.schools, public.school_claims, public.score_shares, public.shared_results
   from anon, authenticated;
-grant select on public.schools, public.school_claims, public.score_shares, public.shared_results to authenticated;
+grant select on public.school_claims, public.score_shares, public.shared_results to authenticated;
+-- Everyone signed in can see a school's name and place, but not the teacher list or email kept for checking.
+grant select (id, name, org, town, country, website, source, created_at) on public.schools to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Actions the app calls
@@ -292,13 +298,13 @@ $$;
 create function public.admin_claims() returns table (
   id uuid, status text, teacher_name text, credential text, proof text, email text, created_at timestamptz,
   school_id uuid, school_name text, school_org text, school_town text, school_country text, school_website text,
-  school_source text, listed_teachers text, other_teacher text, families bigint)
+  school_source text, listed_teachers text, school_email text, other_teacher text, families bigint)
 language plpgsql stable security definer set search_path = '' as $$
 begin
   if not public.is_admin() then raise exception 'Only the app team can do that'; end if;
   return query
     select c.id, c.status, c.teacher_name, c.credential, c.proof, u.email::text, c.created_at,
-           s.id, s.name, s.org, s.town, s.country, s.website, s.source, s.listed_teachers,
+           s.id, s.name, s.org, s.town, s.country, s.website, s.source, s.listed_teachers, s.contact_email,
            (select o.teacher_name from public.school_claims o where o.school_id = s.id and o.status = 'approved' and o.id <> c.id),
            (select count(*) from public.score_shares x where x.claim_id = c.id)
     from public.school_claims c
@@ -351,6 +357,8 @@ grant execute on function public.is_admin(), public.is_my_approved_claim(uuid), 
   public.sync_shared_results(uuid, jsonb), public.admin_claims(), public.admin_decide_claim(uuid, boolean),
   public.admin_remove_teacher(uuid)
   to authenticated;
+
+-- The school list itself is in school-list.sql. Run that next.
 
 -- ---------------------------------------------------------------------------
 -- Make the app's own account an admin, so it can approve teachers.

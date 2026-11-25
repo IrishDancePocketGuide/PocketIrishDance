@@ -58,7 +58,7 @@ window.PID_LEGAL = (function () {
       </ul>
       <p><strong>Never shared:</strong> photos, your own notes, the journal, what you wrote about judges, other dancers you haven't chosen to share, and your email address.</p>
       <p><strong>Stopping.</strong> You can stop sharing at any time on the dancer's School page. Everything shared for that dancer is deleted straight away. Deleting the dancer, changing school or deleting your account does the same. If the school's teacher changes or leaves the app, sharing stops and the new teacher sees nothing unless you agree again.</p>
-      <p><strong>Teachers' own information.</strong> If you ask to be a school's teacher, we keep the name, qualification and details you give us, and your email address, to check your request. Families at that school see your name once you're approved.</p>
+      <p><strong>Teachers' own information.</strong> If you ask to be a school's teacher, we keep the name, qualification and details you give us, and your email address, to check your request. Families at that school see your name once you're approved. To help us check requests, our school list also keeps the teacher names and school contact details that the dance organizations publish on their own public school lists. Only our team sees these.</p>
       <p style="margin-bottom:0">Our team approves teachers, but doesn't look at families' shared results.</p>`)}
 
     ${sec("Counting visits", `

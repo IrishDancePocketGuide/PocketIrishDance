@@ -136,7 +136,7 @@
       const list = T.found;
       return `
         <form class="card" data-sform="search" data-mode="${mode}">
-          <label class="field"><span>School name or town</span><input name="q" value="${esc(T.q)}" placeholder="For example: Trinity, or Chicago" required minlength="2" autocomplete="off"></label>
+          <label class="field"><span>School name or town</span><input name="q" value="${esc(T.q)}" placeholder="For example: Trinity, Chicago or Mid America" required minlength="2" autocomplete="off"></label>
           <button class="btn block">Search</button>
         </form>
         ${list ? (list.length ? list.map((sc) => `<button class="card" data-s="pick" data-mode="${mode}" data-id="${esc(sc.id)}" style="display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit">
@@ -349,7 +349,8 @@
         <div class="row between"><strong>${esc(c.teacher_name)}</strong><span class="chip ${c.status === "pending" ? "gold" : ""}">${c.status === "pending" ? "Waiting" : "Approved"}</span></div>
         <dl class="facts small" style="margin-top:6px">
           <dt>School</dt><dd>${esc(c.school_name)}<div class="muted">${esc([c.school_town, c.school_country, orgName(c.school_org)].filter(Boolean).join(" · "))}</div>${c.school_website ? `<a href="${esc(c.school_website)}" target="_blank" rel="noopener">Open the school website ↗</a>` : ""}${c.school_source ? `<div class="muted">From: ${esc(c.school_source)}</div>` : ""}</dd>
-          ${c.listed_teachers ? `<dt>Website lists</dt><dd>${esc(c.listed_teachers)}</dd>` : ""}
+          ${c.listed_teachers ? `<dt>Listed teachers</dt><dd>${esc(c.listed_teachers)}</dd>` : ""}
+          ${c.school_email ? `<dt>School's email</dt><dd><a href="mailto:${esc(c.school_email)}">${esc(c.school_email)}</a></dd>` : ""}
           <dt>Qualification</dt><dd>${esc(c.credential || "Not given")}</dd>
           <dt>How to check</dt><dd>${esc(c.proof || "Not given")}</dd>
           <dt>Their email</dt><dd>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : "?"}</dd>
@@ -364,7 +365,7 @@
         <details class="card small"><summary style="cursor:pointer;font-weight:700">How to check a teacher</summary>
           <ul style="margin-bottom:0;padding-left:18px;line-height:1.6">
             <li>Open the school website. Does it name this teacher?</li>
-            <li>Does their email use the school's own web address, or match the email on the school website?</li>
+            <li>Does their email match the school's email from the organization's list, or use the school's own web address?</li>
             <li>Not sure? Email them from ${esc(A.contactEmail)} at the school's public email address, and approve once they reply from it.</li>
             <li>Approving lets them see what families choose to share. If in doubt, don't approve yet.</li>
           </ul></details>
