@@ -75,7 +75,7 @@ window.PID_LEGAL = (function () {
       <p style="margin-top:0">We use a small number of service providers. They may only use information to provide their service to us.</p>
       <ul>
         <li><strong>Supabase</strong> stores Friends accounts, groups, shared wins and cheers, schools, teacher requests and results shared with teachers, in a data centre in the United States.</li>
-        <li><strong>Resend</strong> sends the sign-in code emails, so it receives your email address.</li>
+        <li><strong>Resend</strong> sends the sign-in code emails, so it receives your email address. It also emails our team the details of each new teacher request, so we can check it.</li>
         <li><strong>GitHub Pages</strong> delivers the app's pages to your phone.</li>
         <li><strong>GoatCounter</strong> counts visits, as described above.</li>
       </ul>
