@@ -28,7 +28,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "67"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "68"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -211,6 +211,7 @@
       <div class="row between wrap"><h3>${esc(t.term)}${t.alt ? ` <span class="alt">· ${esc(t.alt)}</span>` : ""}</h3>${sayBtn(t.say)}</div>
       <p>${esc(t.means)}${draftTag(t)}</p>
       ${t.why ? `<p class="why">Why it matters: ${esc(t.why)}</p>` : ""}
+      ${t.orgs ? `<p style="margin:8px 0 0"><span class="chip grey">${esc(t.orgs.length === 1 ? orgName(t.orgs[0]) + " only" : "Used by " + t.orgs.map(orgName).join(", "))}</span></p>` : ""}
     </article>`;
   }
 
