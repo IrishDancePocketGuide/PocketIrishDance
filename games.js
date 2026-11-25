@@ -173,6 +173,7 @@
     const ND = window.PID_NAMEDANCE ? window.PID_NAMEDANCE(A) : null; // namedance.js
     const GW = window.PID_GAELIC ? window.PID_GAELIC(A) : null; // gaelic.js
     const SY = window.PID_SYMBOLS ? window.PID_SYMBOLS(A) : null; // symbols.js
+    const CM = window.PID_COUNTIES ? window.PID_COUNTIES(A) : null; // counties.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -205,6 +206,13 @@
           <span class="game-body"><strong>Irish symbols</strong>
             <span class="small muted">Name the harp, Claddagh, trinity knot and more</span>
             <span class="small game-status">${esc(SY.status())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+        ${CM ? `<a class="card game-card" href="#/games/counties">
+          <span class="ico" aria-hidden="true">🗺️</span>
+          <span class="game-body"><strong>Irish counties</strong>
+            <span class="small muted">Find the county on the map, or pick its province</span>
+            <span class="small game-status">${esc(CM.status())}</span></span>
           <span class="btn sm">Play</span>
         </a>` : ""}
         ${TQ ? `<a class="card game-card" href="#/games/trivia">
@@ -455,6 +463,7 @@
       if (parts[1] === "namedance" && ND) return ND.screen();
       if (parts[1] === "gaelic" && GW) return GW.screen();
       if (parts[1] === "symbols" && SY) return SY.screen();
+      if (parts[1] === "counties" && CM) return CM.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };
