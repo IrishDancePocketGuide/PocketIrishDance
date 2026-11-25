@@ -172,6 +172,7 @@
     const TQ = window.PID_TRIVIA ? window.PID_TRIVIA(A) : null; // trivia.js
     const ND = window.PID_NAMEDANCE ? window.PID_NAMEDANCE(A) : null; // namedance.js
     const GW = window.PID_GAELIC ? window.PID_GAELIC(A) : null; // gaelic.js
+    const SY = window.PID_SYMBOLS ? window.PID_SYMBOLS(A) : null; // symbols.js
     let timer = null;
 
     function puzzleKey(kind, level) { return kind === "bonus" ? "bonus-" + level : localDate() + "-" + level; }
@@ -229,9 +230,16 @@
         </a>` : ""}
         ${GW ? `<a class="card game-card" href="#/games/gaelic">
           <span class="ico" aria-hidden="true">☘️</span>
-          <span class="game-body"><strong>Gaelic word flashcards</strong>
-            <span class="small muted">See an Irish word and pick what it means</span>
+          <span class="game-body"><strong>Learning Irish</strong>
+            <span class="small muted">Word flashcards: see a word in Irish (Gaeilge) and pick what it means</span>
             <span class="small game-status">${esc(GW.status())}</span></span>
+          <span class="btn sm">Play</span>
+        </a>` : ""}
+        ${SY ? `<a class="card game-card" href="#/games/symbols">
+          <span class="ico" aria-hidden="true">🍀</span>
+          <span class="game-body"><strong>Irish symbols</strong>
+            <span class="small muted">Name the harp, Claddagh, trinity knot and more</span>
+            <span class="small game-status">${esc(SY.status())}</span></span>
           <span class="btn sm">Play</span>
         </a>` : ""}
         ${streakOn ? `<p class="small muted" style="text-align:center">🔥 ${st.count} day${st.count === 1 ? "" : "s"} in a row${st.best > st.count ? ` · best ${st.best}` : ""}</p>` : ""}
@@ -446,6 +454,7 @@
       if (parts[1] === "trivia" && TQ) return TQ.screen();
       if (parts[1] === "namedance" && ND) return ND.screen();
       if (parts[1] === "gaelic" && GW) return GW.screen();
+      if (parts[1] === "symbols" && SY) return SY.screen();
       if (parts[1] === "wordsearch") return wordsearch(parts[2] === "bonus" ? "bonus" : "daily");
       return hub();
     };

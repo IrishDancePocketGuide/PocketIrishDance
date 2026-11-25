@@ -50,7 +50,7 @@
     let game = null; // the round being played
 
     function stars(pct) { return pct >= 90 ? 3 : pct >= 70 ? 2 : pct >= 40 ? 1 : 0; }
-    const starText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
+    const starText = (n) => n ? `${"☘️".repeat(n)} (${n} of 3)` : "(0 of 3 ☘️)"; // scored in shamrocks, not stars
 
     function screen() {
       R = ls.load();
@@ -211,7 +211,7 @@
       if (pad) { pad.classList.remove("live"); pad.style.setProperty("--pulse", 0); }
       const pt = document.getElementById("rtPadText"); if (pt) pt.textContent = "Play again";
       show(`${starText(st)}  ${perfect} perfect · ${good} good · ${pct}% on the beat${newBest && prev ? " · New best!" : ""}`, "");
-      if (newBest && st === 3 && window.PID_CELEBRATE) window.PID_CELEBRATE("Spot on!", `${game.score} points in the ${game.d.name.toLowerCase()}. You've got great timing!`);
+      if (newBest && st === 3 && window.PID_CELEBRATE) window.PID_CELEBRATE("Spot on!", `${game.score} points in the ${game.d.name.toLowerCase()}. You've got great timing!`, { shamrocks: true });
       else if (newBest && prev) toast(`New best score: ${game.score}`);
     }
 

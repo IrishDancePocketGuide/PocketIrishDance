@@ -476,3 +476,10 @@ label.field > span { display: block; font-size: 13.5px; font-weight: 700; margin
 .gw-word { font-size: 38px; font-weight: 700; line-height: 1.15; margin: 0 0 10px; overflow-wrap: anywhere; }
 .gw-dots { flex-wrap: wrap; }
 .gw-dots i { width: 20px; }
+
+/* Irish symbols flashcards */
+.sy-card { display: flex; justify-content: center; padding: 18px; }
+.sy-big { width: min(52vw, 200px); height: auto; color: var(--ink); }
+.sy-row { display: flex; justify-content: center; gap: 10px; }
+.sy-mini { width: 48px; height: 48px; flex: none; color: var(--ink); }
+.sy-review { display: flex; gap: 12px; align-items: flex-start; }

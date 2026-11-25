@@ -1,4 +1,4 @@
-/* Gaelic word flashcards: see an Irish word, pick what it means.
+/* Learning Irish word flashcards: see an Irish word, pick what it means.
    Works offline. Best score stays on this phone. The speaker button
    (data-say) is handled by app.js and is just for learning, not scored. */
 (function () {
@@ -44,12 +44,12 @@
       N = ls.load();
       if (!game) {
         return {
-          title: "Gaelic flashcards", tab: "home", back: true,
+          title: "Learning Irish", tab: "home", back: true,
           html: `
           <section class="card nd-intro">
             <div class="tq-big" aria-hidden="true">☘️</div>
             <h3>How many Irish words do you know?</h3>
-            <p class="muted">You'll see ${TOTAL} words in Irish (Gaelic). Pick what each one means. Tap the speaker to hear how it sounds.</p>
+            <p class="muted">You'll see ${TOTAL} words in Irish (Gaeilge, said GAYL-gyuh). Pick what each one means. Tap the speaker to hear how it sounds.</p>
             <button type="button" class="btn block" data-gw-start>Start</button>
             ${N.best ? `<p class="small muted" style="margin:10px 0 0">Your best: ${N.best} of ${TOTAL}</p>` : ""}
           </section>`
@@ -58,10 +58,10 @@
       if (game.round >= TOTAL) {
         const sc = game.score;
         return {
-          title: "Gaelic flashcards", tab: "home", back: true,
+          title: "Learning Irish", tab: "home", back: true,
           html: `
           <section class="card tq-done">
-            <div class="tq-big">${sc === TOTAL ? "🏆" : sc >= 8 ? "🌟" : "☘️"}</div>
+            <div class="tq-big">${sc === TOTAL ? "☘️☘️☘️" : sc >= 8 ? "☘️☘️" : "☘️"}</div>
             <h3>${sc} of ${TOTAL} words right</h3>
             <p class="muted">${sc === TOTAL ? "Maith thú! (mah HOO), that means well done!" : sc >= 8 ? "Great job! You know lots of Irish." : "Every dancer starts somewhere. Play again to learn them all."}</p>
             <p class="small">Your best: ${Math.max(N.best, sc)} of ${TOTAL}</p>
@@ -74,7 +74,7 @@
       }
       const w = WORDS[game.order[game.round]];
       return {
-        title: "Gaelic flashcards", tab: "home", back: true,
+        title: "Learning Irish", tab: "home", back: true,
         html: `
         <div class="row between ws-stats small"><span>Word ${game.round + 1} of ${TOTAL}</span><span>${game.score} right</span></div>
         <div class="tq-dots gw-dots">${game.order.map((_, i) => `<i class="${i < game.round ? (game.picks[i] ? "ok" : "no") : i === game.round ? "now" : ""}"></i>`).join("")}</div>
@@ -109,7 +109,7 @@
         const newBest = game.score > (N.best || 0);
         if (newBest) N.best = game.score;
         ls.save(N);
-        if (game.score === TOTAL && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Maith thú!", `All ${TOTAL} Irish words right. Well done! ☘️`), 300);
+        if (game.score === TOTAL && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Maith thú!", `All ${TOTAL} Irish words right. Well done! ☘️`, { shamrocks: true }), 300);
         else if (newBest && N.played > 1) A.toast(`New best: ${game.score} of ${TOTAL}`);
       }
       A.rerender();

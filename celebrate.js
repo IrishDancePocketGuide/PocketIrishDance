@@ -1,16 +1,20 @@
 // Fireworks and a congratulations card for 1st places. Tap anywhere to close.
+// Pass { shamrocks: true } for shamrock fireworks (perfect game scores).
 (function () {
   "use strict";
-  const COLORS = ["#f5c542", "#ff5d73", "#4fd1c5", "#7c5cff", "#3ddc84", "#ff9f43", "#ffffff"];
+  const ALL_COLORS = ["#f5c542", "#ff5d73", "#4fd1c5", "#7c5cff", "#3ddc84", "#ff9f43", "#ffffff"];
+  const GREENS = ["#3ddc84", "#2ecc71", "#7bd88f", "#1fae5f", "#b6f2a6", "#f5c542"];
 
-  function celebrate(title, line) {
+  function celebrate(title, line, opts) {
+    const clover = !!(opts && opts.shamrocks);
+    const COLORS = clover ? GREENS : ALL_COLORS;
     const old = document.getElementById("celebrate"); if (old) old.remove();
     const calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const wrap = document.createElement("div");
     wrap.id = "celebrate"; wrap.className = "celebrate"; wrap.setAttribute("role", "dialog"); wrap.setAttribute("aria-label", title);
     wrap.innerHTML = `<canvas aria-hidden="true"></canvas>
       <div class="celebrate-card">
-        <div class="celebrate-medal" aria-hidden="true">🥇</div>
+        <div class="celebrate-medal" aria-hidden="true">${clover ? "☘️" : "🥇"}</div>
         <h2></h2><p></p>
         <button type="button" class="btn block">Yay! 🎉</button>
       </div>`;
@@ -23,6 +27,12 @@
     function size() { cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); }
     size(); addEventListener("resize", size);
 
+    // A little shamrock: three round leaves and a stem, size r, turned by rot.
+    function shamrock(x, y, r, rot) {
+      g.save(); g.translate(x, y); g.rotate(rot); g.beginPath();
+      for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + k * (Math.PI * 2 / 3); g.moveTo(Math.cos(a) * r * 0.55 + r * 0.45, Math.sin(a) * r * 0.55); g.arc(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, r * 0.45, 0, 7); }
+      g.fill(); g.lineWidth = r * 0.18; g.strokeStyle = g.fillStyle; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(r * 0.2, r * 0.7, r * 0.6, r * 1.1); g.stroke(); g.restore();
+    }
     const rockets = [], sparks = [];
     let launched = 0, running = true, last = performance.now();
     const total = calm ? 0 : 14;
@@ -33,10 +43,10 @@
       launched++;
     }
     function burst(x, y, c) {
-      const n = 60 + ((Math.random() * 30) | 0); const c2 = COLORS[(Math.random() * COLORS.length) | 0];
+      const n = clover ? 26 + ((Math.random() * 10) | 0) : 60 + ((Math.random() * 30) | 0); const c2 = COLORS[(Math.random() * COLORS.length) | 0];
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2, s = 120 + Math.random() * 160;
-        sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, fade: 0.55 + Math.random() * 0.4, c: i % 3 ? c : c2 });
+        sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, fade: 0.55 + Math.random() * 0.4, c: i % 3 ? c : c2, rot: Math.random() * 7, spin: (Math.random() - 0.5) * 6 });
       }
     }
     const timer = setInterval(() => { if (launched < total) launch(); else clearInterval(timer); }, 260);
@@ -55,7 +65,8 @@
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i]; p.vx *= 0.97; p.vy = p.vy * 0.97 + 140 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= p.fade * dt;
         if (p.life <= 0) { sparks.splice(i, 1); continue; }
-        g.globalAlpha = p.life; g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, 2.2, 0, 7); g.fill();
+        g.globalAlpha = p.life; g.fillStyle = p.c;
+        if (clover) { p.rot += p.spin * dt; shamrock(p.x, p.y, 7, p.rot); } else { g.beginPath(); g.arc(p.x, p.y, 2.2, 0, 7); g.fill(); }
       }
       g.globalAlpha = 1;
       if (launched >= total && !rockets.length && !sparks.length) { running = false; return; }

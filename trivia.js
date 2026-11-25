@@ -115,7 +115,7 @@
       if (done) {
         const r = d.right;
         body = `<section class="card tq-done">
-            <div class="tq-big">${r === PER_DAY ? "🏆" : r >= 3 ? "🌟" : "☘️"}</div>
+            <div class="tq-big">${r === PER_DAY ? "☘️☘️☘️" : r >= 3 ? "☘️☘️" : "☘️"}</div>
             <h3>${r} of ${PER_DAY} right</h3>
             <p class="muted">${r === PER_DAY ? "A perfect score! You really know your feis." : r >= 3 ? "Great job! Come back tomorrow for 5 more." : "Every day you'll learn something new. Come back tomorrow!"}</p>
             <p class="small"><strong>🔥 ${streak || 1} day${(streak || 1) === 1 ? "" : "s"} in a row</strong>${T.streak.best > (streak || 1) ? ` · best ${T.streak.best}` : ""}</p>
@@ -157,7 +157,7 @@
       why.hidden = false;
       why.innerHTML = `<p><strong>${ok ? "Correct! 🎉" : "Not quite."}</strong> ${esc(Q.why)}</p><button type="button" class="btn block" data-tq-next>${finished ? "See my score" : "Next question"}</button>`;
       if (navigator.vibrate) try { navigator.vibrate(ok ? 15 : [10, 40, 10]); } catch (e) { /* ignore */ }
-      if (finished && d.right === PER_DAY && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect score!", `5 out of 5! That's ${T.streak.count} day${T.streak.count === 1 ? "" : "s"} in a row. 🔥`), 400);
+      if (finished && d.right === PER_DAY && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect score!", `5 out of 5! That's ${T.streak.count} day${T.streak.count === 1 ? "" : "s"} in a row. 🔥`, { shamrocks: true }), 400);
     }
 
     document.getElementById("app").addEventListener("click", (e) => {
