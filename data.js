@@ -56,6 +56,36 @@ window.PID_DATA = {
       link: "https://www.irish.dance",
       rulesLink: "https://www.irish.dance/competition-rules",
       rulesName: "WIDA competition rules"
+    },
+    {
+      id: "crn",
+      name: "CRN",
+      fullName: "Cumann Rince Náisiúnta",
+      say: "KUM-un RIN-kuh NAW-shoon-tuh",
+      active: true, pick: true,
+      where: "Ireland, the UK, mainland Europe (including the Netherlands and Belgium), the USA, Canada and Australia.",
+      summary: "Founded in Ireland in 1982. CRN describes itself as an open platform: its feiseanna welcome dancers from all over the world. Its teachers are encouraged to choreograph new work while keeping the traditions of Irish dance.",
+      teachers: "TMCRN (part-qualified teacher), ODCRN (fully qualified teacher), ADCRN (adjudicator, or judge)",
+      majors: "Irish Open Championships, North American Open Championships and the World Open Championships (Craobhacha Oscailte na Cruinne). Regional championships are the qualifiers.",
+      link: "https://www.crn.ie",
+      schoolsLink: "https://www.crn.ie/find-a-class/",
+      rulesHow: "CRN's Rules of Competition aren't published online. CRN asks people to contact them for a copy, so ask your teacher, who has them.",
+      contactLink: "https://www.crn.ie/contact-us/"
+    },
+    {
+      id: "crdm",
+      name: "CRDM",
+      fullName: "Cumann Rince Dea Mheasa",
+      say: "KUM-un RIN-kuh dyah VASS-uh",
+      active: true, pick: true,
+      where: "Ireland, England, Scotland and the Isle of Man, with some feiseanna in the USA.",
+      summary: "Founded in 2002 by 8 teachers. All CRDM feiseanna run under CRDM's own rules, and your teacher enters your dancer (CRDM doesn't take entries from parents). Good to know: CRDM teachers also use the titles TCRG and ADCRG, so those letters alone don't tell you a school is CLRG.",
+      teachers: "TMRF and TCRG (teachers) and ADCRG (adjudicator, or judge), from CRDM's own exams",
+      majors: "World Championships, All Ireland Championships, British Nationals and American Nationals",
+      link: "https://www.crdm.ie",
+      schoolsLink: "https://www.crdm.ie/crdm-member-schools/",
+      rulesLink: "https://www.crdm.ie/competition-rules/",
+      rulesName: "CRDM competition rules"
     }
   ],
 
@@ -207,6 +237,51 @@ window.PID_DATA = {
       moveUp: "Win with 1 judge: Open in those dances for the year. Win with 3 judges: Open in every dance for life",
       perDance: false,
       parents: "Provincial Championships are the route to the World Championships"
+    },
+    // CRDM, from its public competition rules (crdm.ie/competition-rules, CRDM019, CRDM023, CRDM033, CRDM094),
+    // read Nov 25 2026. Grade names as printed in CRDM feis results.
+    {
+      org: "crdm", id: "cd_a", order: 1, name: "Beginner A",
+      danced: "Solo dances, plus the A Award (for dancers with 3 or more dances in Beginner A)",
+      moveUp: "Win 1st place in a dance with 6 or more dancers, then move up in that dance. With fewer than 6, a dancer can win that dance 3 times before moving up",
+      moveUpPlace: 1, minEntrants: 6, perDance: true,
+      parents: "No solo dress: a class costume, or a skirt or trousers and top. Beginner A dancers may dance again if they stop or miss the start"
+    },
+    {
+      org: "crdm", id: "cd_b", order: 2, name: "Beginner B",
+      danced: "Solo dances, plus the B Award (for dancers with 2 or more dances in Beginner B)",
+      moveUp: "Win 1st place in a dance with 6 or more dancers, or win it 3 times with fewer",
+      moveUpPlace: 1, minEntrants: 6, perDance: true,
+      parents: "Still a class costume, or a skirt or trousers and top"
+    },
+    {
+      org: "crdm", id: "cd_i", order: 3, name: "Intermediate",
+      danced: "Solo dances, plus the Intermediate Award",
+      moveUp: "Win 1st place in a dance with 6 or more dancers, or win it 3 times with fewer",
+      moveUpPlace: 1, minEntrants: 6, perDance: true,
+      parents: "Winning a Preliminary or Premiership Championship ends the Intermediate Award for your dancer"
+    },
+    {
+      org: "crdm", id: "cd_o", order: 4, name: "Open",
+      danced: "The top grade for solo dances",
+      moveUp: "The top solo grade",
+      perDance: true,
+      parents: "A dancer can be Open in some dances and lower in others"
+    },
+    {
+      org: "crdm", id: "cd_pc", order: 5, name: "Preliminary Championship",
+      alt: "and the Premiership Championship, from age 9",
+      danced: "Two rounds in front of 3 judges, heavy round first. Ages 7 and 8: reel and light or slip jig. Age 9 and up: reel and treble jig. The Premiership (age 9 and up) is slip jig and a traditional set (boys dance a reel)",
+      moveUp: "Winning moves those 2 dances to Open. After 3 wins a dancer can't enter it again",
+      perDance: false,
+      parents: "For dancers aged 7 and up who haven't won an Open Championship with a modern set under 3 or more judges"
+    },
+    {
+      org: "crdm", id: "cd_oc", order: 6, name: "Open Championship",
+      danced: "Age 9 and up: at least 2 rounds in front of 3 or more judges, one of them a modern set dance. Under 9s have their own Open cups and awards",
+      moveUp: "The top level. Winning one moves all of a dancer's dances to Open",
+      perDance: false,
+      parents: "Qualifying for the All Irelands, British Nationals and Worlds runs through the regional championships"
     }
   ],
 
@@ -263,8 +338,8 @@ window.PID_DATA = {
 
     // People and organizations
     { g: "people", orgs: ["clrg"], term: "CLRG", alt: "An Coimisiún", say: "un KUM-ish-oon", means: "An Coimisiún le Rincí Gaelacha, the largest Irish dance organization, based in Dublin", why: "Sets the rules your dancer competes under" },
-    { g: "people", orgs: ["clrg"], term: "TCRG", means: "A certified CLRG teacher", why: "Your dancer competes as their TCRG's pupil. Families register for regular feiseanna themselves, but the TCRG registers dancers for majors like the Oireachtas, Nationals and Worlds" },
-    { g: "people", orgs: ["clrg"], term: "ADCRG", means: "A certified CLRG adjudicator (judge)", why: "The people scoring your dancer" },
+    { g: "people", orgs: ["clrg", "crdm"], term: "TCRG", means: "A certified teacher. Mostly CLRG, but CRDM uses the same title for its own teachers", why: "Your dancer competes as their TCRG's pupil. Families register for regular feiseanna themselves, but the TCRG registers dancers for majors like the Oireachtas, Nationals and Worlds" },
+    { g: "people", orgs: ["clrg", "crdm"], term: "ADCRG", means: "A certified adjudicator (judge). Mostly CLRG, but CRDM uses the same title for its own judges", why: "The people scoring your dancer" },
     { g: "people", orgs: ["clrg"], term: "SDCRG", means: "A certified CLRG examiner, who can run grade exams", why: "Mostly relevant to teachers" },
     { g: "people", term: "Adjudicator", means: "A judge", why: "In grades one judge places each dance. Championships use a panel: usually 3, 5 at major championships, and 6 at the All-Irelands with 5 counting" },
     { g: "people", orgs: ["clrg"], term: "Region", means: "A geographic area under CLRG with its own regional body and Oireachtas", why: "Your region decides your Oireachtas and some local rules" },
@@ -283,7 +358,17 @@ window.PID_DATA = {
     { g: "events", orgs: ["wida"], term: "Jump 2-3", means: "A first competition for the youngest WIDA dancers: 16 jump 2-3s or promenade steps", why: "From 2027 it's for under-7s only" },
     { g: "events", orgs: ["wida"], term: "Yafers", means: "The online system used to enter every WIDA feis", why: "Entries are non-refundable once paid" },
     { g: "dance", orgs: ["wida"], term: "Modern set", means: "A set dance to modern music, used as a third round in WIDA Open Championships", why: "Only recalled dancers dance it" },
-    { g: "people", orgs: ["wida"], term: "TMRF", means: "A WIDA teacher qualification", why: "Teachers with only TMRF can still compete themselves" },
+    { g: "people", orgs: ["wida", "crdm"], term: "TMRF", means: "A teacher qualification used by WIDA and by CRDM", why: "Teachers with only TMRF can still compete themselves" },
+    { g: "people", orgs: ["crn"], term: "ODCRN", means: "A fully qualified CRN teacher (Oide Damhsa diploma)", why: "The CRN version of a teacher's title" },
+    { g: "people", orgs: ["crn"], term: "TMCRN", means: "A CRN teacher who has passed Part 1 of the ODCRN teacher diploma", why: "A certified, part-qualified CRN teacher" },
+    { g: "people", orgs: ["crn"], term: "ADCRN", means: "A CRN adjudicator (judge)", why: "The people scoring your dancer at CRN feiseanna" },
+    { g: "events", orgs: ["crn"], term: "Féile", say: "FAY-luh", means: "A festival or competition. CRN and others use it for many of their local competitions", why: "A féile works like a feis for your dancer" },
+    { g: "events", orgs: ["crn"], term: "Feis Host", means: "The website CRN uses for feis entries (crn.feishost.com)", why: "Upcoming CRN feiseanna are listed there" },
+    { g: "events", orgs: ["crdm"], term: "A Award / B Award", means: "CRDM competitions in front of 1 judge for beginner dancers: A for dancers with 3 or more dances in Beginner A, B for 2 or more in Beginner B", why: "Your dancer must also dance at least 2 solos that day to enter" },
+    { g: "events", orgs: ["crdm"], term: "Intermediate Award", means: "A CRDM award competition in front of 1 judge, for dancers who haven't won it, or a Preliminary, Premiership or Open Championship", why: "Winning it moves your dancer up in the Award and in that solo dance" },
+    { g: "events", orgs: ["crdm"], term: "Premiership Championship", means: "A CRDM championship for dancers aged 9 and up who haven't won an Open Championship: slip jig and a traditional set (boys dance a reel) in front of 3 judges", why: "Winning it counts like a Preliminary Championship win" },
+    { g: "events", orgs: ["crdm"], term: "1 Adjudicator Championship", means: "A CRDM championship with one judge", why: "Winning it makes your dancer Open in both dances, and it's part of qualifying for the CRDM Worlds" },
+    { g: "events", orgs: ["crdm"], term: "Championship points", means: "CRDM's points for championship placings: 100 for 1st, 75 for 2nd, 65 for 3rd, down to 1 point for 50th", why: "How CRDM turns championship placings into points" },
     { g: "people", term: "Feis committee", means: "The volunteers running a particular feis", why: "Contact them about entries, schedules and results" }
   ],
 
@@ -466,7 +551,65 @@ window.PID_DATA = {
       a: "Change in the changing rooms. If a dress is unzipped between rounds, wear a crop top or bodysuit underneath, keep arms in the sleeves and the front covered." },
     { orgId: "wida", topic: "Changing schools", sec: "19", levels: [], regions: [], org: "WIDA",
       q: "What happens if we change schools?",
-      a: "Your dancer can keep competing straight away, with no ban. The new teacher tells the old teacher in writing. Your dancer can't use the old school's steps (except traditional sets), so they compete once they've learned the new school's steps." }
+      a: "Your dancer can keep competing straight away, with no ban. The new teacher tells the old teacher in writing. Your dancer can't use the old school's steps (except traditional sets), so they compete once they've learned the new school's steps." },
+
+    // ----- CRDM: plain-language summaries of crdm.ie/competition-rules (read Nov 25 2026) -----
+    { orgId: "crdm", topic: "Entering competitions", sec: "CRDM020 1.3, CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "How do I enter a CRDM feis?",
+      a: "Through your teacher. CRDM only takes entries from its registered teachers (and teachers on its approved visitors list), not from parents. All fees are paid in advance; you can't pay on the day. Questions about entries also go through your teacher." },
+    { orgId: "crdm", topic: "Entering competitions", sec: "CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "What if a feis is cancelled or moved?",
+      a: "If a feis is cancelled and rescheduled to a date that doesn't suit your child, you're entitled to a full refund of the fee. If a one-day feis becomes two days, dancers whose day changed get a refund. CRDM doesn't cover travel or hotel costs." },
+    { orgId: "crdm", topic: "Entering competitions", sec: "CRDM019", levels: [], regions: [], org: "CRDM",
+      q: "Which age group does my dancer dance in?",
+      a: "Their age on the day of the feis decides it." },
+    { orgId: "crdm", topic: "At the feis", sec: "CRDM020 1.4, CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "Can I film or photograph my dancer?",
+      a: "No. Cameras and phones aren't allowed during competitions, to protect children. Photos are only allowed during the prize giving." },
+    { orgId: "crdm", topic: "At the feis", sec: "CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "When should my dancer be ready?",
+      a: "In costume and ready to dance 30 minutes before their competition is scheduled. The hall must be silent while anyone is dancing, so don't move about during a competition." },
+    { orgId: "crdm", topic: "At the feis", sec: "CRDM020 1.5–2.3", levels: [], regions: [], org: "CRDM",
+      q: "What behaviour is expected from families?",
+      a: "No smoking, vaping or alcohol. Children shouldn't run around or shout, and parents are responsible for them. Dancers applaud every competitor when results are called, and there's no booing or shouting at the stage. Bullying leads to a warning and removal from the venue, and repeated bullying to a ban from CRDM events. CRDM also forbids posting on the Voy forum." },
+    { orgId: "crdm", topic: "At the feis", sec: "CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "What if my dancer stops or misses the start?",
+      a: "Only Beginner A dancers are allowed to dance again. Everyone else can't redance." },
+    { orgId: "crdm", topic: "Moving up", sec: "CRDM094", levels: ["cd_a", "cd_b", "cd_i"], regions: [], org: "CRDM",
+      q: "When does my dancer move up a grade?",
+      a: "When they win 1st place in a dance with 6 or more dancers, they move up in that dance. If there were fewer than 6, they can win that dance in that grade 3 times before they must move up. It's one dance at a time." },
+    { orgId: "crdm", topic: "Moving up", sec: "CRDM094, CRDM019", levels: [], regions: [], org: "CRDM",
+      q: "How many competitions can my dancer enter?",
+      a: "Solos in up to 3 different grades, and at most 3 awards or championships at one feis (not two of the same grade). To enter an award or 1 Adjudicator Championship, your dancer must also dance at least 2 solo dances that day. Boys may enter only 1 championship." },
+    { orgId: "crdm", topic: "Awards and championships", sec: "CRDM019", levels: ["cd_a", "cd_b", "cd_i"], regions: [], org: "CRDM",
+      q: "What are the A, B and Intermediate Awards?",
+      a: "Competitions in front of 1 judge. The A Award is for dancers with 3 or more solo dances in Beginner A, the B Award for 2 or more in Beginner B, and the Intermediate Award for dancers who haven't won it or any championship. Winning one means moving up to the next Award and moving that dance up too. With fewer than 6 dancers, a winner can enter that Award again at the next championship feis." },
+    { orgId: "crdm", topic: "Awards and championships", sec: "CRDM019, CRDM023", levels: ["cd_i", "cd_pc"], regions: [], org: "CRDM",
+      q: "Who can dance the Preliminary or Premiership Championship?",
+      a: "Preliminary: dancers aged 7 and up who haven't won an Open Championship with a modern set under 3 or more judges. Premiership: the same, from age 9. Both are danced 2 at a time in front of 3 judges, heavy round first. Winning moves those 2 dances to Open, and after 3 wins (Preliminary and Premiership wins added together) a dancer can't enter again." },
+    { orgId: "crdm", topic: "Awards and championships", sec: "CRDM019, CRDM094", levels: ["cd_pc", "cd_oc"], regions: [], org: "CRDM",
+      q: "When can my dancer dance an Open Championship?",
+      a: "When they're no longer eligible for the A or B Award. From age 9 it's at least 2 rounds in front of 3 or more judges, one of them a modern set dance. Winning one moves all of a dancer's dances to Open, and they can't enter the Intermediate Award, Preliminary or Premiership again. Under 9s have their own Open cups and awards." },
+    { orgId: "crdm", topic: "Awards and championships", sec: "CRDM023 8–10", levels: ["cd_pc", "cd_oc"], regions: [], org: "CRDM",
+      q: "How does my dancer qualify for the All Irelands, British Nationals or Worlds?",
+      a: "All Irelands and British Nationals: dance at 4 or more CRDM feiseanna (1 for dancers in remote places), and dance a reel for it to count. Worlds: your dancer can't be eligible for the A or B Award, and must dance 2 Open Championships at regional championships plus a 1 Adjudicator Championship at a regional grade feis (one qualifying championship for remote dancers)." },
+    { orgId: "crdm", topic: "Shoes and costume", sec: "CRDM032", levels: [], regions: [], org: "CRDM",
+      q: "What shoes are allowed?",
+      a: "Black leather or patent soft shoes for light dances and black hard shoes for heavy dances. No coloured or sparkly shoes, even for prize giving. No buckles or elastic on soft shoes, and buckles on hard shoes can be at most 2 inches by 1 inch." },
+    { orgId: "crdm", topic: "Shoes and costume", sec: "CRDM033", levels: [], regions: [], org: "CRDM",
+      q: "What are the costume rules?",
+      a: "Beginner A and B dancers can't wear a solo dress: a class costume, or a skirt or trousers and top with sleeves, also during results. Shoulders must be covered, skirts no shorter than mid-thigh at the back, and costumes no shorter than your dancer's hand held at their side. White bubble socks or black tights (at least 70 denier). No feathers. Change in the changing rooms." },
+    { orgId: "crdm", topic: "Changing schools", sec: "CRDM094", levels: [], regions: [], org: "CRDM",
+      q: "What happens if we change schools?",
+      a: "A dancer can't be judged by their old teacher for 2 years. If they move to a school in another organization, any perpetual trophies must go back to the feis organiser straight away." },
+
+    // ----- CRN: its Rules of Competition aren't published online (crn.ie, checked Nov 25 2026) -----
+    { orgId: "crn", topic: "Entering competitions", levels: [], regions: [], org: "CRN",
+      q: "Where can I read CRN's rules?",
+      a: "CRN's Rules of Competition aren't on its website. CRN says to contact them for a copy, and your teacher will have them. Every CRN feis is run under those rules and CRN's Code of Ethics." },
+    { orgId: "crn", topic: "Entering competitions", levels: [], regions: [], org: "CRN",
+      q: "Can dancers from other organizations dance at CRN feiseanna?",
+      a: "CRN calls itself an open platform and says its feiseanna welcome dancers from all over the world. Check the feis syllabus and with your teacher before entering." }
   ],
 
   // Parent checklists. Each item has a short key (k) so ticks stay put if items are reordered.

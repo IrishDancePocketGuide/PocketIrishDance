@@ -108,7 +108,7 @@ window.PID_LEGAL = (function () {
     </div>
 
     ${sec("A guide, not the official rules", `
-      <p style="margin-top:0">Pocket Irish Dance is an independent, free guide for parents. It is not made by, endorsed by or connected to CLRG, An Comhdháil, WIDA, IDTANA or any other Irish dance organization, school or feis. Their names belong to them.</p>
+      <p style="margin-top:0">Pocket Irish Dance is an independent, free guide for parents. It is not made by, endorsed by or connected to CLRG, An Comhdháil, WIDA, IDTANA, CRN, CRDM or any other Irish dance organization, school or feis. Their names belong to them.</p>
       <p style="margin-bottom:0">We work hard to keep things accurate, but rules, levels and feis dates change and differ by region. Always check anything important with your teacher, the feis syllabus and the organization's current official rules.</p>`)}
 
     ${sec("Your results and backups", `
