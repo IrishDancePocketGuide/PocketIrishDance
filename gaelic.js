@@ -109,7 +109,7 @@
         const newBest = game.score > (N.best || 0);
         if (newBest) N.best = game.score;
         ls.save(N);
-        if (game.score === TOTAL && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Maith thú!", `All ${TOTAL} Irish words right. Well done! ☘️`), 300);
+        if (game.score === TOTAL && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Maith thú!", `All ${TOTAL} Irish words right. Well done! ☘️`, { shamrocks: true }), 300);
         else if (newBest && N.played > 1) A.toast(`New best: ${game.score} of ${TOTAL}`);
       }
       A.rerender();

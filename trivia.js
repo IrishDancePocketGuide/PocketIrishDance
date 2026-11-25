@@ -157,7 +157,7 @@
       why.hidden = false;
       why.innerHTML = `<p><strong>${ok ? "Correct! 🎉" : "Not quite."}</strong> ${esc(Q.why)}</p><button type="button" class="btn block" data-tq-next>${finished ? "See my score" : "Next question"}</button>`;
       if (navigator.vibrate) try { navigator.vibrate(ok ? 15 : [10, 40, 10]); } catch (e) { /* ignore */ }
-      if (finished && d.right === PER_DAY && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect score!", `5 out of 5! That's ${T.streak.count} day${T.streak.count === 1 ? "" : "s"} in a row. 🔥`), 400);
+      if (finished && d.right === PER_DAY && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect score!", `5 out of 5! That's ${T.streak.count} day${T.streak.count === 1 ? "" : "s"} in a row. 🔥`, { shamrocks: true }), 400);
     }
 
     document.getElementById("app").addEventListener("click", (e) => {

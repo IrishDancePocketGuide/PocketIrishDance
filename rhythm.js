@@ -211,7 +211,7 @@
       if (pad) { pad.classList.remove("live"); pad.style.setProperty("--pulse", 0); }
       const pt = document.getElementById("rtPadText"); if (pt) pt.textContent = "Play again";
       show(`${starText(st)}  ${perfect} perfect · ${good} good · ${pct}% on the beat${newBest && prev ? " · New best!" : ""}`, "");
-      if (newBest && st === 3 && window.PID_CELEBRATE) window.PID_CELEBRATE("Spot on!", `${game.score} points in the ${game.d.name.toLowerCase()}. You've got great timing!`);
+      if (newBest && st === 3 && window.PID_CELEBRATE) window.PID_CELEBRATE("Spot on!", `${game.score} points in the ${game.d.name.toLowerCase()}. You've got great timing!`, { shamrocks: true });
       else if (newBest && prev) toast(`New best score: ${game.score}`);
     }
 

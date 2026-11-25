@@ -161,7 +161,7 @@
         const newBest = game.score > (N.best || 0);
         if (newBest) N.best = game.score;
         ls.save(N);
-        if (game.score === ROUNDS && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect ears!", `All ${ROUNDS} dances named. Amazing listening! 🎶`), 300);
+        if (game.score === ROUNDS && window.PID_CELEBRATE) setTimeout(() => window.PID_CELEBRATE("Perfect ears!", `All ${ROUNDS} dances named. Amazing listening! 🎶`, { shamrocks: true }), 300);
         else if (newBest && N.played > 1) A.toast(`New best: ${game.score} of ${ROUNDS}`);
       }
       A.rerender();
