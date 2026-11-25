@@ -28,7 +28,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "69"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "70"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -672,6 +672,14 @@
     };
   };
 
+  // Year the dancer started Irish dance (optional, saved as dn.started).
+  function startYears() { const now = new Date().getFullYear(); return Array.from({ length: 61 }, (_, i) => now - i); }
+  function dancingSince(dn) {
+    const y = Number(dn.started); if (!y) return "";
+    const n = new Date().getFullYear() - y;
+    return n <= 0 ? `Started Irish dance this year (${y})` : `Dancing since ${y} · about ${n} year${n === 1 ? "" : "s"}`;
+  }
+
   screens.dancerForm = function (id) {
     const dn = S.dancers.find((d) => d.id === id) || { id: "", name: "", levels: {} };
     const startLevel = S.profile.level || (orgLevels()[0] || {}).id || "b1";
@@ -679,6 +687,8 @@
       title: dn.id ? "Edit dancer" : "Add a dancer", tab: "scores", back: true,
       html: `<form id="dancerForm" class="card">
         <label class="field"><span>Dancer's first name or nickname</span><input name="name" required maxlength="40" value="${esc(dn.name)}" placeholder="For example, Ava"></label>
+        <label class="field" style="margin-top:12px"><span>What year did they start Irish dance? <span class="muted">(optional)</span></span>
+          <select name="started"><option value="">Not sure, or skip for now</option>${startYears().map((y) => `<option value="${y}" ${String(dn.started || "") === String(y) ? "selected" : ""}>${y}</option>`).join("")}</select></label>
         <h3 style="margin-top:16px">Current level in each dance</h3>
         <p class="small muted" style="margin-top:0">Leave as “Not dancing yet” for dances they don't compete in.</p>
         ${D.dances.filter((d) => d.shoe !== "champ").map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span>
@@ -695,8 +705,9 @@
           D.dances.forEach((d) => { const v = fd.get("lv_" + d.id); if (v) levels[d.id] = v; });
           if (fd.get("lv_champ")) levels.champ = fd.get("lv_champ");
           const name = String(fd.get("name")).trim(); if (!name) return;
-          if (dn.id) { Object.assign(S.dancers.find((d) => d.id === dn.id), { name, levels }); }
-          else { dn.id = uid(); S.dancers.push({ id: dn.id, name, levels }); }
+          const started = Number(fd.get("started")) || 0;
+          if (dn.id) { const cur = S.dancers.find((d) => d.id === dn.id); Object.assign(cur, { name, levels }); if (started) cur.started = started; else delete cur.started; }
+          else { dn.id = uid(); S.dancers.push(Object.assign({ id: dn.id, name, levels }, started ? { started } : {})); }
           save(); toast("Saved"); location.hash = "#/dancer/" + dn.id;
         });
       }
@@ -759,9 +770,10 @@
       <nav class="kid-switch" aria-label="Your dancers">${S.dancers.map((d) => `<a href="#/dancer/${d.id}" class="${d.id === dn.id ? "on" : ""}" ${d.id === dn.id ? 'aria-current="page"' : ""}>${esc(d.name)}</a>`).join("")}<a href="#/dancer/new" class="add">＋ ${S.dancers.length > 1 ? "Add child" : "Add another child"}</a></nav>
       <div class="row" style="gap:8px">
         <a class="btn" style="flex:1" href="#/add/${dn.id}">＋ Add a result for ${esc(dn.name)}</a>
-        <a class="btn ghost" href="#/dancer/${dn.id}/edit">Levels</a>
+        <a class="btn ghost" href="#/dancer/${dn.id}/edit">Edit</a>
       </div>
       <div class="card" style="padding:6px 14px">
+        <div class="dance-row"><span class="name">💃 ${dn.started ? esc(dancingSince(dn)) : `<a href="#/dancer/${dn.id}/edit">Add the year ${esc(dn.name)} started dancing</a>`}</span></div>
         ${D.dances.filter((d) => dancerLevel(dn, d.id)).map((d) => `<div class="dance-row"><span class="name">${esc(d.name)}</span><span class="chip">${esc(levelById(dancerLevel(dn, d.id)).name)}</span></div>`).join("") || '<p class="small muted">No levels set yet.</p>'}
         ${dancerLevel(dn, "champ") ? `<div class="dance-row"><span class="name">Championship</span><span class="chip">${esc(levelById(dancerLevel(dn, "champ")).name)}</span></div>` : ""}
       </div>
