@@ -26,7 +26,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "61"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "62"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -210,9 +210,12 @@
     const lv = r.levels.length ? r.levels.map((id) => `<span class="chip">${esc(levelById(id).name)}</span>`).join("") : '<span class="chip">All levels</span>';
     const rg = r.regions.length ? `<span class="chip grey">${esc(r.regions.length === 3 && r.regions.includes("Mexico") ? "North America" : r.regions.join(", "))}</span>` : "";
     const org = D.organizations.find((o) => o.id === r.orgId) || {};
-    const linked = org.rulesLink && !r.draft;
-    const src = linked
-      ? `Source: <a href="${esc(org.rulesLink)}" target="_blank" rel="noopener">${esc(org.rulesName || org.name + " rules")}${r.sec ? ", rule " + esc(r.sec) : ""} ↗</a>. A plain-language summary; the official wording always wins.`
+    const fromSite = !org.rulesLink && org.rulesHow && org.link && !r.draft;
+    const linked = (org.rulesLink && !r.draft) || fromSite;
+    const src = fromSite
+      ? `Source: <a href="${esc(org.link)}" target="_blank" rel="noopener">${esc(org.name)}'s official website ↗</a>. Its full rules aren't published online, so ask your teacher.`
+      : linked
+      ? `Source: <a href="${esc(org.rulesLink)}" target="_blank" rel="noopener">${esc(org.rulesName || org.name + " rules")}${r.sec ? ", " + (/^[A-Z]/.test(r.sec) ? "" : "rule ") + esc(r.sec) : ""} ↗</a>. A plain-language summary; the official wording always wins.`
       : `Source: ${esc(r.org)} rules. Draft until we add their official rulebook.`;
     return `<article class="card">
       <div class="chips">${lv}${rg}${linked ? "" : '<span class="chip gold">Draft</span>'}</div>
@@ -298,7 +301,9 @@
     { id: "any", name: "No preference", hint: "Show me all the school lists" },
     { id: "clrg", name: "CLRG", hint: "Teachers have TCRG after their name" },
     { id: "comhdhail", name: "An Comhdháil", hint: "Mainly Ireland and Great Britain", locator: "https://web.irishdancingorg.com/index.php/school-locator" },
-    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", locator: "https://www.irish.dance/teachers" }
+    { id: "wida", name: "WIDA", hint: "Mainly mainland Europe", locator: "https://www.irish.dance/teachers" },
+    { id: "crn", name: "CRN", hint: "Ireland, the UK, Europe, North America and Australia", locator: "https://www.crn.ie/find-a-class/" },
+    { id: "crdm", name: "CRDM", hint: "Ireland, England, Scotland and the Isle of Man", locator: "https://www.crdm.ie/crdm-member-schools/" }
   ];
   screens.schools = function () {
     const st = screens.schools.st || { org: curOrg() };
@@ -337,7 +342,9 @@
         </ul>
       </div>
       ${o.id === "clrg" || o.id === "any" ? `<p class="small muted">Official CLRG information: <a href="https://www.clrg.ie" target="_blank" rel="noopener">clrg.ie ↗</a></p>` : ""}
-      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}`
+      ${o.id === "comhdhail" ? `<p class="small muted">Official An Comhdháil information: <a href="https://www.irishdancingorg.com" target="_blank" rel="noopener">irishdancingorg.com ↗</a></p>` : ""}
+      ${o.id === "crn" ? `<p class="small muted">Official CRN information: <a href="https://www.crn.ie" target="_blank" rel="noopener">crn.ie ↗</a></p>` : ""}
+      ${o.id === "crdm" ? `<p class="small muted">Official CRDM information: <a href="https://www.crdm.ie" target="_blank" rel="noopener">crdm.ie ↗</a></p>` : ""}`
     };
   };
 
@@ -347,7 +354,9 @@
   const FEIS_ORGS = [
     { id: "clrg", name: "CLRG", where: "North America", calendar: "https://idtana.org/feiseanna/" },
     { id: "comhdhail", name: "An Comhdháil", where: "Ireland, UK and beyond", calendar: "https://web.irishdancingorg.com/index.php/feis" },
-    { id: "wida", name: "WIDA", where: "Mainly mainland Europe and the UK", calendar: "https://www.irish.dance/competitions-list" }
+    { id: "wida", name: "WIDA", where: "Mainly mainland Europe and the UK", calendar: "https://www.irish.dance/competitions-list" },
+    { id: "crn", name: "CRN", where: "Ireland, the UK and North America", calendar: "https://crn.feishost.com/" },
+    { id: "crdm", name: "CRDM", where: "Ireland, the UK and the USA", calendar: "https://www.crdm.ie/competition-dates/" }
   ];
   // IDTANA's national list has the bigger events; most local CLRG feiseanna are on these regional calendars.
   const CLRG_REGION_CALENDARS = [
@@ -476,7 +485,7 @@
       return {
         title: "Levels", tab: "levels",
         html: `<h2>${esc(org.name)} levels</h2>
-        <div class="empty"><div class="big">🪜</div><p>The ${esc(org.name)} level ladder is being written. Its level names and moving-up rules are different from CLRG's, so we're not showing CLRG's here.</p>
+        <div class="empty"><div class="big">🪜</div><p>${org.rulesHow ? `${esc(org.name)} hasn't published its level names or moving-up rules online, so we can't show its ladder yet. Your teacher can tell you which level your dancer is in.` : `The ${esc(org.name)} level ladder is being written.`} Its levels are different from CLRG's, so we're not showing CLRG's here.</p>
         ${org.link ? `<a class="btn ghost" href="${esc(org.link)}" target="_blank" rel="noopener">${esc(org.name)} website ↗</a>` : ""}</div>`
       };
     }
@@ -488,6 +497,10 @@
         <p style="margin:6px 0 0">The <strong>grades</strong> are Beginner, Primary, Intermediate and Open. Each dance is its own competition.</p>
         <p style="margin:8px 0 0">A <strong>premiership</strong> is two dances with the scores added together, at your dancer's grade. Then come <strong>championships</strong>: Preliminary, then Open.</p>
         <p class="small muted" style="margin:8px 0 0">Once a dancer moves up, they can't move back down.</p></article>` : ""}
+      ${o === "crdm" ? `<article class="card"><h3>Grades, awards and championships</h3>
+        <p style="margin:6px 0 0">The <strong>grades</strong> are Beginner A, Beginner B, Intermediate and Open. Each dance is its own competition.</p>
+        <p style="margin:8px 0 0"><strong>Awards</strong> (A, B and Intermediate) are danced in front of 1 judge at your dancer's grade. Then come <strong>championships</strong>: the 1 Adjudicator Championship, the Preliminary and Premiership Championships, then Open.</p>
+        <p class="small muted" style="margin:8px 0 0">To move up in a grade, a win needs 6 or more dancers in the competition.</p></article>` : ""}
       <div class="ladder">${ladder()}</div>
       ${(D.organizations.find((x) => x.id === o) || {}).rulesLink ? `<p class="small muted"><a href="${esc(D.organizations.find((x) => x.id === o).rulesLink)}" target="_blank" rel="noopener">Official ${esc(orgName(o))} rules ↗</a></p>` : ""}` : `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
       <p class="muted" style="margin-top:0">CLRG in North America (the level names used at North American feiseanna). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
@@ -520,7 +533,7 @@
       title: "Organizations", tab: "home", back: true,
       html: `<h2>Who's who in Irish dance</h2>
       <p class="muted" style="margin-top:0">There isn't one Irish dance organization. Your school belongs to one, and that decides the rules, the levels and the championships your dancer can enter. Dancers from different organizations usually don't compete against each other.</p>
-      <div class="card small"><strong>How to tell which one you're in:</strong> ask your teacher, or look at their title. A teacher with <strong>TCRG</strong> after their name teaches in CLRG. Your school's website or feis entry forms usually name the organization too.</div>
+      <div class="card small"><strong>How to tell which one you're in:</strong> ask your teacher, or look at their title. A teacher with <strong>TCRG</strong> after their name usually teaches in CLRG, but CRDM uses the same title, so check. CRN teachers have <strong>ODCRN</strong> or <strong>TMCRN</strong>. Your school's website or feis entry forms usually name the organization too.</div>
       ${D.organizations.map((o) => `<article class="card">
         <div class="row between wrap"><h3>${esc(o.name)}</h3>${o.partOf ? `<span class="chip grey">Part of the ${esc(o.partOf)} world</span>` : ""}</div>
         ${o.fullName !== o.name ? `<p class="small muted" style="margin:0">${esc(o.fullName)}</p>` : ""}
@@ -550,7 +563,7 @@
       title: "Rules", tab: "rules",
       html: `<h2>Rules library</h2>
       <p class="muted" style="margin-top:0">The rules that matter to parents, in plain language, with a link to the official rulebook.</p>
-      ${(D.organizations.find((x) => x.id === curOrg()) || {}).rulesLink ? "" : `<div class="note"><strong>Coming soon:</strong> ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "these are draft examples showing how the library will work. The full CLRG and North American (IDTANA) feis rules will be added from the current rulebooks."}</div>`}
+      ${(D.organizations.find((x) => x.id === curOrg()) || {}).rulesLink ? "" : (D.organizations.find((x) => x.id === curOrg()) || {}).rulesHow ? `<div class="note">${esc(D.organizations.find((x) => x.id === curOrg()).rulesHow)}</div>` : `<div class="note"><strong>Coming soon:</strong> ${curOrg() && curOrg() !== "clrg" ? esc(orgName(curOrg())) + " rules will be added from its current rulebook." : "these are draft examples showing how the library will work. The full CLRG and North American (IDTANA) feis rules will be added from the current rulebooks."}</div>`}
       ${curOrg() && curOrg() !== "clrg" ? (orgLevels().length ? `<label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>` : "") : `<div class="two">
         <label class="field"><span>Level</span><select data-rf="level"><option value="">All levels</option>${orgLevels().map((l) => `<option value="${l.id}" ${f.level === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Region</span><select data-rf="region"><option value="">Everywhere</option>${D.regions.map((r) => `<option ${f.region === r ? "selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
