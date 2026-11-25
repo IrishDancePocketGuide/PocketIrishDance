@@ -2,7 +2,7 @@
 
 The app's feis calendar has two parts:
 
-1. **Official lists**, read every 6 hours by `scripts/update-feis.mjs` (WIDA, An Comhdháil, IDTANA national list).
+1. **Official lists**, read every 6 hours by `scripts/update-feis.mjs` (WIDA, An Comhdháil, IDTANA national list, CRN on Feis Host, CRDM competition dates).
 2. **Found feiseanna**, in `feis-found.json`: smaller feiseanna, often run by a local school, that appear on a
    regional calendar or a school's own website. A weekly Claude task finds these, Shannon approves them,
    and the updater merges them into `feis.json`.
@@ -43,7 +43,9 @@ Mexico, mainland Europe), for example `"feis" 2027 "Irish dance" <state or count
   or the feis is on a CLRG regional calendar.
 - `comhdhail`: mentions An Comhdháil / irishdancingorg.com.
 - `wida`: mentions WIDA / irish.dance.
-- Anything else (CRN, ICDTA, independent): leave it out for now and mention it to Shannon.
+- `crn`: mentions CRN / Cumann Rince Náisiúnta / crn.ie.
+- `crdm`: mentions CRDM / Cumann Rince Dea Mheasa / crdm.ie.
+- Anything else (ICDTA, independent): leave it out for now and mention it to Shannon.
 
 ## Record format (`feis-found.json` → `events`)
 

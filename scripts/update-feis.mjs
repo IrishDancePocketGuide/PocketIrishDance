@@ -126,10 +126,64 @@ async function idtana() {
   return events;
 }
 
+// ---------- CRN (crn.feishost.com, the Feis Host entry site CRN links to from crn.ie) ----------
+// Its public home page lists upcoming feiseanna with dates and a region filter. Each feis's own
+// page needs a sign-in, so the app links to the list itself.
+async function crn() {
+  const page = "https://crn.feishost.com/home";
+  const html = await get(page, "crn.html");
+  const regions = {};
+  for (const m of html.matchAll(/<li data-filter="\.filter-([0-9a-f-]+)"[^>]*>([\s\S]*?)<\/li>/gi)) regions[m[1]] = text(m[2]);
+  const toIso = (s) => { const m = s.match(/(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4})/); const mi = m ? MONTHS.indexOf(m[2].toLowerCase()) + 1 : 0; return mi ? iso(m[3], mi, m[1]) : ""; };
+  const events = [];
+  for (const item of html.split(/<div class="[^"]*portfolio-item/).slice(1)) {
+    const name = text((item.match(/<h4[^>]*>([\s\S]*?)<\/h4>/) || [])[1]);
+    const dates = text((item.match(/<p class="align-baseline"[^>]*>([\s\S]*?)<\/p>/) || [])[1]).split(/\s+-\s+/);
+    const start = toIso(dates[0] || ""), end = toIso(dates[1] || "") || start;
+    if (!name || !start) continue;
+    const region = regions[(item.match(/^[^"]*filter-([0-9a-f-]+)/) || [])[1]] || "";
+    events.push({ org: "crn", name, start, end, region, url: "https://crn.feishost.com/" });
+  }
+  return events;
+}
+
+// ---------- CRDM (crdm.ie competition dates table) ----------
+// Rows read like "5th - 6th December 2026" | feis | organiser | venue | what it qualifies for.
+async function crdm() {
+  const page = "https://www.crdm.ie/competition-dates/";
+  const html = await get(page, "crdm.html");
+  const MONTH_NAMES = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  const monthOf = (w) => !w ? 0 : MONTH_NAMES.findIndex((n) => n.startsWith(String(w).toLowerCase().slice(0, 3))) + 1;
+  const events = [];
+  for (const row of html.match(/<tr[\s\S]*?<\/tr>/gi) || []) {
+    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => text(m[1]));
+    if (cells.length < 4 || !cells[1]) continue;
+    // Pieces such as 31st March - 4th April 2027: numbers, month words and a year.
+    const when = cells[0].replace(/(\d)(st|nd|rd|th)\b/gi, "$1");
+    const year = Number((when.match(/\b(20\d\d)\b/) || [])[1]);
+    const parts = when.replace(/\b20\d\d\b/, "").split(/\s*(?:-|–|&|to)\s*/i).map((x) => x.trim()).filter(Boolean);
+    if (!year || !parts.length) continue;
+    const read = (x) => { const d = Number((x.match(/\d{1,2}/) || [])[0]); const m = monthOf((x.match(/[A-Za-z]{3,}/) || [])[0] || ""); return { d, m }; };
+    const a = read(parts[0]), b = read(parts[parts.length - 1]);
+    const m2 = b.m || a.m, m1 = a.m || m2;
+    if (!a.d || !m1) continue;
+    const y1 = m1 > m2 ? year - 1 : year;
+    const kind = /standalone/i.test(cells[4] || "") ? "Major" : /championship/i.test(cells[1]) ? "Championship" : "";
+    events.push({
+      org: "crdm", name: cells[1], start: iso(y1, m1, a.d), end: iso(year, m2, b.d || a.d),
+      place: /^tbc$/i.test(cells[3]) ? "" : cells[3], kind, organiser: cells[2],
+      url: page
+    });
+  }
+  return events;
+}
+
 const SOURCES = [
   { id: "wida", org: "wida", name: "WIDA competitions calendar", url: "https://www.irish.dance/competitions-list", run: wida },
   { id: "comhdhail", org: "comhdhail", name: "An Comhdháil feis calendar", url: "https://web.irishdancingorg.com/index.php/feis", run: comhdhail },
-  { id: "idtana", org: "clrg", name: "IDTANA Find a Feis (North America)", url: "https://idtana.org/feiseanna/", run: idtana }
+  { id: "idtana", org: "clrg", name: "IDTANA Find a Feis (North America)", url: "https://idtana.org/feiseanna/", run: idtana },
+  { id: "crn", org: "crn", name: "CRN feiseanna on Feis Host", url: "https://crn.feishost.com/", run: crn },
+  { id: "crdm", org: "crdm", name: "CRDM competition dates", url: "https://www.crdm.ie/competition-dates/", run: crdm }
 ];
 
 const previous = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : { events: [], sources: [] };
