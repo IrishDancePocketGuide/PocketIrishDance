@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Pocket Irish Dance: the free Irish dance guide for parents</title>
+  <title>Pocket Irish Dance: the free Irish dance app and guide for parents</title>
   <script>
     // The website is for visitors. The installed app, sign-in links and old shared links go straight to the app.
     (function () {
@@ -15,12 +15,30 @@
   </script>
   <meta name="description" content="A free pocket guide for Irish dance parents: what the words mean and how to say them, the levels, the rules for your organization, the feis calendar, and a private score tracker with judge history.">
   <meta name="theme-color" content="#024445">
-  <meta property="og:title" content="Pocket Irish Dance">
+  <link rel="canonical" href="https://pocketirishdance.com/">
+  <meta property="og:site_name" content="Pocket Irish Dance">
+  <meta property="og:title" content="Pocket Irish Dance: Irish dance, finally explained">
   <meta property="og:description" content="Irish dance, explained for parents. Words, levels, rules, feis calendar and a private score tracker. Free.">
-  <meta property="og:image" content="https://pocketirishdance.com/icons/logo-1024.png">
+  <meta property="og:image" content="https://pocketirishdance.com/site/social.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Pocket Irish Dance: Irish dance, finally explained for parents">
   <meta property="og:url" content="https://pocketirishdance.com/">
   <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebSite", "@id": "https://pocketirishdance.com/#website", "name": "Pocket Irish Dance", "url": "https://pocketirishdance.com/", "inLanguage": "en", "publisher": { "@id": "https://pocketirishdance.com/#org" } },
+      { "@type": "Organization", "@id": "https://pocketirishdance.com/#org", "name": "Pocket Irish Dance", "url": "https://pocketirishdance.com/", "logo": "https://pocketirishdance.com/icons/logo-1024.png", "email": "pocketirishdance@gmail.com" },
+      { "@type": "WebApplication", "name": "Pocket Irish Dance", "url": "https://pocketirishdance.com/", "applicationCategory": "EducationalApplication", "operatingSystem": "iPhone, iPad, Android, any web browser", "browserRequirements": "Requires JavaScript", "inLanguage": "en", "isAccessibleForFree": true,
+        "description": "A free pocket guide for Irish dance parents: what the words mean and how to say them, the levels, the rules for your organization, the feis calendar, and a private score tracker with judge history.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@id": "https://pocketirishdance.com/#org" }, "image": "https://pocketirishdance.com/site/social.png" }
+    ]
+  }
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -119,6 +137,9 @@
     .tint { background: var(--bg-2); }
 
     .questions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 30px auto 10px; max-width: 900px; }
+    a.q { color: inherit; text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    a.q:hover { border-color: var(--teal-3); transform: translateY(-1px); }
+    .orgs a { color: inherit; text-decoration: none; }
     .q { background: var(--card); border: 1px solid var(--line); border-radius: 22px 22px 22px 6px; padding: 12px 18px; font-weight: 700; box-shadow: 0 8px 20px -16px rgba(2,68,69,.5); }
     .q:nth-child(even) { border-radius: 22px 22px 6px 22px; background: var(--teal-soft); border-color: transparent; }
 
@@ -259,14 +280,15 @@
         <span class="eyebrow">Sound familiar?</span>
         <h2>New to Irish dance? So was every parent in the hall.</h2>
         <div class="questions" aria-label="Questions dance parents ask">
-          <span class="q">What's a feis, and how do you say it?</span>
-          <span class="q">Why did she get 1st from one judge and 9th overall?</span>
-          <span class="q">Is it Beginner 2 or Advanced Beginner?</span>
-          <span class="q">What goes in the feis bag?</span>
-          <span class="q">When does he move up?</span>
-          <span class="q">Hard shoes or ghillies?</span>
+          <a class="q" href="guide/irish-dance-words/">What's a feis, and how do you say it?</a>
+          <a class="q" href="guide/how-championships-are-judged/">Why did she get 1st from one judge and 9th overall?</a>
+          <a class="q" href="guide/clrg-levels/#b2">Is it Beginner 2 or Advanced Beginner?</a>
+          <a class="q" href="guide/feis-checklists/#bag">What goes in the feis bag?</a>
+          <a class="q" href="guide/clrg-levels/">When does he move up?</a>
+          <a class="q" href="guide/irish-dance-words/#dance">Hard shoes or ghillies?</a>
         </div>
         <p class="lede" style="margin-top:22px">Different organizations, different countries, and a new word at every feis. Pocket Irish Dance explains it all in plain language, set to your dancer's own organization and level.</p>
+        <p style="margin:0"><a class="btn teal" href="guide/">Read the free parent guide</a></p>
       </div>
     </section>
 
@@ -362,7 +384,7 @@
 
         <div class="center reveal" style="margin-top:40px">
           <h3>Covers the major organizations</h3>
-          <div class="orgs"><span>CLRG</span><span>An Comhdháil</span><span>WIDA</span><span>IDTANA</span><span>CRN</span><span>CRDM</span></div>
+          <div class="orgs"><a href="guide/organizations/#clrg"><span>CLRG</span></a><a href="guide/organizations/#an-comhdhail"><span>An Comhdháil</span></a><a href="guide/organizations/#wida"><span>WIDA</span></a><a href="guide/organizations/#idtana"><span>IDTANA</span></a><a href="guide/organizations/#crn"><span>CRN</span></a><a href="guide/organizations/#crdm"><span>CRDM</span></a></div>
           <p class="muted" style="margin-top:12px;font-size:15px">For families in the US, Canada, the UK, Ireland, Australia and beyond.</p>
         </div>
       </div>
@@ -448,6 +470,9 @@
       <div class="row">
         <img src="icons/wordmark-white.png" alt="Pocket Irish Dance" width="720" height="194">
         <nav aria-label="About">
+          <a href="guide/">Parent guide</a>
+          <a href="guide/clrg-levels/">CLRG levels</a>
+          <a href="guide/irish-dance-words/">Irish dance words</a>
           <a href="app.html#/privacy">Privacy policy</a>
           <a href="app.html#/terms">Terms of use</a>
           <a href="mailto:pocketirishdance@gmail.com">Contact us</a>

@@ -1,0 +1,5 @@
+# Pocket Irish Dance: everyone is welcome to read the website and the parent guides.
+User-agent: *
+Allow: /
+
+Sitemap: https://pocketirishdance.com/sitemap.xml

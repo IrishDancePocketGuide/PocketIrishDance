@@ -53,6 +53,12 @@
     // The website (index.html).
     website: function () { count("website", "Website visit"); },
 
+    // The parent guide pages (guide/, made by scripts/build-guides.mjs). Sends only the page's fixed name.
+    guide: function (slug, title) {
+      if (!/^[a-z0-9-]{1,60}$/.test(slug)) return;
+      count("guide/" + slug, "Guide: " + String(title || slug).slice(0, 80));
+    },
+
     // The app (app.html): counts each open, and again when it comes back after 30 minutes away.
     app: function () {
       var how = function () { return installed() ? ["open-home-screen", "App opened from home screen"] : ["open-browser", "App opened in a browser"]; };
