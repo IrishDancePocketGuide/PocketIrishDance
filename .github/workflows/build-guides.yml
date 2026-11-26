@@ -1,0 +1,42 @@
+# Keeps the parent guide pages (guide/) and sitemap.xml in step with the app's content.
+# Whenever data.js (or the page builder) changes on main, it rebuilds them from data.js and saves any changes.
+# You can also run it any time from the Actions tab: "Build parent guide pages" > "Run workflow".
+name: Build parent guide pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - data.js
+      - scripts/build-guides.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-guides-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the guide pages from data.js
+        run: node scripts/build-guides.mjs
+      - name: Save changes
+        run: |
+          git add -A guide sitemap.xml
+          if git diff --cached --quiet; then echo "Guide pages already up to date."; exit 0; fi
+          git config user.name "guide-pages-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Rebuild parent guide pages from data.js"
+          for i in 1 2 3; do git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0; sleep 5; done
+          exit 1

@@ -22,6 +22,8 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | `supabase/schema.sql` | The Friends database and its privacy rules. Run once in the Supabase SQL Editor. |
 | `vendor/supabase/` | The Supabase browser library (supabase-js 2.118.0, MIT). |
 | `styles.css` | Colors and layout. |
+| `guide/`, `sitemap.xml` | The parent guide pages for search engines (levels, rules, words, organizations, checklists), made from `data.js` by `scripts/build-guides.mjs`. Don't edit them by hand: run `node scripts/build-guides.mjs` after changing `data.js` (the "Build parent guide pages" GitHub Action also does it on main). Styles in `site/guide.css`. |
+| `robots.txt` | Tells search engines they're welcome and where the sitemap is. `app.html` is marked noindex; the website and guide pages are what show in search. |
 | `manifest.webmanifest`, `sw.js`, `icons/` | What makes it installable and work offline. |
 
 ## Privacy
@@ -41,6 +43,10 @@ Friends is the only online part, and only for parents who sign up. A parent shar
 The app lives at https://pocketirishdance.com (GitHub Pages custom domain, set in the repository's Settings > Pages). Namecheap DNS holds four A records for `@` (185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153) and a CNAME `www` → `irishdancepocketguide.github.io`, alongside the Resend email records. The old github.io address redirects there. Results are saved per web address, so anyone moving from the old address restores a backup file.
 
 All paths in the app are relative, so it works at either address. Supabase's Site URL and Redirect URLs must include the current address for sign-in emails.
+
+## Search engines
+
+Register the site with Google Search Console and Bing Webmaster Tools using the pocketirishdance@gmail.com account, and submit the sitemap at https://pocketirishdance.com/sitemap.xml. The social preview image is `site/social.png` (1200×630).
 
 ## Status
 
