@@ -1134,3 +1134,23 @@ from (values
   ('Ridgewood Irish Dance Academy', 'Region not listed', 'Not listed', null, null, null)
 ) as v(name, town, country, website, email, teachers)
 on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: every branch of Kavanagh Porter Academy, from the school's own website, kavanaghporteracademy.com (read Nov 26 2026). The site shows "CLRG Vetted". 11 branches.
+-- The town is the branch name the site uses, with the street address's town in brackets where it differs.
+-- The older 'Kavanagh Porter' (USA & Ireland) row from the championship results is kept, in case a family already picked it.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'Kavanagh Porter Academy website'
+from (values
+  ('Kavanagh Porter Academy', 'Boise, Idaho', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-boise-idaho', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Catonsville, Maryland', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-catonsville-maryland', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Jacksonville (St. Augustine), Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-jacksonville-florida', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Sarasota, Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-sarasota-florida', 'kpasarasota@gmail.com', 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Naples, Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-falls-church-virginia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Richmond (Midlothian), Virginia', 'United States', 'kavanaghporteracademy.com/richmond-virginai-irish-dance-academy-kavanagh-porter-dance-school', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Springfield (Alexandria), Virginia', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-springfield-virginia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Peachtree City, Georgia', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-peachtree-city-georgia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Dublin (Kilmainham)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-dublin-ireland', null, 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Donegal (Ballybofey)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-donegal-ireland', null, 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Cork (Whitechurch)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-cork-ireland', 'kpacork@gmail.com', 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
