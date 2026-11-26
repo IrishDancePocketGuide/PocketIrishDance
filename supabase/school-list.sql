@@ -1172,3 +1172,22 @@ from (values
   ('Scoil Rince Daryl Rose', 'Canyon Country, California', 'United States', 'srdririshdance.com', null, 'Daryl Goldes (ADCRG)')
 ) as v(name, town, country, website, email, teachers)
 on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: more Canadian schools Shannon asked for, confirmed on the IDTANA school pages (idtana.org/country/ca), the Eastern Canada
+-- teachers' school lists (idtac-er.com/schools-ontario, /schools-quebec) and irishdancing.com (read Nov 26 2026).
+-- Only schools not already in the list are added; names are as the official lists spell them. 10 schools.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'IDTANA and Eastern Canada school lists'
+from (values
+  ('Bernadette Short School of Irish Dancing', 'Montreal, Quebec', 'Canada', 'shortschoolirishdance.com', null, null),
+  ('Celtic Academy Canada', 'Guelph, Ontario', 'Canada', 'irishdancecanada.com', null, null),
+  ('De Menezes Reilly Academy of Irish Dance', 'Niagara Falls, Ontario', 'Canada', null, null, null),
+  ('DeVoy Academy of Irish Dance', 'Toronto, Ontario', 'Canada', null, null, null),
+  ('Durham Irish Dance', 'Whitby, Ontario', 'Canada', null, null, null),
+  ('Kilmartin Irish Dance School', 'Hudson, Quebec', 'Canada', null, null, 'Meaghan Kilmartin (TCRG)'),
+  ('Mohan School of Irish Dance', 'Waterloo, Ontario', 'Canada', null, null, null),
+  ('Moran Academy of Irish Dance', 'Deux-Montagnes, Quebec', 'Canada', 'sites.google.com/view/moran-academy', null, null),
+  ('Sask Irish Dance', 'Saskatoon, Saskatchewan', 'Canada', null, null, null),
+  ('Siamsa Rince Gaelach', 'Fredericton, New Brunswick', 'Canada', 'siamsairishdance.com', null, 'Sharon Stanford-Rutter, Meghan Callaghan, Dominique Doucet (founders)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
