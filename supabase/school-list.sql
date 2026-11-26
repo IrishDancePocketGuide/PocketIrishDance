@@ -1154,3 +1154,21 @@ from (values
   ('Kavanagh Porter Academy', 'Cork (Whitechurch)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-cork-ireland', 'kpacork@gmail.com', 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)')
 ) as v(name, town, country, website, email, teachers)
 on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: more Western US Region schools Shannon asked for, from the region's own teacher list, westernusregion.com/teachers (read Nov 26 2026).
+-- Only schools not already in the list are added. 10 schools.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'Western US Region teacher list'
+from (values
+  ('Blackthorn Academy of Irish Dance', 'Eugene, Oregon', 'United States', null, null, 'Alex Hailey (TCRG)'),
+  ('Boyle Irish Dance Academy', 'San Francisco, California', 'United States', null, null, 'Noreen Boyle (TCRG), Mary Folan (TCRG)'),
+  ('Brosnan School of Irish Dance', 'San Anselmo, California', 'United States', 'brosnanschool.com', null, 'Lisa Brosnan Hynes (TCRG)'),
+  ('Dara Irish Dance Academy', 'Lehi, Utah', 'United States', null, null, 'Amelia Walker (TCRG)'),
+  ('Kennelly School of Irish Dance', 'Sacramento, California', 'United States', null, null, 'Patricia Kennelly (ADCRG)'),
+  ('Kyne Irish Dance Co.', 'Portland, Oregon', 'United States', null, null, 'Nora Fogarty (TCRG)'),
+  ('McGrath Irish Dancers', 'San Ramon, California', 'United States', 'mcgrathirishdancers.com', null, 'Valerie Deam (TCRG)'),
+  ('O''Connor-Kennedy Academy', 'Laguna Hills, California', 'United States', 'oconnorkennedy.com', null, 'Kate O''Connor (ADCRG), Sean Kennedy (ADCRG), Megan Kennedy (TCRG), Annaliesa Potter (TCRG)'),
+  ('Rohan Murphy Irish Dance Academy', 'Danville, California', 'United States', null, null, 'Lauren Edberg (TCRG)'),
+  ('Scoil Rince Daryl Rose', 'Canyon Country, California', 'United States', 'srdririshdance.com', null, 'Daryl Goldes (ADCRG)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
