@@ -1134,3 +1134,60 @@ from (values
   ('Ridgewood Irish Dance Academy', 'Region not listed', 'Not listed', null, null, null)
 ) as v(name, town, country, website, email, teachers)
 on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: every branch of Kavanagh Porter Academy, from the school's own website, kavanaghporteracademy.com (read Nov 26 2026). The site shows "CLRG Vetted". 11 branches.
+-- The town is the branch name the site uses, with the street address's town in brackets where it differs.
+-- The older 'Kavanagh Porter' (USA & Ireland) row from the championship results is kept, in case a family already picked it.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'Kavanagh Porter Academy website'
+from (values
+  ('Kavanagh Porter Academy', 'Boise, Idaho', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-boise-idaho', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Catonsville, Maryland', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-catonsville-maryland', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Jacksonville (St. Augustine), Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-jacksonville-florida', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Sarasota, Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-sarasota-florida', 'kpasarasota@gmail.com', 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Naples, Florida', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-falls-church-virginia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Richmond (Midlothian), Virginia', 'United States', 'kavanaghporteracademy.com/richmond-virginai-irish-dance-academy-kavanagh-porter-dance-school', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Springfield (Alexandria), Virginia', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-springfield-virginia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Peachtree City, Georgia', 'United States', 'kavanaghporteracademy.com/irish-dance-classes-peachtree-city-georgia', null, 'Scott Porter, Bekah Fine, Saoirse Deboy, Emma Cross, Cece Trapani, Becky Jarriel (US teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Dublin (Kilmainham)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-dublin-ireland', null, 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Donegal (Ballybofey)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-donegal-ireland', null, 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)'),
+  ('Kavanagh Porter Academy', 'Cork (Whitechurch)', 'Ireland', 'kavanaghporteracademy.com/irish-dance-classes-cork-ireland', 'kpacork@gmail.com', 'Elaine Kavanagh, Clodagh Lanigan Walsh, Ursula Quigley Moore, Amy Tyndall, Tracey Dunphy Grant, Audrey Bermingham, Dillon Redmond (Ireland teachers, branch not given)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: more Western US Region schools Shannon asked for, from the region's own teacher list, westernusregion.com/teachers (read Nov 26 2026).
+-- Only schools not already in the list are added. 10 schools.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'Western US Region teacher list'
+from (values
+  ('Blackthorn Academy of Irish Dance', 'Eugene, Oregon', 'United States', null, null, 'Alex Hailey (TCRG)'),
+  ('Boyle Irish Dance Academy', 'San Francisco, California', 'United States', null, null, 'Noreen Boyle (TCRG), Mary Folan (TCRG)'),
+  ('Brosnan School of Irish Dance', 'San Anselmo, California', 'United States', 'brosnanschool.com', null, 'Lisa Brosnan Hynes (TCRG)'),
+  ('Dara Irish Dance Academy', 'Lehi, Utah', 'United States', null, null, 'Amelia Walker (TCRG)'),
+  ('Kennelly School of Irish Dance', 'Sacramento, California', 'United States', null, null, 'Patricia Kennelly (ADCRG)'),
+  ('Kyne Irish Dance Co.', 'Portland, Oregon', 'United States', null, null, 'Nora Fogarty (TCRG)'),
+  ('McGrath Irish Dancers', 'San Ramon, California', 'United States', 'mcgrathirishdancers.com', null, 'Valerie Deam (TCRG)'),
+  ('O''Connor-Kennedy Academy', 'Laguna Hills, California', 'United States', 'oconnorkennedy.com', null, 'Kate O''Connor (ADCRG), Sean Kennedy (ADCRG), Megan Kennedy (TCRG), Annaliesa Potter (TCRG)'),
+  ('Rohan Murphy Irish Dance Academy', 'Danville, California', 'United States', null, null, 'Lauren Edberg (TCRG)'),
+  ('Scoil Rince Daryl Rose', 'Canyon Country, California', 'United States', 'srdririshdance.com', null, 'Daryl Goldes (ADCRG)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
+
+-- CLRG: more Canadian schools Shannon asked for, confirmed on the IDTANA school pages (idtana.org/country/ca), the Eastern Canada
+-- teachers' school lists (idtac-er.com/schools-ontario, /schools-quebec) and irishdancing.com (read Nov 26 2026).
+-- Only schools not already in the list are added; names are as the official lists spell them. 10 schools.
+insert into public.schools (name, town, country, website, contact_email, listed_teachers, org, source)
+select v.name, v.town, v.country, v.website, v.email, v.teachers, 'clrg', 'IDTANA and Eastern Canada school lists'
+from (values
+  ('Bernadette Short School of Irish Dancing', 'Montreal, Quebec', 'Canada', 'shortschoolirishdance.com', null, null),
+  ('Celtic Academy Canada', 'Guelph, Ontario', 'Canada', 'irishdancecanada.com', null, null),
+  ('De Menezes Reilly Academy of Irish Dance', 'Niagara Falls, Ontario', 'Canada', null, null, null),
+  ('DeVoy Academy of Irish Dance', 'Toronto, Ontario', 'Canada', null, null, null),
+  ('Durham Irish Dance', 'Whitby, Ontario', 'Canada', null, null, null),
+  ('Kilmartin Irish Dance School', 'Hudson, Quebec', 'Canada', null, null, 'Meaghan Kilmartin (TCRG)'),
+  ('Mohan School of Irish Dance', 'Waterloo, Ontario', 'Canada', null, null, null),
+  ('Moran Academy of Irish Dance', 'Deux-Montagnes, Quebec', 'Canada', 'sites.google.com/view/moran-academy', null, null),
+  ('Sask Irish Dance', 'Saskatoon, Saskatchewan', 'Canada', null, null, null),
+  ('Siamsa Rince Gaelach', 'Fredericton, New Brunswick', 'Canada', 'siamsairishdance.com', null, 'Sharon Stanford-Rutter, Meghan Callaghan, Dominique Doucet (founders)')
+) as v(name, town, country, website, email, teachers)
+on conflict (lower(btrim(name)), lower(btrim(town))) do nothing;
