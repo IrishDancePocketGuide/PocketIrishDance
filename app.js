@@ -11,7 +11,12 @@
   // ---------- helpers ----------
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  const levelById = (id) => D.levels.find((l) => l.id === id);
+  // CLRG levels have local names outside North America (Great Britain, Ireland, Australia). The level ids stay
+  // the same, so a result logged as "Primary" in Great Britain is the same level as Beginner 2 in North America.
+  const ladderFor = (region) => (D.clrgLadders || []).find((c) => c.id === region || c.region === region || (c.regions || []).includes(region)) || null;
+  const myLadder = () => ((curOrg() || "clrg") === "clrg" ? ladderFor(S.profile.region) : null);
+  const localize = (l, lad) => (l && l.org === "clrg" && lad && lad.levels && lad.levels[l.id] ? Object.assign({}, l, lad.levels[l.id], { naName: l.name }) : l);
+  const levelById = (id, lad) => localize(D.levels.find((l) => l.id === id), lad === undefined ? myLadder() : lad);
   const danceById = (id) => D.dances.find((d) => d.id === id);
   // Some dances (the adult championships) belong to one organization's ladder only.
   const danceForOrg = (d) => !d.orgs || d.orgs.includes(curOrg() || "clrg");
@@ -28,7 +33,7 @@
 
   // ---------- saved data (on this phone only) ----------
   const KEY = "pid.v1";
-  const APP_VERSION = "72"; // keep in step with VERSION in sw.js
+  const APP_VERSION = "73"; // keep in step with VERSION in sw.js
   const blank = () => ({ profile: { org: "", region: "", level: "" }, checks: {}, dancers: [], results: [], dismissed: {}, judgeInfo: {}, journal: [] });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
@@ -186,7 +191,11 @@
   const orgName = (id) => (D.organizations.find((o) => o.id === id) || {}).name || "";
   let viewOrg = "";
   const curOrg = () => viewOrg || S.profile.org || "";
-  const orgLevels = () => D.levels.filter((l) => l.org === (curOrg() || "clrg"));
+  // This organization's levels, in ladder order, with the local names for the parent's country.
+  const orgLevels = (lad) => {
+    const o = curOrg() || "clrg"; if (lad === undefined) lad = o === "clrg" ? myLadder() : null;
+    return D.levels.filter((l) => l.org === o && (!l.only || (lad && lad.region === l.only))).map((l) => localize(l, lad)).sort((a, b) => a.order - b.order);
+  };
   const inOrg = (item) => { const o = curOrg(); if (!o) return true; const tags = item.orgs || (item.org && item.org.length < 12 && D.organizations.some((x) => x.id === item.org) ? [item.org] : null) || (item.orgId ? [item.orgId] : null); return !tags || tags.includes(o); };
 
   // ---------- pronunciation ----------
@@ -503,6 +512,11 @@
         ${org.link ? `<a class="btn ghost" href="${esc(org.link)}" target="_blank" rel="noopener">${esc(org.name)} website ↗</a>` : ""}</div>`
       };
     }
+    // CLRG: one ladder per country. Opens on the parent's own country.
+    const ladders = D.clrgLadders || [];
+    const lad = ladderFor(screens.levels.country || S.profile.region) || ladders[0];
+    const own = (ladderFor(S.profile.region) || ladders[0]) === lad;
+    const clrgList = orgLevels(lad && lad.levels ? lad : null);
     return {
       title: "Levels", tab: "levels",
       html: o && o !== "clrg" ? `<h2>The ${esc(orgName(o))} level ladder</h2>
@@ -515,24 +529,29 @@
         <p style="margin:6px 0 0">The <strong>grades</strong> are Beginner A, Beginner B, Intermediate and Open. Each dance is its own competition.</p>
         <p style="margin:8px 0 0"><strong>Awards</strong> (A, B and Intermediate) are danced in front of 1 judge at your dancer's grade. Then come <strong>championships</strong>: the 1 Adjudicator Championship, the Preliminary and Premiership Championships, then Open.</p>
         <p class="small muted" style="margin:8px 0 0">To move up in a grade, a win needs 6 or more dancers in the competition.</p></article>` : ""}
-      <div class="ladder">${ladder()}</div>
+      <div class="ladder">${ladder(orgLevels())}</div>
       ${(D.organizations.find((x) => x.id === o) || {}).rulesLink ? `<p class="small muted"><a href="${esc(D.organizations.find((x) => x.id === o).rulesLink)}" target="_blank" rel="noopener">Official ${esc(orgName(o))} rules ↗</a></p>` : ""}` : `<h2>The ${o ? "" : "CLRG "}level ladder</h2>
-      <p class="muted" style="margin-top:0">CLRG in North America (the level names used at North American feiseanna). At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
+      <div class="pill-tabs" role="tablist" aria-label="Country">${ladders.map((c) => `<button data-ladder="${c.id}" class="${c === lad ? "on" : ""}" role="tab" aria-selected="${c === lad}">${esc(c.tab || c.region)}</button>`).join("")}</div>
+      <p class="muted" style="margin-top:10px">${esc(lad.intro)} At the lower levels a dancer moves up <strong>one dance at a time</strong>, so they can be at different levels in different dances.</p>
+      ${lad.warn ? `<div class="note">${esc(lad.warn)}</div>` : ""}
       <article class="card">
         <h3>What are “grades”?</h3>
-        <p style="margin:6px 0 0">“Grades” (or <strong>grade competitions</strong>) is the name for all the levels below championship: Beginner 1, Beginner 2, Novice and Open Prizewinner. In grades, each dance is a separate competition with one judge, and your dancer moves up one dance at a time.</p>
+        <p style="margin:6px 0 0">“Grades” (or <strong>grade competitions</strong>) is the name for all the levels below championship: ${esc(clrgList.filter((l) => l.perDance).map((l) => l.name).join(", ").replace(/, ([^,]*)$/, " and $1"))}. In grades, each dance is a separate competition with one judge, and your dancer moves up one dance at a time.</p>
         <p style="margin:8px 0 0">Once a dancer has moved up through the grades, they go into <strong>championships</strong> (Preliminary, then Open). There, they dance several rounds in one competition, judged by a panel, and get one overall result.</p>
-        <p style="margin:8px 0 0">Adults (18 and over) have their own championships: <strong>Adult Championship</strong> and <strong>Advanced Adult Championship</strong>. They're at the bottom of this list.</p>
+        ${lad.levels ? "" : `<p style="margin:8px 0 0">Adults (18 and over) have their own championships: <strong>Adult Championship</strong> and <strong>Advanced Adult Championship</strong>. They're at the bottom of this list.</p>`}
         <p class="small muted" style="margin:8px 0 0">Don't confuse grades with <strong>grade exams</strong> (Grád, said “grawd”). Those are optional CLRG skills exams, separate from competitions.</p>
       </article>
-      <div class="note">Great Britain, Ireland and Australia use different names for the lower levels. Their ladders are coming next.</div>
+      ${!own && S.profile.region ? `<p class="small muted">You're looking at another country's names. Your results use the names for ${esc(S.profile.region)}, which you can change in <a href="#/settings">Settings</a>.</p>` : ""}
       <div class="ladder">
-        ${ladder()}
-      </div>`
+        ${ladder(lad.levels ? clrgList.filter((l) => !l.adult) : clrgList, own)}
+      </div>
+      ${lad.unconfirmed ? `<p class="small muted">${esc(lad.unconfirmed)}</p>` : ""}
+      ${lad.sources ? `<p class="small muted" style="margin-bottom:4px">Where these names come from (official CLRG feis syllabi):</p><ul class="small muted" style="margin-top:0">${lad.sources.map((x) => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)} ↗</a></li>`).join("")}</ul>` : ""}`
     };
-    function ladder() {
-      return orgLevels().map((l) => `<article class="card rung ${l.id === mine ? "me" : ""}" data-n="${l.order}">
-          <div class="row between wrap"><h3>${esc(l.name)}</h3>${l.id === mine ? '<span class="chip">Your dancer</span>' : ""}</div>
+    function ladder(list, own = true) {
+      let n = 0;
+      return list.map((l) => `<article class="card rung ${own && l.id === mine ? "me" : ""}" data-n="${++n}">
+          <div class="row between wrap"><h3>${esc(l.name)}</h3>${own && l.id === mine ? '<span class="chip">Your dancer</span>' : ""}</div>
           ${l.alt ? `<p class="small muted" style="margin:0">${esc(l.alt)}</p>` : ""}
           <dl class="facts">
             <dt>Danced</dt><dd>${esc(l.danced)}</dd>
@@ -630,7 +649,13 @@
 
   // ----- score tracker -----
   function dancerLevel(dn, danceId) { return (dn.levels && dn.levels[danceId]) || ""; }
-  function nextLevel(id) { const l = levelById(id); return l && D.levels.find((x) => x.org === l.org && x.order === l.order + 1 && !!x.adult === !!l.adult); }
+  function nextLevel(id) {
+    const l = levelById(id); if (!l) return undefined;
+    const lad = myLadder();
+    const list = D.levels.filter((x) => x.org === l.org && !!x.adult === !!l.adult && (!x.only || (lad && lad.region === x.only))).sort((a, b) => a.order - b.order);
+    const i = list.findIndex((x) => x.id === id);
+    return i >= 0 && list[i + 1] ? levelById(list[i + 1].id) : undefined;
+  }
 
   function moveUpSuggestions(dn) {
     const out = []; const seen = {};
@@ -1404,6 +1429,7 @@
     if (t.dataset.searchAll !== undefined) { screens.search.all = !!t.dataset.searchAll; rerender(); return; }
     if (t.dataset.feisOrg) { screens.feis.st.org = t.dataset.feisOrg; rerender(); return; }
     if (t.dataset.schoolOrg !== undefined) { screens.schools.st = Object.assign(screens.schools.st || {}, { org: t.dataset.schoolOrg }); route(); return; }
+    if (t.dataset.ladder) { screens.levels.country = t.dataset.ladder; rerender(); return; }
     if (t.dataset.group) { screens.words.group = t.dataset.group; rerender(); return; }
     if (t.dataset.dview) { screens.dancer.view = t.dataset.dview; rerender(); return; }
     if (t.dataset.resetCheck) { Object.keys(S.checks).forEach((k) => { if (k.startsWith(t.dataset.resetCheck + ":")) delete S.checks[k]; }); save(); rerender(); return; }

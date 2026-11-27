@@ -172,6 +172,17 @@ window.PID_DATA = {
       perDance: false, check: true,
       parents: "Recalls work like other championships: at the Southern Region Oireachtas, only recalled dancers dance the set round"
     },
+    // Australia only (CLRG / AIDA). AIDA syllabi list Elementary as "Mean-Grad (1)", between Primary and Intermediate.
+    // "only" keeps it off every other country's ladder. See clrgLadders below for sources.
+    {
+      org: "clrg", only: "Australia", id: "au_el", order: 2.5, name: "Elementary",
+      alt: "Mean-Grád (1) on AIDA feis syllabi",
+      danced: "The same dances and steps as Intermediate, but shorter: dancers do two steps of their heavy jig or hornpipe instead of three",
+      moveUp: "Win 1st in a dance, then move up to Intermediate in that dance. AIDA's grade rules aren't published online, so check with your teacher how many dancers must be in the competition",
+      moveUpPlace: 1, perDance: true, check: true,
+      words: ["elementary", "elem", "mean grad 1", "mean-grad 1", "mean grad (1)", "mean-grad (1)"],
+      parents: "Hard shoe dances get more advanced here"
+    },
     // WIDA, from the official competition rules (irish.dance/competition-rules), read Nov 23 2026.
     {
       org: "wida", id: "w_b", order: 1, name: "Beginner",
@@ -305,6 +316,109 @@ window.PID_DATA = {
       moveUp: "The top level. Winning one moves all of a dancer's dances to Open",
       perDance: false,
       parents: "Qualifying for the All Irelands, British Nationals and Worlds runs through the regional championships"
+    }
+  ],
+
+  // CLRG level names outside North America. The levels themselves are the same CLRG levels (same ids),
+  // so results logged with a local name still line up with the score tracker, judge history and moving up.
+  // The grades have Irish names (Bun Grád, Tús Grád, Meán Grád, Árd Grád), which GB and Australian syllabi print
+  // next to their English names; that is how each one is matched to the North American level. Read Nov 27 2026 from official CLRG-registered feis syllabi
+  // (linked in sources). Moving-up rules are set by each regional council and differ, so they are marked check.
+  clrgLadders: [
+    {
+      id: "na", region: "North America", tab: "N. America", regions: ["United States", "Canada", "Mexico"],
+      intro: "CLRG in North America (the level names used at North American feiseanna)."
+    },
+    {
+      id: "gb", region: "Great Britain", tab: "Britain", regions: ["Great Britain"],
+      intro: "CLRG in England, Scotland and Wales. Feiseanna here use the grades Novice (or Beginners), Primary, Intermediate and Open, then Preliminary and Open Championships. Each regional council sets its own moving-up rules, so check your feis syllabus.",
+      warn: "A “Novice” in Great Britain is a brand new dancer (the first grade). In North America, Novice is the third level. Same word, different level.",
+      sources: [
+        { name: "Trainor Feis 2026 syllabus (Southern England Regional Council)", url: "https://www.clrg.ie/wp-content/uploads/2026/01/FINAL-TRAINOR-SYLLABUS-2026.pdf" },
+        { name: "Feis McCarron 2026 syllabus (Midland Regional Council)", url: "https://www.clrg.ie/wp-content/uploads/2025/11/Feis-McCarron-syllabus_2026_.pdf" },
+        { name: "Hannon Murphy Memorial Feis 2025 syllabus (North East Regional Council)", url: "https://www.clrg.ie/wp-content/uploads/2025/06/Hannon-Murphy-Syllabus-2025.pdf" }
+      ],
+      levels: {
+        b1: { name: "Novice", alt: "also called Beginners (North East England); Bun Grád. Like Beginner 1 in North America",
+          words: ["novice", "nov", "beginners", "beginner", "beg", "bun grad", "bún grád", "bun grád"],
+          moveUp: "Depends on how many dancers are in the competition. Midlands: 1 dancer moves up with 6 to 10 dancers, 2 with 11 to 20, 3 with 21 or more. Southern England: placing 1st, 2nd or 3rd. North East: winning 1st (the top 3 move up with 15 or more dancers). With 5 or fewer dancers it usually doesn't count",
+          moveUpPlace: 1, minEntrants: 6 },
+        b2: { name: "Primary", alt: "Tús Grád. Like Beginner 2 (Advanced Beginner) in North America",
+          words: ["primary", "prim", "tus grad", "tús grád", "tus grád"],
+          moveUp: "Midlands: same numbers as Novice. Southern England: placing 1st or 2nd. North East: winning 1st. Results with 5 or fewer dancers usually don't count",
+          moveUpPlace: 1, minEntrants: 6 },
+        novice: { name: "Intermediate", alt: "Meán Grád. Like Novice in North America",
+          words: ["intermediate", "inter", "mean grad", "meán grád", "mean grád"],
+          moveUp: "Win 1st in a dance in your dancer's own age group (with more than 5 dancers), then dance Open in that dance",
+          moveUpPlace: 1, minEntrants: 6,
+          parents: "Intermediate dancers can also enter Preliminary and Open Championships" },
+        pw: { name: "Open", alt: "Árd Grád. Like Open Prizewinner in North America",
+          words: ["open", "ard grad", "árd grád", "ard grád"],
+          moveUp: "Open is the top grade. Dancers also enter championships from here" },
+        pc: { moveUp: "Win 2 Preliminary Championships within two years (wins with fewer than 6 dancers usually don't count, but 3 wins always do), then dance Open Championship for 12 months",
+          danced: "Usually three rounds when it is run on its own: reel or slip jig, heavy jig or hornpipe, and a set dance. When it is run together with the Open Championship, the Preliminary result comes from the first two rounds. Judged by a panel of at least 3." },
+        oc: {}
+      }
+    },
+    {
+      id: "ie", region: "Ireland", regions: ["Ireland"],
+      intro: "CLRG in Ireland, north and south. Feiseanna use the Irish names: Bun Grád, Tús Grád, Meán Grád and Árd Grád, then Preliminary and Open Championships. Many feiseanna stop at Meán Grád, and dancers go into championships from there. Each provincial council (Munster, Leinster, Connacht, Ulster) sets its own moving-up numbers.",
+      sources: [
+        { name: "Hill of Tara Feis 2026 syllabus (Comhairle Laighean, Leinster)", url: "https://www.clrg.ie/wp-content/uploads/2026/01/HILL-OF-TARA-FEIS-SYLLABUS-2026.pdf" },
+        { name: "West of Ireland Championships 2026 syllabus", url: "https://www.clrg.ie/wp-content/uploads/2026/01/2026-syllabus-West-of-Ireland.pdf" },
+        { name: "Mid-Ulster feis syllabus (An Comhairle Uladh)", url: "https://planxti.com/files/feis/file/2022-36-19-02-01-57-7CA92736-13A5-49C0-BF77-D5AE9B75AF8D.pdf" }
+      ],
+      levels: {
+        b1: { name: "Bun Grád", alt: "the beginners' grade. Like Beginner 1 in North America",
+          words: ["bun grad", "bún grád", "bun grád", "bun", "bún"],
+          moveUp: "Winning 1st moves a dancer up, and big competitions move up more than one dancer. Leinster: none move up with 1 to 5 dancers, 2 with 6 to 10, and 1 more for every extra 10. West of Ireland: 1 with 6 to 20 dancers, 2 with 21 to 30, 3 with more",
+          moveUpPlace: 1, minEntrants: 6 },
+        b2: { name: "Tús Grád", alt: "the primary grade. Like Beginner 2 (Advanced Beginner) in North America",
+          words: ["tus grad", "tús grád", "tus grád", "tus", "tús"],
+          moveUp: "The same numbers as Bun Grád",
+          moveUpPlace: 1, minEntrants: 6 },
+        novice: { name: "Meán Grád", alt: "the middle grade. Like Novice in North America",
+          words: ["mean grad", "meán grád", "mean grád", "méan grád"],
+          moveUp: "Win 1st in a dance (Leinster: in that age group or older). Dancers here can also enter Preliminary Championships. After 2 Preliminary wins in a year, a dancer can't dance Meán Grád for the rest of that year",
+          moveUpPlace: 1 },
+        pw: { name: "Árd Grád", alt: "the open grade. Like Open Prizewinner in North America. Not every feis offers it",
+          words: ["ard grad", "árd grád", "ard grád", "open grade"],
+          moveUp: "The top grade. Dancers also enter championships from here" },
+        pc: { moveUp: "Can't enter after placing top 3 in an Open Championship (with 3 or more judges). A dancer who wins more than 2 Preliminary Championships in a year moves up to Open. Wins with 5 or fewer dancers don't count",
+          danced: "Two rounds: reel or slip jig, then jig or hornpipe. Often run together with the Open Championship, with the Preliminary result taken from the first two rounds. Judged by a panel of judges." },
+        oc: { alt: "Craobh Chomórtas in Irish" }
+      }
+    },
+    {
+      id: "au", region: "Australia", regions: ["Australia"],
+      intro: "CLRG in Australia, run by the Australian Irish Dancing Association (AIDA). Australia has five grades: Beginner, Primary, Elementary, Intermediate and Open. Elementary has no North American match. Some feiseanna also have a Novice grade below Beginner for first-timers.",
+      warn: "A “Novice” in Australia is below Beginner. In North America, Novice is the third level. Same word, different level.",
+      sources: [
+        { name: "AIDA (SA, NT & TAS) Feis 2025 syllabus", url: "https://www.comps-online.com.au/Documents/Organiser/OR000090/EV003288/Rule/2025%20AIDA%20FEIS%20Syllabus%20April%20Syllabus.pdf" },
+        { name: "Miller School Feis 2026 syllabus (South Australia)", url: "https://www.comps-online.com.au/Documents/Organiser/OR000145/EV004089/Rule/2026%20MILLER%20%20SCHOOL%20OF%20IRISH%20DANCING%20FEIS%20SYLLABUS%20F.pdf" },
+        { name: "AIDA NSW: Feisanna", url: "https://www.aidansw.com.au/feisanna" }
+      ],
+      unconfirmed: "AIDA's own grade rules (how many dancers must be in a competition to move up) aren't published online, so the numbers aren't shown here. Your teacher has them.",
+      levels: {
+        b1: { name: "Beginner", alt: "Bun-Grád on AIDA syllabi. Like Beginner 1 in North America. Most dancers start here",
+          words: ["beginner", "beginners", "beg", "bun grad", "bun-grad", "bún grád"],
+          moveUp: "Win 1st in a dance, or your teacher can move your dancer up. Check with your teacher how many dancers a win needs",
+          moveUpPlace: 1 },
+        b2: { name: "Primary", alt: "Tús-Grád on AIDA syllabi. Like Beginner 2 (Advanced Beginner) in North America",
+          words: ["primary", "prim", "tus grad", "tus-grad", "tús grád"],
+          moveUp: "Win 1st in a dance, or your teacher can move your dancer up. Next comes Elementary",
+          moveUpPlace: 1 },
+        novice: { name: "Intermediate", alt: "Mean-Grád on AIDA syllabi. Like Novice in North America",
+          words: ["intermediate", "inter", "mean grad", "mean-grad"],
+          moveUp: "Win 1st in a dance, then move up to Open in that dance",
+          moveUpPlace: 1,
+          parents: "Intermediate dancers can compete at State and National Championships, and can choose to enter the Preliminary Championship at the State Championships" },
+        pw: { name: "Open", alt: "Ard-Grád on AIDA syllabi. Like Open Prizewinner in North America",
+          words: ["open", "ard grad", "ard-grad", "árd grád"],
+          moveUp: "The top grade" },
+        pc: { moveUp: "Rules are set by AIDA. Ask your teacher" },
+        oc: {}
+      }
     }
   ],
 

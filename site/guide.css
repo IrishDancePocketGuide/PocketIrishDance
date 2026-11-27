@@ -72,3 +72,6 @@ ul.list li { margin: 0 0 .5em; }
 footer { background: var(--bg-2); border-top: 1px solid var(--line); margin-top: 40px; padding: 26px 0 34px; font-size: 14px; color: var(--ink-2); }
 footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 14px; }
 footer nav a { font-weight: 700; }
+.table { width: 100%; border-collapse: collapse; margin: 0 0 18px; font-size: 16px; }
+.table th, .table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.table th { color: var(--ink-2); font-weight: 800; font-size: 15px; }

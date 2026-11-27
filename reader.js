@@ -129,7 +129,9 @@
   function levelMatcher(levels) {
     const list = [];
     levels.forEach((lv) => {
-      const words = new Set([(lv.name || "").toLowerCase()].concat(LEVEL_WORDS[lv.id] || []));
+      // A level with local names (Great Britain, Ireland, Australia) brings its own spellings, because the same
+      // word can mean a different level there ("Novice" is the first grade in Great Britain).
+      const words = new Set([(lv.name || "").toLowerCase()].concat(lv.words || LEVEL_WORDS[lv.id] || []));
       words.forEach((w) => { if (w) list.push({ id: lv.id, w, re: new RegExp("(^|[^a-z0-9-])" + esc(w) + "(?![a-z0-9])") }); });
     });
     list.sort((a, b) => b.w.length - a.w.length);
