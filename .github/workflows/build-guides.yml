@@ -1,4 +1,4 @@
-# Keeps the parent guide pages (guide/) and sitemap.xml in step with the app's content.
+# Keeps the parent guide pages (guide/), feis calendar pages (feis/) and sitemap.xml in step with the app's content.
 # Whenever data.js (or the page builder) changes on main, it rebuilds them from data.js and saves any changes.
 # You can also run it any time from the Actions tab: "Build parent guide pages" > "Run workflow".
 name: Build parent guide pages
@@ -8,6 +8,8 @@ on:
     branches: [main]
     paths:
       - data.js
+      - feis.json
+      - feis-found.json
       - scripts/build-guides.mjs
   workflow_dispatch:
 
@@ -33,7 +35,7 @@ jobs:
         run: node scripts/build-guides.mjs
       - name: Save changes
         run: |
-          git add -A guide sitemap.xml
+          git add -A guide feis sitemap.xml
           if git diff --cached --quiet; then echo "Guide pages already up to date."; exit 0; fi
           git config user.name "guide-pages-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

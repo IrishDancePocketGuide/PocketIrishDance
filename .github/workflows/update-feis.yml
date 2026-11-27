@@ -1,5 +1,6 @@
 # Keeps the app's feis calendar current. Every 6 hours it reads each organization's own public
 # feis calendar and saves the upcoming feiseanna to feis.json, which the app shows.
+# It also rebuilds the feis/ and guide/ pages for search engines (scripts/build-guides.mjs), so past feiseanna drop off.
 # You can also run it any time from the Actions tab: "Update feis calendar" > "Run workflow".
 name: Update feis calendar
 
@@ -28,12 +29,14 @@ jobs:
         run: node scripts/update-feis.mjs
       - name: Show what was found
         run: node -e 'const d=require("./feis.json");for(const s of d.sources)console.log(s.id,s.count,s.problem||"ok");for(const e of d.events.slice(0,60))console.log(e.org,e.start,e.end,"|",e.name,"|",e.place||"")'
+      - name: Rebuild the feis calendar and guide pages for search engines
+        run: node scripts/build-guides.mjs
       - name: Save changes
         run: |
-          if git ls-files --error-unmatch feis.json >/dev/null 2>&1 && git diff --quiet -- feis.json; then echo "Nothing new."; exit 0; fi
+          git add feis.json guide feis sitemap.xml
+          if git diff --cached --quiet; then echo "Nothing new."; exit 0; fi
           git config user.name "feis-calendar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add feis.json
           git commit -m "Update feis calendar"
           for i in 1 2 3; do git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0; sleep 5; done
           exit 1
