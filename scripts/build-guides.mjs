@@ -142,10 +142,16 @@ page({
 
 // ---------- Levels, one page per organization ----------
 const NA_NOTE = {
-  clrg: "These are the CLRG level names used at feiseanna in North America (the United States, Canada and Mexico). Great Britain, Ireland and Australia use different names for the lower levels. At the lower levels a dancer moves up one dance at a time, so they can be at different levels in different dances."
+  clrg: "These are the CLRG level names used at feiseanna in North America (the United States, Canada and Mexico). Great Britain, Ireland and Australia use different names for the lower levels (see the links below). At the lower levels a dancer moves up one dance at a time, so they can be at different levels in different dances."
 };
+// CLRG level names in other countries: same levels, local names (data.js clrgLadders).
+const LADDERS = (D.clrgLadders || []).filter((c) => c.levels);
+const ladderSlug = (c) => `clrg-levels-${c.region.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+const ladderLevels = (c) => D.levels.filter((l) => l.org === "clrg" && (!l.only || l.only === c.region))
+  .map((l) => Object.assign({}, l, (c.levels || {})[l.id] || {}, { naName: l.name })).sort((a, b) => a.order - b.order);
+const ladderLinks = () => `<p>Outside North America: ${LADDERS.map((c) => `<a href="/guide/${ladderSlug(c)}/">CLRG levels in ${esc(c.region)}</a>`).join(" · ")}.</p>`;
 for (const o of levelOrgs) {
-  const lv = D.levels.filter((l) => l.org === o.id).sort((a, b) => a.order - b.order);
+  const lv = D.levels.filter((l) => l.org === o.id && !l.only).sort((a, b) => a.order - b.order);
   const youth = lv.filter((l) => !l.adult);
   const anyCheck = lv.some((l) => l.check);
   page({
@@ -171,7 +177,45 @@ for (const o of levelOrgs) {
     </dl>
   </section>`).join("")}
   ${anyCheck ? `<p class="small muted">Some of these rules differ by region. Your teacher and the feis syllabus have the final word.</p>` : ""}
+  ${o.id === "clrg" ? ladderLinks() : ""}
   <p>${ruleOrgs.includes(o) ? `More questions? See <a href="/guide/${SLUG[o.id]}-rules/">${esc(o.name)} rules in plain words</a>, or ` : "See "}<a href="/guide/how-championships-are-judged/">how championships are judged</a>.</p>`
+  });
+}
+
+// ---------- CLRG levels in Great Britain, Ireland and Australia ----------
+for (const c of LADDERS) {
+  const lv = ladderLevels(c);
+  const grades = lv.filter((l) => l.perDance);
+  page({
+    slug: ladderSlug(c),
+    title: `Irish dance levels in ${c.region} (CLRG): ${listJoin(grades.map((l) => l.name))} explained`,
+    description: clip(`The CLRG Irish dance grades in ${c.region}, ${listJoin(grades.map((l) => l.name))}, in plain words: how dancers move up, and how each matches the North American levels.`),
+    h1: `CLRG Irish dance levels in ${c.region}, explained`,
+    lede: `${c.intro}`,
+    crumbs: [{ name: "Organizations", url: `${SITE}/guide/organizations/` }, { name: "CLRG levels", url: `${SITE}/guide/clrg-levels/` }],
+    appLink: "/app.html#/levels",
+    body: `
+  ${c.warn ? `<p class="note">${esc(c.warn)}</p>` : ""}
+  <h2>How the names match</h2>
+  <table class="table"><thead><tr><th>${esc(c.region)}</th><th>North America</th></tr></thead><tbody>
+  ${lv.filter((l) => !l.adult).map((l) => `<tr><td>${esc(l.name)}</td><td>${l.naName && l.naName !== l.name ? esc(l.naName) : l.only ? "No match" : esc(l.name)}</td></tr>`).join("")}
+  </tbody></table>
+  <ul class="toc">${lv.map((l) => `<li><a href="#${l.id}">${esc(l.name)}</a></li>`).join("")}</ul>
+  ${lv.map((l, i) => `
+  <section class="card" id="${l.id}">
+    <h2 style="margin-top:0"><span class="step">${l.adult ? "A" : i + 1}</span>${esc(l.name)}</h2>
+    ${l.alt ? `<p class="muted small">${esc(l.alt.charAt(0).toUpperCase() + l.alt.slice(1))}</p>` : ""}
+    <dl>
+      <dt>What they dance</dt><dd>${esc(sentence(l.danced))}</dd>
+      <dt>Moving up</dt><dd>${esc(sentence(l.moveUp))}</dd>
+      ${l.parents ? `<dt>For parents</dt><dd>${esc(sentence(l.parents))}</dd>` : ""}
+    </dl>
+  </section>`).join("")}
+  ${c.unconfirmed ? `<p class="small muted">${esc(c.unconfirmed)}</p>` : ""}
+  <p class="small muted">Moving-up rules are set by each regional council and can change. Your teacher and the feis syllabus have the final word.</p>
+  <h2>Sources</h2>
+  <ul class="small">${(c.sources || []).map((x) => `<li><a href="${esc(x.url)}" rel="noopener">${esc(x.name)}</a></li>`).join("")}</ul>
+  <p>See also: <a href="/guide/clrg-levels/">CLRG levels in North America</a> and <a href="/guide/how-championships-are-judged/">how championships are judged</a>.</p>`
   });
 }
 
@@ -439,7 +483,7 @@ answerPage({
 });
 
 {
-  const orgsWithLevels = levelOrgs.map((o) => ({ o, lv: D.levels.filter((l) => l.org === o.id && !l.adult).sort((a, b) => a.order - b.order) }));
+  const orgsWithLevels = levelOrgs.map((o) => ({ o, lv: D.levels.filter((l) => l.org === o.id && !l.adult && !l.only).sort((a, b) => a.order - b.order) }));
   answerPage({
     slug: "moving-up-in-irish-dance",
     title: "How moving up works in Irish dance, for every organization",
@@ -450,7 +494,8 @@ answerPage({
   <h2>${esc(o.name)}</h2>
   ${NA_NOTE[o.id] ? `<p class="small muted">${esc(NA_NOTE[o.id].split(". ")[0])}.</p>` : ""}
   ${lv.map((l) => `<div class="qa"><h3>${esc(l.name)}</h3><p>${esc(sentence(l.moveUp))}</p></div>`).join("")}
-  <p class="small"><a href="/guide/${SLUG[o.id]}-levels/">Everything about ${esc(o.name)} levels</a></p>`).join(""),
+  <p class="small"><a href="/guide/${SLUG[o.id]}-levels/">Everything about ${esc(o.name)} levels</a></p>
+  ${o.id === "clrg" ? ladderLinks() : ""}`).join(""),
     faqs: orgsWithLevels.map(({ o, lv }) => ({ q: `How do dancers move up in ${o.name}?`, a: lv.filter((l) => l.moveUpPlace).map((l) => `${l.name}: ${lower1(sentence(l.moveUp))}`).join(" ") })).filter((f) => f.a),
     related: [["guide/how-championships-are-judged/", "How championships are judged"]],
     appLink: "/app.html#/levels"
