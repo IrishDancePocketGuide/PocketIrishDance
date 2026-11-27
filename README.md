@@ -22,7 +22,7 @@ It's an installable web app: open the link on a phone and choose "Add to Home Sc
 | `supabase/schema.sql` | The Friends database and its privacy rules. Run once in the Supabase SQL Editor. |
 | `vendor/supabase/` | The Supabase browser library (supabase-js 2.118.0, MIT). |
 | `styles.css` | Colors and layout. |
-| `guide/`, `sitemap.xml` | The parent guide pages for search engines (levels, rules, words, organizations, checklists), made from `data.js` by `scripts/build-guides.mjs`. Don't edit them by hand: run `node scripts/build-guides.mjs` after changing `data.js` (the "Build parent guide pages" GitHub Action also does it on main). Styles in `site/guide.css`. |
+| `guide/`, `feis/`, `sitemap.xml` | Pages for search engines: the parent guide (levels, rules, words, organizations, checklists and answers to common parent questions) made from `data.js`, and the feis calendar by country, state or province and organization made from `feis.json` by `scripts/build-guides.mjs`. Don't edit them by hand: run `node scripts/build-guides.mjs` after changing `data.js` (the "Build parent guide pages" GitHub Action also does it on main, and the feis calendar Action rebuilds them every 6 hours so past feiseanna drop off). Styles in `site/guide.css`. |
 | `robots.txt` | Tells search engines they're welcome and where the sitemap is. `app.html` is marked noindex; the website and guide pages are what show in search. |
 | `manifest.webmanifest`, `sw.js`, `icons/` | What makes it installable and work offline. |
 
