@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-26T19:14:52.847Z",
+ "checked": "2026-11-27T01:34:32.202Z",
  "sources": [
   {
    "id": "wida",
@@ -7,7 +7,7 @@
    "name": "WIDA competitions calendar",
    "url": "https://www.irish.dance/competitions-list",
    "count": 40,
-   "lastGood": "2026-11-26T19:14:52.847Z",
+   "lastGood": "2026-11-27T01:34:32.202Z",
    "problem": ""
   },
   {
@@ -16,7 +16,7 @@
    "name": "An Comhdháil feis calendar",
    "url": "https://web.irishdancingorg.com/index.php/feis",
    "count": 6,
-   "lastGood": "2026-11-26T19:14:52.847Z",
+   "lastGood": "2026-11-27T01:34:32.202Z",
    "problem": ""
   },
   {
@@ -25,7 +25,7 @@
    "name": "IDTANA Find a Feis (North America)",
    "url": "https://idtana.org/feiseanna/",
    "count": 7,
-   "lastGood": "2026-11-26T19:14:52.847Z",
+   "lastGood": "2026-11-27T01:34:32.202Z",
    "problem": ""
   },
   {
@@ -34,7 +34,7 @@
    "name": "CRN feiseanna on Feis Host",
    "url": "https://crn.feishost.com/",
    "count": 6,
-   "lastGood": "2026-11-26T19:14:52.847Z",
+   "lastGood": "2026-11-27T01:34:32.202Z",
    "problem": ""
   },
   {
@@ -43,8 +43,8 @@
    "name": "CRDM competition dates",
    "url": "https://www.crdm.ie/competition-dates/",
    "count": 23,
-   "lastGood": "2026-11-26T01:31:55.919Z",
-   "problem": "https://www.crdm.ie/competition-dates/ answered 403"
+   "lastGood": "2026-11-27T01:34:32.202Z",
+   "problem": ""
   },
   {
    "id": "found",
@@ -52,7 +52,7 @@
    "name": "Found on regional and school websites (checked by hand)",
    "url": "",
    "count": 23,
-   "lastGood": "2026-11-26T19:14:52.847Z",
+   "lastGood": "2026-11-27T01:34:32.202Z",
    "problem": ""
   }
  ],
