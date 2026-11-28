@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-27T19:13:05.358Z",
+ "checked": "2026-11-28T01:29:30.590Z",
  "sources": [
   {
    "id": "wida",
@@ -7,7 +7,7 @@
    "name": "WIDA competitions calendar",
    "url": "https://www.irish.dance/competitions-list",
    "count": 40,
-   "lastGood": "2026-11-27T19:13:05.358Z",
+   "lastGood": "2026-11-28T01:29:30.590Z",
    "problem": ""
   },
   {
@@ -16,7 +16,7 @@
    "name": "An Comhdháil feis calendar",
    "url": "https://web.irishdancingorg.com/index.php/feis",
    "count": 6,
-   "lastGood": "2026-11-27T19:13:05.358Z",
+   "lastGood": "2026-11-28T01:29:30.590Z",
    "problem": ""
   },
   {
@@ -25,7 +25,7 @@
    "name": "IDTANA Find a Feis (North America)",
    "url": "https://idtana.org/feiseanna/",
    "count": 7,
-   "lastGood": "2026-11-27T19:13:05.358Z",
+   "lastGood": "2026-11-28T01:29:30.590Z",
    "problem": ""
   },
   {
@@ -34,7 +34,7 @@
    "name": "CRN feiseanna on Feis Host",
    "url": "https://crn.feishost.com/",
    "count": 6,
-   "lastGood": "2026-11-27T19:13:05.358Z",
+   "lastGood": "2026-11-28T01:29:30.590Z",
    "problem": ""
   },
   {
@@ -52,7 +52,7 @@
    "name": "Found on regional and school websites (checked by hand)",
    "url": "",
    "count": 23,
-   "lastGood": "2026-11-27T19:13:05.358Z",
+   "lastGood": "2026-11-28T01:29:30.590Z",
    "problem": ""
   }
  ],
